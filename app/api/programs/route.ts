@@ -1,4 +1,4 @@
-import { asRecord, bool, requestError, text } from "../../lib/backend-api";
+import { asRecord, bool, number, requestError, text } from "../../lib/backend-api";
 import {
   preserveBackendResponse,
   requestIsMultipart,
@@ -22,10 +22,13 @@ function toProgram(item: Record<string, unknown>) {
 function jsonPayload(body: Record<string, unknown>) {
   return {
     title: text(body.title),
+    short_description: text(body.short_description),
     description: text(body.description),
     presenter: text(body.presenter),
+    schedule: text(body.schedule),
     cover_image: text(body.cover_image, text(body.coverImage)),
     promo_video_url: text(body.promo_video_url, text(body.promoVideoUrl)),
+    display_order: number(body.display_order),
     is_featured: bool(body.is_featured),
     is_active: body.is_active !== false,
   };
@@ -66,7 +69,7 @@ export async function GET(request: Request) {
   try {
     const incoming = new URL(request.url).searchParams;
     const approved = new URLSearchParams();
-    for (const key of ["page", "ordering", "search", "is_active"] as const) {
+    for (const key of ["page", "ordering", "search", "is_active", "is_featured"] as const) {
       const value = incoming.get(key)?.trim();
       if (value) approved.set(key, value);
     }

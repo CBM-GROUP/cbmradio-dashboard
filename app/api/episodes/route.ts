@@ -18,7 +18,8 @@ function jsonPayload(body: Record<string, unknown>) {
     cover_image: text(body.cover_image, text(body.thumbnailImage)),
     youtube_link: text(body.youtube_embed_url, text(body.youtubeEmbedUrl, text(body.youtube_link, text(body.youtubeLink)))),
     publish_date: text(body.publish_date, text(body.publishDate)) || null,
-    is_featured: bool(body.is_featured), is_active: body.is_active !== false,
+    is_featured: bool(body.is_featured), featured_order: number(body.featured_order),
+    is_active: body.is_active !== false,
   };
 }
 async function mutate(request: Request, method: "POST" | "PATCH") {
@@ -54,7 +55,7 @@ export async function GET(request: Request) {
   try {
     const incoming = new URL(request.url).searchParams;
     const approved = new URLSearchParams();
-    for (const key of ["page", "ordering", "search", "program", "is_active"] as const) {
+    for (const key of ["page", "ordering", "search", "program", "is_featured", "is_active"] as const) {
       const value = incoming.get(key)?.trim();
       if (value) approved.set(key, value);
     }
