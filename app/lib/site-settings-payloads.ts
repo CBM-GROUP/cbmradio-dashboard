@@ -1,0 +1,3 @@
+import type { HeroMediaType, ImageSource } from "../types/site-settings";
+export function heroMediaFields(mediaType:HeroMediaType,imageSource:ImageSource,externalImageUrl:string,videoUrl:string){return {media_type:mediaType,image_source:mediaType==="image"?imageSource:"",external_image_url:mediaType==="image"&&imageSource==="external"?externalImageUrl:"",video_url:mediaType==="video"?videoUrl:"",uploaded_image:mediaType==="image"&&imageSource==="upload"?undefined:null};}
+export function socialPayload(value:{platform_key:string;url:string;is_active:boolean;display_order:number}){return {...value,url:value.url.trim(),display_order:Math.max(0,value.display_order)};}

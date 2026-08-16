@@ -1,4 +1,4 @@
-import { Film, Image, LayoutDashboard, LayoutTemplate, MessageSquare, Newspaper, Radio, Users, type LucideIcon } from "lucide-react";
+import { Contact, Film, Image, Images, LayoutDashboard, LayoutTemplate, MessageSquare, Newspaper, Radio, Share2, Users, type LucideIcon } from "lucide-react";
 
 export type DashboardNavigationItem = { href: string; label: string; icon: LucideIcon; exact?: boolean };
 export type DashboardNavigationGroup = { label: string; items: DashboardNavigationItem[] };
@@ -15,7 +15,12 @@ export const dashboardNavigation: DashboardNavigationGroup[] = [
     { href: "/dashboard/team", label: "Team", icon: Users },
     { href: "/dashboard/comments", label: "Comments", icon: MessageSquare },
   ] },
-  { label: "Site Management", items: [{ href: "/dashboard/page-sections", label: "Page Sections", icon: LayoutTemplate }] },
+  { label: "Site Management", items: [
+    { href: "/dashboard/site-settings/social-links", label: "Social Links", icon: Share2 },
+    { href: "/dashboard/site-settings/contact", label: "Contact Information", icon: Contact },
+    { href: "/dashboard/site-settings/page-heroes", label: "Page Heroes", icon: Images },
+    { href: "/dashboard/page-sections", label: "Homepage Sections (Legacy)", icon: LayoutTemplate },
+  ] },
 ];
 
 export function dashboardRouteIsActive(pathname: string, item: DashboardNavigationItem) {
