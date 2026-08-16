@@ -41,6 +41,22 @@ export async function POST(request: Request) {
   }
 }
 
+export async function PATCH(request: Request) {
+  const headers = await getBackendAuthHeaders(true);
+  if (!headers) return unauthorizedResponse();
+  try {
+    const incoming = asRecord(await request.json());
+    const id = text(incoming.id); delete incoming.id;
+    if (!id) return requestError("Article media id is required.");
+    return preserveBackendResponse(await fetch(
+      `${BACKEND_API_V1_URL}/articles/media/${encodeURIComponent(id)}/`,
+      { method: "PATCH", headers, body: JSON.stringify(incoming) },
+    ), identity);
+  } catch {
+    return requestError("Unable to update article media.", 502);
+  }
+}
+
 export async function DELETE(request: Request) {
   const headers = await getBackendAuthHeaders();
   if (!headers) return unauthorizedResponse();

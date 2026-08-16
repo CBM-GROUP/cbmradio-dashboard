@@ -1,0 +1,43 @@
+"use client";
+
+import LinkExtension from "@tiptap/extension-link";
+import { EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import { NodeSelection } from "@tiptap/pm/state";
+import { Bold, Heading2, Heading3, ImagePlus, Italic, Link as LinkIcon, List, ListOrdered, Minus, Quote, Redo2, Undo2, Video } from "lucide-react";
+import { useEffect, useState } from "react";
+import { apiClient, isApiError } from "../../lib/api-client";
+import { editorJsonToArticleDocument, safeHref } from "../../lib/article-content";
+import { normalizeYouTubeEmbedUrl } from "../../lib/youtube-embed";
+import type { ArticleDocument } from "../../types/articles";
+import type { ArticleMedia } from "../../types/article-media";
+import { Button } from "../ui/button";
+import { Input } from "../ui/form-controls";
+import { ArticleImage, ArticleYouTube } from "./editor-extensions";
+
+export default function RichArticleEditor({ initialDocument, existingMedia, onChange }: { initialDocument:ArticleDocument; existingMedia:ArticleMedia[]; onChange:(document:ArticleDocument)=>void }) {
+  const [showImage,setShowImage]=useState(false); const [showVideo,setShowVideo]=useState(false);
+  const [file,setFile]=useState<File|null>(null); const [alt,setAlt]=useState(""); const [caption,setCaption]=useState(""); const [videoUrl,setVideoUrl]=useState("");
+  const [uploading,setUploading]=useState(false); const [mediaError,setMediaError]=useState("");
+  const [mediaRecords,setMediaRecords]=useState<ArticleMedia[]>(existingMedia);
+  const editor=useEditor({ immediatelyRender:false, extensions:[StarterKit.configure({code:false,codeBlock:false,strike:false,link:false}),LinkExtension.configure({openOnClick:false}),ArticleImage,ArticleYouTube], content:initialDocument, editorProps:{attributes:{class:"article-prose","aria-label":"Article content"}}, onUpdate:({editor})=>onChange(editorJsonToArticleDocument(editor.getJSON())) });
+  useEffect(()=>{if(editor&&!editor.isFocused)editor.commands.setContent(initialDocument,{emitUpdate:false});},[editor,initialDocument]);
+  if(!editor)return <p className="ui-field-help">Loading writing canvas…</p>;
+  const link=()=>{const previous=editor.getAttributes("link").href||"";const href=window.prompt("Link URL",previous);if(href===null)return;if(!href){editor.chain().focus().unsetLink().run();return;}if(!safeHref(href)){setMediaError("Use a safe http(s), mailto, tel, or internal URL.");return;}editor.chain().focus().extendMarkRange("link").setLink({href}).run();};
+  const upload=async()=>{if(!file){setMediaError("Choose an image first.");return;}if(!alt.trim()){setMediaError("Alternative text is required for an inline image.");return;}setUploading(true);setMediaError("");const form=new FormData();form.set("media_type","image");form.set("source_type","upload");form.set("uploaded_file",file);form.set("alt_text",alt);form.set("caption",caption);try{const media=await apiClient.post<ArticleMedia>("/api/article-media",form);setMediaRecords(current=>[...current,media]);editor.chain().focus().insertContent({type:"image",attrs:{media_id:media.public_id,src:media.resolved_url,alt:media.alt_text,caption:media.caption}}).run();setFile(null);setAlt("");setCaption("");setShowImage(false);}catch(value){setMediaError(isApiError(value)?value.message:"Image upload failed.");}finally{setUploading(false);}};
+  const insertVideo=async()=>{const normalized=normalizeYouTubeEmbedUrl(videoUrl);if(!normalized){setMediaError("Enter a valid YouTube URL.");return;}setUploading(true);setMediaError("");try{const media=await apiClient.post<ArticleMedia>("/api/article-media",{media_type:"video",source_type:"external",external_url:normalized,caption});setMediaRecords(current=>[...current,media]);editor.chain().focus().insertContent({type:"youtube",attrs:{media_id:media.public_id,url:media.resolved_url,caption:media.caption}}).run();setVideoUrl("");setCaption("");setShowVideo(false);}catch(value){setMediaError(isApiError(value)?value.message:"Video insertion failed.");}finally{setUploading(false);}};
+  const selectedNode=editor.state.selection instanceof NodeSelection?editor.state.selection.node:null;
+  const editSelectedMedia=async()=>{const selected=selectedNode;if(!selected||!["image","youtube"].includes(selected.type.name))return;const media=mediaRecords.find(item=>item.public_id===selected.attrs.media_id);if(!media){setMediaError("The selected media record could not be found.");return;}const nextCaption=window.prompt("Caption",String(selected.attrs.caption||""));if(nextCaption===null)return;let nextAlt=String(selected.attrs.alt||"");if(selected.type.name==="image"){const value=window.prompt("Alternative text",nextAlt);if(value===null)return;nextAlt=value;if(!nextAlt.trim()){setMediaError("Alternative text cannot be empty.");return;}}setUploading(true);setMediaError("");try{const updated=await apiClient.patch<ArticleMedia>("/api/article-media",{id:media.id,caption:nextCaption,alt_text:nextAlt});setMediaRecords(current=>current.map(item=>item.id===updated.id?updated:item));editor.chain().focus().updateAttributes(selected.type.name,{caption:updated.caption,...(selected.type.name==="image"?{alt:updated.alt_text}:{})}).run();}catch(value){setMediaError(isApiError(value)?value.message:"Media metadata could not be updated.");}finally{setUploading(false);}};
+  return <div className="rich-editor"><div className="rich-editor-toolbar" role="toolbar" aria-label="Article formatting">
+    <Tool label="Undo" active={false} onClick={()=>editor.chain().focus().undo().run()}><Undo2/></Tool><Tool label="Redo" active={false} onClick={()=>editor.chain().focus().redo().run()}><Redo2/></Tool>
+    <Tool label="Bold" active={editor.isActive("bold")} onClick={()=>editor.chain().focus().toggleBold().run()}><Bold/></Tool><Tool label="Italic" active={editor.isActive("italic")} onClick={()=>editor.chain().focus().toggleItalic().run()}><Italic/></Tool><Tool label="Link" active={editor.isActive("link")} onClick={link}><LinkIcon/></Tool>
+    <Tool label="Heading 2" active={editor.isActive("heading",{level:2})} onClick={()=>editor.chain().focus().toggleHeading({level:2}).run()}><Heading2/></Tool><Tool label="Heading 3" active={editor.isActive("heading",{level:3})} onClick={()=>editor.chain().focus().toggleHeading({level:3}).run()}><Heading3/></Tool>
+    <Tool label="Bulleted list" active={editor.isActive("bulletList")} onClick={()=>editor.chain().focus().toggleBulletList().run()}><List/></Tool><Tool label="Numbered list" active={editor.isActive("orderedList")} onClick={()=>editor.chain().focus().toggleOrderedList().run()}><ListOrdered/></Tool><Tool label="Blockquote" active={editor.isActive("blockquote")} onClick={()=>editor.chain().focus().toggleBlockquote().run()}><Quote/></Tool><Tool label="Horizontal rule" active={false} onClick={()=>editor.chain().focus().setHorizontalRule().run()}><Minus/></Tool>
+    <Tool label="Insert image" active={showImage} onClick={()=>{setShowImage(!showImage);setShowVideo(false);}}><ImagePlus/></Tool><Tool label="Insert YouTube video" active={showVideo} onClick={()=>{setShowVideo(!showVideo);setShowImage(false);}}><Video/></Tool>
+    {selectedNode&&["image","youtube"].includes(selectedNode.type.name)&&<Button variant="ghost" loading={uploading} onClick={()=>void editSelectedMedia()}>Edit selected media</Button>}
+  </div>
+  {(showImage||showVideo)&&<div className="media-insert-panel">{showImage?<><Input label="Image file" type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={event=>setFile(event.target.files?.[0]||null)}/><Input label="Alternative text" required value={alt} onChange={event=>setAlt(event.target.value)}/><Input label="Caption" value={caption} onChange={event=>setCaption(event.target.value)}/><Button loading={uploading} onClick={()=>void upload()}>Upload and insert</Button></>:<><Input label="YouTube URL" type="url" value={videoUrl} onChange={event=>setVideoUrl(event.target.value)}/><Input label="Caption" value={caption} onChange={event=>setCaption(event.target.value)}/><Button loading={uploading} onClick={()=>void insertVideo()}>Insert video</Button></>}{mediaError&&<p className="ui-field-error" role="alert">{mediaError}</p>}</div>}
+  <EditorContent editor={editor}/><p className="ui-field-help">Select an embedded image or video to edit its metadata. Delete or Backspace removes it from the document; it detaches after the Article is saved.</p></div>;
+}
+
+function Tool({label,active,onClick,children}:{label:string;active:boolean;onClick:()=>void;children:React.ReactNode}) { return <button type="button" title={label} aria-label={label} aria-pressed={active} className={active?"is-active":""} onClick={onClick}>{children}</button>; }

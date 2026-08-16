@@ -41,10 +41,16 @@ async function mutate(request: Request, method: "POST" | "PATCH") {
     ), toArticle);
   } catch { return requestError("Unable to reach the articles service.", 502); }
 }
-export async function GET() {
+export async function GET(request: Request) {
   const headers = await getBackendAuthHeaders();
   if (!headers) return unauthorizedResponse();
-  try { return preserveBackendResponse(await fetch(`${BACKEND_API_V1_URL}/articles/`, { headers, cache: "no-store" }), toArticle); }
+  const incoming = new URL(request.url).searchParams;
+  const slug = incoming.get("slug")?.trim();
+  const target = slug ? `articles/${encodeURIComponent(slug)}/` : "articles/";
+  const approved = new URLSearchParams();
+  for (const key of ["page", "search", "ordering", "category"] as const) { const value=incoming.get(key)?.trim(); if(value)approved.set(key,value); }
+  const query = !slug && approved.size ? `?${approved}` : "";
+  try { return preserveBackendResponse(await fetch(`${BACKEND_API_V1_URL}/${target}${query}`, { headers, cache: "no-store" }), toArticle); }
   catch { return requestError("Unable to reach the articles service.", 502); }
 }
 export async function POST(request: Request) { return mutate(request, "POST"); }
