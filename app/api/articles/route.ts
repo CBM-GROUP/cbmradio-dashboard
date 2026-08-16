@@ -12,14 +12,13 @@ function toArticle(item: Record<string, unknown>) {
   };
 }
 function jsonPayload(body: Record<string, unknown>) {
-  const published = text(body.status) === "Published" || bool(body.is_published);
-  return {
-    title: text(body.title), body: text(body.body, text(body.content)),
-    cover_image: text(body.cover_image, text(body.coverImage)),
-    author: text(body.author, "CBM Radio"), is_published: published,
-    is_featured: bool(body.is_featured),
-    published_at: published ? text(body.published_at, new Date().toISOString()) : null,
-  };
+  const payload = { ...body };
+  delete payload.slug;
+  if ("coverImage" in payload && !("cover_image" in payload)) payload.cover_image = payload.coverImage;
+  delete payload.coverImage;
+  if ("content" in payload && !("body" in payload)) payload.body = payload.content;
+  delete payload.content;
+  return payload;
 }
 async function mutate(request: Request, method: "POST" | "PATCH") {
   const multipart = requestIsMultipart(request);
