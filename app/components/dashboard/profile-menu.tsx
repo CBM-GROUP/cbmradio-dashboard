@@ -55,15 +55,15 @@ export default function ProfileMenu({ user }: { user: AdminUser }) {
       <button
         ref={triggerRef}
         type="button"
-        className="flex items-center gap-2.5 rounded-full border border-slate-800 bg-slate-900/90 py-1 pl-3 pr-1 text-left transition hover:border-slate-700 hover:bg-slate-800 cursor-pointer"
+        className="flex items-center gap-2.5 rounded-full border border-slate-200 bg-white py-1 pl-3 pr-1 text-left transition hover:border-slate-300 hover:bg-slate-50 cursor-pointer dark:border-slate-800 dark:bg-slate-900/90 dark:hover:border-slate-700 dark:hover:bg-slate-800"
         aria-label={`Open account menu for ${displayName}`}
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
       >
         <div className="hidden text-right text-xs md:block">
-          <p className="font-semibold text-white leading-tight">{displayName}</p>
-          <p className="text-[10px] text-emerald-400 font-medium">Administrator</p>
+          <p className="font-semibold text-slate-900 leading-tight dark:text-white">{displayName}</p>
+          <p className="text-[10px] text-emerald-600 font-medium dark:text-emerald-400">Administrator</p>
         </div>
         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 font-bold text-xs text-slate-950 shadow-inner">
           {initials}
@@ -74,14 +74,14 @@ export default function ProfileMenu({ user }: { user: AdminUser }) {
         <div
           role="menu"
           aria-label="Account menu"
-          className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-slate-800 bg-slate-950 p-2 shadow-2xl backdrop-blur-xl z-50 animate-in fade-in zoom-in-95 duration-100"
+          className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-slate-200 bg-white p-2 shadow-xl backdrop-blur-xl z-50 animate-in fade-in zoom-in-95 duration-100 dark:border-slate-800 dark:bg-slate-950"
         >
-          <div className="px-3 py-2 border-b border-slate-800/80">
+          <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800/80">
             <div className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-emerald-400" />
-              <p className="text-xs font-semibold text-white truncate">{displayName}</p>
+              <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              <p className="text-xs font-semibold text-slate-900 truncate dark:text-white">{displayName}</p>
             </div>
-            <p className="text-[11px] text-slate-400 truncate mt-0.5">{user.email || user.username}</p>
+            <p className="text-[11px] text-slate-500 truncate mt-0.5 dark:text-slate-400">{user.email || user.username}</p>
           </div>
 
           <div className="pt-1.5">
@@ -90,7 +90,7 @@ export default function ProfileMenu({ user }: { user: AdminUser }) {
               role="menuitem"
               onClick={() => void logout()}
               disabled={signingOut}
-              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-rose-400 transition hover:bg-rose-500/10 hover:text-rose-300 cursor-pointer disabled:opacity-50"
+              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-rose-600 transition hover:bg-rose-50 hover:text-rose-700 cursor-pointer disabled:opacity-50 dark:text-rose-400 dark:hover:bg-rose-500/10 dark:hover:text-rose-300"
             >
               <LogOut className="h-4 w-4" />
               <span>{signingOut ? "Signing out…" : "Sign out"}</span>

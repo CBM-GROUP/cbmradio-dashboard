@@ -23,20 +23,20 @@ export function OverviewMetricCard({
 }) {
   return (
     <Link href={href} className="group block focus-visible:outline-none">
-      <Card className="relative overflow-hidden border-slate-800 bg-slate-900/60 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-700 hover:bg-slate-900/90 hover:shadow-lg hover:shadow-emerald-950/20">
+      <Card className="relative overflow-hidden p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:hover:shadow-lg dark:hover:shadow-emerald-950/20">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold tracking-wide text-slate-400 uppercase">
+          <span className="text-xs font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400">
             {label}
           </span>
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-800 bg-slate-950 text-emerald-400 group-hover:border-emerald-500/30 group-hover:text-emerald-300">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-slate-100 text-emerald-600 transition-colors group-hover:border-emerald-500/30 group-hover:text-emerald-700 dark:border-slate-800 dark:bg-slate-950 dark:text-emerald-400 dark:group-hover:text-emerald-300">
             {icon}
           </div>
         </div>
         <div className="mt-4 flex items-baseline justify-between">
-          <span className="text-3xl font-extrabold tracking-tight text-white">
+          <span className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
             {value.toLocaleString()}
           </span>
-          <span className="flex items-center text-xs font-medium text-slate-500 transition-colors group-hover:text-emerald-400">
+          <span className="flex items-center text-xs font-medium text-slate-400 transition-colors group-hover:text-emerald-600 dark:text-slate-500 dark:group-hover:text-emerald-400">
             <span>Manage</span>
             <ArrowUpRight className="ml-0.5 h-3.5 w-3.5" />
           </span>
@@ -56,12 +56,12 @@ function dateValue(value: string | null) {
 function DateDisplay({ value }: { value: string | null }) {
   const formatted = dateValue(value);
   return formatted ? (
-    <span className="flex items-center gap-1 text-[11px] text-slate-500">
+    <span className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400">
       <Calendar className="h-3 w-3" />
       <time dateTime={value || undefined}>{formatted}</time>
     </span>
   ) : (
-    <span className="text-[11px] text-slate-600">Date unavailable</span>
+    <span className="text-[11px] text-slate-400 dark:text-slate-600">Date unavailable</span>
   );
 }
 
@@ -71,15 +71,15 @@ export function LatestArticleCard({
   article: DashboardArticleSummary | null;
 }) {
   return (
-    <Card className="overflow-hidden border-slate-800 bg-slate-900/60">
-      <CardHeader className="border-b border-slate-800/80 pb-3">
+    <Card className="overflow-hidden">
+      <CardHeader className="border-b border-slate-100 dark:border-slate-800/80 pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-bold text-slate-300 uppercase tracking-wider">
+          <CardTitle className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
             Latest Published Article
           </CardTitle>
           <Link
             href="/dashboard/articles"
-            className="text-xs font-semibold text-emerald-400 hover:underline"
+            className="text-xs font-semibold text-emerald-600 hover:underline dark:text-emerald-400"
           >
             All Articles &rarr;
           </Link>
@@ -88,7 +88,7 @@ export function LatestArticleCard({
       <CardContent className="p-5">
         {article ? (
           <div className="space-y-4">
-            <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-slate-800 bg-slate-950">
+            <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-100 dark:border-slate-800 dark:bg-slate-950">
               {article.cover_image ? (
                 <Image
                   src={article.cover_image}
@@ -98,23 +98,23 @@ export function LatestArticleCard({
                   className="object-cover"
                 />
               ) : (
-                <div className="flex h-full items-center justify-center text-xs text-slate-600">
+                <div className="flex h-full items-center justify-center text-xs text-slate-400 dark:text-slate-600">
                   No cover image
                 </div>
               )}
             </div>
             <div>
               <div className="flex items-start justify-between gap-2">
-                <h3 className="font-bold text-base text-white line-clamp-1">
+                <h3 className="font-bold text-base text-slate-900 dark:text-white line-clamp-1">
                   {article.title}
                 </h3>
                 <Badge variant="default" className="shrink-0 text-[10px]">
                   Published
                 </Badge>
               </div>
-              <div className="mt-2 flex items-center justify-between text-xs text-slate-400">
+              <div className="mt-2 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                 <span className="flex items-center gap-1">
-                  <UserIcon className="h-3.5 w-3.5 text-slate-500" />
+                  <UserIcon className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
                   <span>{article.author || "Editorial Team"}</span>
                 </span>
                 <DateDisplay value={article.published_at} />
@@ -122,7 +122,7 @@ export function LatestArticleCard({
             </div>
           </div>
         ) : (
-          <div className="flex h-40 items-center justify-center text-xs text-slate-500">
+          <div className="flex h-40 items-center justify-center text-xs text-slate-400 dark:text-slate-500">
             No published articles yet.
           </div>
         )}
@@ -137,15 +137,15 @@ export function LatestEpisodeCard({
   episode: DashboardEpisodeSummary | null;
 }) {
   return (
-    <Card className="overflow-hidden border-slate-800 bg-slate-900/60">
-      <CardHeader className="border-b border-slate-800/80 pb-3">
+    <Card className="overflow-hidden">
+      <CardHeader className="border-b border-slate-100 dark:border-slate-800/80 pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-bold text-slate-300 uppercase tracking-wider">
+          <CardTitle className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
             Latest Radio Episode
           </CardTitle>
           <Link
             href="/dashboard/episodes"
-            className="text-xs font-semibold text-emerald-400 hover:underline"
+            className="text-xs font-semibold text-emerald-600 hover:underline dark:text-emerald-400"
           >
             All Episodes &rarr;
           </Link>
@@ -154,7 +154,7 @@ export function LatestEpisodeCard({
       <CardContent className="p-5">
         {episode ? (
           <div className="space-y-4">
-            <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-slate-800 bg-slate-950">
+            <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-100 dark:border-slate-800 dark:bg-slate-950">
               {episode.cover_image ? (
                 <Image
                   src={episode.cover_image}
@@ -164,14 +164,14 @@ export function LatestEpisodeCard({
                   className="object-cover"
                 />
               ) : (
-                <div className="flex h-full items-center justify-center text-xs text-slate-600">
+                <div className="flex h-full items-center justify-center text-xs text-slate-400 dark:text-slate-600">
                   No thumbnail
                 </div>
               )}
             </div>
             <div>
               <div className="flex items-start justify-between gap-2">
-                <h3 className="font-bold text-base text-white line-clamp-1">
+                <h3 className="font-bold text-base text-slate-900 dark:text-white line-clamp-1">
                   {episode.title}
                 </h3>
                 <Badge
@@ -181,8 +181,8 @@ export function LatestEpisodeCard({
                   {episode.is_active ? "Active" : "Archived"}
                 </Badge>
               </div>
-              <div className="mt-2 flex items-center justify-between text-xs text-slate-400">
-                <span className="font-medium text-emerald-400 truncate">
+              <div className="mt-2 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                <span className="font-medium text-emerald-600 dark:text-emerald-400 truncate">
                   {episode.program_title || "Radio Broadcast"}
                 </span>
                 <DateDisplay value={episode.publish_date} />
@@ -190,7 +190,7 @@ export function LatestEpisodeCard({
             </div>
           </div>
         ) : (
-          <div className="flex h-40 items-center justify-center text-xs text-slate-500">
+          <div className="flex h-40 items-center justify-center text-xs text-slate-400 dark:text-slate-500">
             No episodes recorded yet.
           </div>
         )}
@@ -209,10 +209,10 @@ export function RecentArticles({
       {articles.map((item) => (
         <li
           key={item.id}
-          className="flex items-center justify-between gap-3 border-b border-slate-800/50 py-3 last:border-0"
+          className="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800/50 py-3 last:border-0"
         >
           <div className="min-w-0 flex-1">
-            <p className="font-semibold text-sm text-slate-100 truncate hover:text-emerald-400">
+            <p className="font-semibold text-sm text-slate-800 truncate hover:text-emerald-600 dark:text-slate-100 dark:hover:text-emerald-400">
               {item.title}
             </p>
             <p className="text-xs text-slate-500 mt-0.5">By {item.author || "CBM Radio"}</p>
@@ -242,13 +242,13 @@ export function RecentEpisodes({
       {episodes.map((item) => (
         <li
           key={item.id}
-          className="flex items-center justify-between gap-3 border-b border-slate-800/50 py-3 last:border-0"
+          className="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800/50 py-3 last:border-0"
         >
           <div className="min-w-0 flex-1">
-            <p className="font-semibold text-sm text-slate-100 truncate hover:text-emerald-400">
+            <p className="font-semibold text-sm text-slate-800 truncate hover:text-emerald-600 dark:text-slate-100 dark:hover:text-emerald-400">
               {item.title}
             </p>
-            <p className="text-xs text-emerald-400/90 font-medium mt-0.5 truncate">
+            <p className="text-xs text-emerald-600 dark:text-emerald-400/90 font-medium mt-0.5 truncate">
               {item.program_title || "Program"}
             </p>
           </div>
@@ -277,10 +277,10 @@ export function RecentComments({
       {comments.map((item) => (
         <li
           key={item.id}
-          className="space-y-1.5 border-b border-slate-800/50 py-3 last:border-0"
+          className="space-y-1.5 border-b border-slate-100 dark:border-slate-800/50 py-3 last:border-0"
         >
           <div className="flex items-center justify-between gap-2">
-            <span className="font-semibold text-xs text-slate-200">
+            <span className="font-semibold text-xs text-slate-700 dark:text-slate-200">
               {item.name || "Anonymous Listener"}
             </span>
             <Badge
@@ -290,11 +290,11 @@ export function RecentComments({
               {item.is_approved ? "Approved" : "Pending"}
             </Badge>
           </div>
-          <p className="text-xs text-slate-400 line-clamp-2 italic bg-slate-950/60 p-2 rounded-lg border border-slate-800/60">
+          <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 italic bg-slate-50 border border-slate-200 p-2 rounded-lg dark:bg-slate-950/60 dark:border-slate-800/60">
             &ldquo;{item.body}&rdquo;
           </p>
           <div className="flex items-center justify-between pt-1">
-            <span className="text-[10px] text-slate-500 font-mono">
+            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
               {item.article !== null
                 ? `Article #${item.article}`
                 : item.episode !== null
@@ -321,15 +321,15 @@ function OverviewList({
   children: ReactNode;
 }) {
   return (
-    <Card className="border-slate-800 bg-slate-900/60 flex flex-col justify-between">
-      <CardHeader className="border-b border-slate-800/80 pb-3">
+    <Card className="flex flex-col justify-between">
+      <CardHeader className="border-b border-slate-100 dark:border-slate-800/80 pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-bold text-slate-300 uppercase tracking-wider">
+          <CardTitle className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
             {title}
           </CardTitle>
           <Link
             href={href}
-            className="text-xs font-semibold text-emerald-400 hover:underline"
+            className="text-xs font-semibold text-emerald-600 hover:underline dark:text-emerald-400"
           >
             View all &rarr;
           </Link>
@@ -339,7 +339,7 @@ function OverviewList({
         {count > 0 ? (
           <ul className="space-y-0.5">{children}</ul>
         ) : (
-          <div className="flex h-32 items-center justify-center text-xs text-slate-500">
+          <div className="flex h-32 items-center justify-center text-xs text-slate-400 dark:text-slate-500">
             No entries recorded yet.
           </div>
         )}
