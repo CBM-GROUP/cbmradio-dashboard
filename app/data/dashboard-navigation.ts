@@ -19,7 +19,7 @@ export const dashboardNavigation: DashboardNavigationGroup[] = [
     { href: "/dashboard/site-settings/social-links", label: "Social Links", icon: Share2 },
     { href: "/dashboard/site-settings/contact", label: "Contact Information", icon: Contact },
     { href: "/dashboard/site-settings/page-heroes", label: "Page Heroes", icon: Images },
-    { href: "/dashboard/page-sections", label: "Homepage Sections (Legacy)", icon: LayoutTemplate },
+    { href: "/dashboard/page-sections", label: "Page Sections & Blocks", icon: LayoutTemplate },
   ] },
 ];
 
