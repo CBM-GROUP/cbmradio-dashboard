@@ -1,4 +1,4 @@
-import { Contact, Film, Image, Images, LayoutDashboard, LayoutTemplate, MessageSquare, Newspaper, Radio, Share2, Users, type LucideIcon } from "lucide-react";
+import { Contact, Film, Image, Images, LayoutDashboard, LayoutTemplate, ListOrdered, MessageSquare, Newspaper, Radio, Share2, Users, type LucideIcon } from "lucide-react";
 
 export type DashboardNavigationItem = { href: string; label: string; icon: LucideIcon; exact?: boolean };
 export type DashboardNavigationGroup = { label: string; items: DashboardNavigationItem[] };
@@ -8,6 +8,7 @@ export const dashboardNavigation: DashboardNavigationGroup[] = [
   { label: "Content", items: [
     { href: "/dashboard/programs", label: "Programs", icon: Radio },
     { href: "/dashboard/episodes", label: "Episodes", icon: Film },
+    { href: "/dashboard/charts", label: "Music Charts", icon: ListOrdered },
     { href: "/dashboard/articles", label: "Articles", icon: Newspaper },
     { href: "/dashboard/gallery", label: "Gallery", icon: Image },
   ] },
