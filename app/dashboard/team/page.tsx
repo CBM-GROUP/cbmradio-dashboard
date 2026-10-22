@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import {
-  Briefcase,
   Edit2,
   LayoutGrid,
   List,
@@ -51,7 +50,11 @@ export default function TeamPage() {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "table">(() => {
+    if (typeof window === "undefined") return "grid";
+    const saved = localStorage.getItem("team_view_mode");
+    return saved === "table" || saved === "grid" ? saved : "grid";
+  });
   const [toast, setToast] = useState<string | null>(null);
 
   const [name, setName] = useState("");
@@ -65,13 +68,6 @@ export default function TeamPage() {
   const [submitting, setSubmitting] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<TeamMember | null>(null);
   const [deleting, setDeleting] = useState(false);
-
-  useEffect(() => {
-    const saved = localStorage.getItem("team_view_mode");
-    if (saved === "table" || saved === "grid") {
-      setViewMode(saved);
-    }
-  }, []);
 
   const handleSetViewMode = (mode: "grid" | "table") => {
     setViewMode(mode);
@@ -98,6 +94,7 @@ export default function TeamPage() {
     if (editingMember) body.append("id", editingMember.id);
     body.append("name", name);
     body.append("role", position);
+    body.append("category", category);
     body.append("bio", bio || "Station Staff Member.");
     body.append("photo", image);
     body.append("is_active", String(isActive));
@@ -130,8 +127,8 @@ export default function TeamPage() {
   const startEdit = (m: TeamMember) => {
     setEditingMember(m);
     setName(m.name);
-    setPosition(m.position);
-    setCategory(m.category);
+    setPosition(m.position || "");
+    setCategory(m.category || "Leadership");
     setBio(m.bio);
     setImage(m.externalImage || "");
     setIsActive(m.is_active);

@@ -2,10 +2,8 @@
 
 import Image from "next/image";
 import {
-  Calendar,
   Clock,
   Edit2,
-  Film,
   LayoutGrid,
   List,
   Plus,
@@ -69,7 +67,11 @@ export default function ProgramsPage() {
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<string>("all");
   const [featuredFilter, setFeaturedFilter] = useState<string>("all");
-  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "table">(() => {
+    if (typeof window === "undefined") return "grid";
+    const saved = localStorage.getItem("programs_view_mode");
+    return saved === "table" || saved === "grid" ? saved : "grid";
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [form, setForm] = useState(initial);
@@ -82,13 +84,6 @@ export default function ProgramsPage() {
   const [deleting, setDeleting] = useState(false);
   const [target, setTarget] = useState<Program | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-
-  useEffect(() => {
-    const saved = localStorage.getItem("programs_view_mode");
-    if (saved === "table" || saved === "grid") {
-      setViewMode(saved);
-    }
-  }, []);
 
   const handleSetViewMode = (mode: "grid" | "table") => {
     setViewMode(mode);

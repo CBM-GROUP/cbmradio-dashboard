@@ -4,8 +4,6 @@ import type { ReactNode } from "react";
 import {
   ArrowUpRight,
   Calendar,
-  CheckCircle2,
-  Clock,
   ExternalLink,
   Film,
   FileCheck2,

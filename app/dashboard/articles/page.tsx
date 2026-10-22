@@ -5,8 +5,6 @@ import Link from "next/link";
 import {
   Calendar,
   Edit2,
-  FileCheck2,
-  FilePenLine,
   FileText,
   LayoutGrid,
   List,
@@ -22,7 +20,7 @@ import { useCallback, useEffect, useState } from "react";
 import Toast from "../../components/toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { ConfirmationDialog } from "../../components/ui/confirmation-dialog";
 import { Pagination } from "../../components/ui/pagination";
 import {
@@ -51,20 +49,17 @@ export default function ArticlesPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [ordering, setOrdering] = useState<string>("-created_at");
-  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "table">(() => {
+    if (typeof window === "undefined") return "grid";
+    const saved = localStorage.getItem("articles_view_mode");
+    return saved === "table" || saved === "grid" ? saved : "grid";
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<DashboardArticle | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const [toast, setToast] = useState<string | null>(null);
-
-  useEffect(() => {
-    const saved = localStorage.getItem("articles_view_mode");
-    if (saved === "table" || saved === "grid") {
-      setViewMode(saved);
-    }
-  }, []);
 
   const handleSetViewMode = (mode: "grid" | "table") => {
     setViewMode(mode);

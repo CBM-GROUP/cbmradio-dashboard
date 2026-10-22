@@ -4,14 +4,12 @@ import Image from "next/image";
 import {
   Calendar,
   Clapperboard,
-  Clock,
   Edit2,
   Film,
   LayoutGrid,
   List,
   Play,
   Plus,
-  Radio,
   Search,
   Sparkles,
   Trash2,
@@ -84,7 +82,11 @@ export default function EpisodesPage() {
   const [featured, setFeatured] = useState("");
   const [active, setActive] = useState("");
   const [ordering, setOrdering] = useState("-publish_date");
-  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "table">(() => {
+    if (typeof window === "undefined") return "grid";
+    const saved = localStorage.getItem("episodes_view_mode");
+    return saved === "table" || saved === "grid" ? saved : "grid";
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [form, setForm] = useState(initial);
@@ -97,13 +99,6 @@ export default function EpisodesPage() {
   const [target, setTarget] = useState<Episode | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-
-  useEffect(() => {
-    const saved = localStorage.getItem("episodes_view_mode");
-    if (saved === "table" || saved === "grid") {
-      setViewMode(saved);
-    }
-  }, []);
 
   const handleSetViewMode = (mode: "grid" | "table") => {
     setViewMode(mode);

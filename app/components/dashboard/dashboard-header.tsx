@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, Radio } from "lucide-react";
+import { Menu } from "lucide-react";
 import type { AdminUser } from "../../lib/backend-auth";
 import ProfileMenu from "./profile-menu";
 import { Badge } from "@/components/ui/badge";

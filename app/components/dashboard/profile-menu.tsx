@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, ShieldCheck, User } from "lucide-react";
+import { LogOut, ShieldCheck } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { AdminUser } from "../../lib/backend-auth";
 

@@ -9,7 +9,6 @@ import {
   LayoutGrid,
   List,
   Maximize2,
-  Plus,
   Search,
   Sparkles,
   Trash2,
@@ -63,7 +62,11 @@ export default function GalleryPage() {
   const [showForm, setShowForm] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<"All" | GalleryCategory>("All");
   const [search, setSearch] = useState("");
-  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "table">(() => {
+    if (typeof window === "undefined") return "grid";
+    const saved = localStorage.getItem("gallery_view_mode");
+    return saved === "table" || saved === "grid" ? saved : "grid";
+  });
   const [editingItem, setEditingItem] = useState<GalleryItem | null>(null);
   const [caption, setCaption] = useState("");
   const [externalUrl, setExternalUrl] = useState("");
@@ -75,13 +78,6 @@ export default function GalleryPage() {
   const [deleteTarget, setDeleteTarget] = useState<GalleryItem | null>(null);
   const [activeLightbox, setActiveLightbox] = useState<GalleryItem | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-
-  useEffect(() => {
-    const saved = localStorage.getItem("gallery_view_mode");
-    if (saved === "table" || saved === "grid") {
-      setViewMode(saved);
-    }
-  }, []);
 
   const handleSetViewMode = (mode: "grid" | "table") => {
     setViewMode(mode);

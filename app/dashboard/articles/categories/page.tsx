@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Edit2, Plus, Sparkles, Tags, Trash2, X } from "lucide-react";
+import { ArrowLeft, Edit2, Plus, Search, Sparkles, Tags, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import Toast, { type ToastVariant } from "../../../components/toast";
 import { Badge } from "@/components/ui/badge";
@@ -270,6 +270,34 @@ export default function ArticleCategoriesPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Search Toolbar */}
+      <Card className="p-3">
+        <div className="relative max-w-sm">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500" />
+          <input
+            type="text"
+            value={search}
+            placeholder="Search categories..."
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            className="w-full rounded-lg border border-slate-200 bg-white pl-9 pr-8 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-zinc-100 dark:placeholder:text-zinc-500"
+          />
+          {search && (
+            <button
+              onClick={() => {
+                setSearch("");
+                setPage(1);
+              }}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-white text-xs"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+      </Card>
 
       {/* Categories Grid */}
       {loading ? (

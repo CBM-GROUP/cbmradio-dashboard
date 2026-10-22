@@ -1,12 +1,8 @@
 "use client";
 
 import {
-  Calendar,
-  Contact,
   Film,
   Image as ImageIcon,
-  Images,
-  LayoutTemplate,
   MessageSquare,
   Newspaper,
   Radio,
