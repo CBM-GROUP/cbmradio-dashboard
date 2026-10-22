@@ -425,103 +425,83 @@ export default function TeamPage() {
           }
         />
       ) : viewMode === "grid" ? (
-        /* Prominent Magazine-Scale Visual Grid of Staff Cards */
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
+        /* Minimal Clean Staff Profile Cards */
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredList.map((m) => (
             <Card
               key={m.id}
-              className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/80 bg-white transition-all duration-300 hover:-translate-y-1.5 hover:border-emerald-500/40 hover:shadow-2xl dark:border-zinc-800/80 dark:bg-zinc-950 dark:hover:shadow-emerald-950/30"
+              className="group flex flex-col justify-between overflow-hidden rounded-xl border border-slate-200/80 bg-white p-4 transition-all duration-200 hover:-translate-y-1 hover:border-emerald-500/40 hover:shadow-md dark:border-zinc-800/80 dark:bg-zinc-950 dark:hover:shadow-emerald-950/20"
             >
               <div>
-                {/* Large Portrait Photography Header */}
-                <div className="relative h-80 sm:h-96 w-full overflow-hidden bg-slate-100 dark:bg-black">
-                  {m.image ? (
-                    <Image
-                      src={m.image}
-                      alt={m.name}
-                      fill
-                      unoptimized
-                      className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                {/* Top: Category & Status */}
+                <div className="flex items-center justify-between gap-2">
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] font-semibold px-2 py-0.5 border-slate-200 text-slate-700 dark:border-zinc-800 dark:text-zinc-300"
+                  >
+                    {m.category || "Staff"}
+                  </Badge>
+                  <span
+                    className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-zinc-400"
+                    title={m.is_active ? "Public on website" : "Hidden from website"}
+                  >
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${
+                        m.is_active ? "bg-emerald-500 animate-pulse" : "bg-slate-300 dark:bg-zinc-700"
+                      }`}
                     />
-                  ) : (
-                    <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-b from-slate-100 to-slate-200 text-slate-400 dark:from-zinc-900 dark:to-black dark:text-zinc-600">
-                      <User className="h-28 w-28 opacity-40" />
-                      <span className="mt-2 text-xs font-medium text-slate-400 dark:text-zinc-600">
-                        No Portrait Photo
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Gradient Scrim */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent" />
-
-                  {/* Top Badges */}
-                  <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between">
-                    <span className="rounded-full bg-emerald-500/90 px-3 py-1 text-xs font-bold tracking-wider text-black uppercase shadow-md backdrop-blur-xs">
-                      {m.category || "Staff"}
-                    </span>
-                    <Badge
-                      variant={m.is_active ? "default" : "secondary"}
-                      className="flex items-center gap-1.5 shadow-md backdrop-blur-xs text-xs"
-                    >
-                      <span
-                        className={`h-2 w-2 rounded-full ${
-                          m.is_active ? "bg-emerald-400 animate-pulse" : "bg-slate-400"
-                        }`}
-                      />
-                      <span>{m.is_active ? "On Air & Active" : "Hidden"}</span>
-                    </Badge>
-                  </div>
-
-                  {/* Overlay Title at base of photo */}
-                  <div className="absolute bottom-4 left-5 right-5">
-                    <h3 className="text-xl sm:text-2xl font-black text-white drop-shadow-sm tracking-tight line-clamp-1">
-                      {m.name}
-                    </h3>
-                    <div className="mt-1 flex items-center gap-2 text-xs sm:text-sm font-semibold text-emerald-400">
-                      <Mic className="h-4 w-4 shrink-0" />
-                      <span className="truncate">{m.position}</span>
-                    </div>
-                  </div>
+                    <span>{m.is_active ? "Active" : "Hidden"}</span>
+                  </span>
                 </div>
 
-                {/* Profile Details & Biography */}
-                <div className="p-6 space-y-3">
-                  <div className="flex items-center justify-between text-xs font-mono text-slate-400 dark:text-zinc-500 pb-2 border-b border-slate-100 dark:border-zinc-900">
-                    <span>Directory Roster #{m.id}</span>
-                    <span>{m.category || "General"}</span>
+                {/* Avatar & Title Block */}
+                <div className="mt-4 flex flex-col items-center text-center">
+                  <div className="relative h-20 w-20 overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-xs dark:border-zinc-800 dark:bg-black">
+                    {m.image ? (
+                      <Image
+                        src={m.image}
+                        alt={m.name}
+                        fill
+                        unoptimized
+                        className="object-cover object-top transition-transform duration-300 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-slate-400 dark:text-zinc-600">
+                        <User className="h-9 w-9 opacity-50" />
+                      </div>
+                    )}
                   </div>
 
-                  <div>
-                    <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500 mb-1.5">
-                      Presenter Biography
-                    </h4>
-                    <p className="text-sm text-slate-600 dark:text-zinc-300 leading-relaxed line-clamp-4">
-                      {m.bio || "No detailed biography published yet for this station presenter."}
-                    </p>
+                  <h3 className="mt-3 font-bold text-sm text-slate-900 dark:text-white truncate max-w-full">
+                    {m.name}
+                  </h3>
+
+                  <div className="mt-0.5 flex items-center justify-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 truncate max-w-full">
+                    <Mic className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{m.position}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Actions Footer */}
-              <div className="flex items-center gap-3 border-t border-slate-100 bg-slate-50/70 p-4 dark:border-zinc-800/80 dark:bg-black/40">
+              {/* Minimal Actions Footer */}
+              <div className="mt-4 pt-3 border-t border-slate-100 dark:border-zinc-800/80 flex items-center justify-between gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => startEdit(m)}
-                  className="flex-1 flex items-center justify-center gap-2 font-semibold text-xs border-slate-200 hover:border-emerald-500 hover:text-emerald-600 dark:border-zinc-800 dark:text-zinc-200 dark:hover:border-emerald-500/50 dark:hover:text-emerald-400"
+                  className="flex-1 h-7 text-xs font-semibold border-slate-200 hover:border-emerald-500 hover:text-emerald-600 dark:border-zinc-800 dark:text-zinc-200 dark:hover:border-emerald-500/50 dark:hover:text-emerald-400"
                 >
-                  <Edit2 className="h-3.5 w-3.5" />
-                  <span>Edit Profile</span>
+                  <Edit2 className="h-3 w-3 mr-1.5" />
+                  <span>Edit</span>
                 </Button>
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   onClick={() => setDeleteTarget(m)}
-                  className="flex items-center justify-center gap-1.5 px-3 text-xs text-rose-600 border-rose-500/20 hover:bg-rose-50 hover:border-rose-500/40 dark:text-rose-400 dark:border-rose-500/30 dark:hover:bg-rose-500/10"
+                  className="h-7 w-7 p-0 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                  title="Remove staff member"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
-                  <span>Remove</span>
                 </Button>
               </div>
             </Card>
