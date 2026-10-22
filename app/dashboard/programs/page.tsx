@@ -6,6 +6,8 @@ import {
   Clock,
   Edit2,
   Film,
+  LayoutGrid,
+  List,
   Plus,
   Radio,
   Search,
@@ -22,6 +24,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfirmationDialog } from "../../components/ui/confirmation-dialog";
 import { Pagination } from "../../components/ui/pagination";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { EmptyState, ErrorState, LoadingState } from "../../components/ui/surfaces";
 import { apiClient, isApiError } from "../../lib/api-client";
 import { appendEditorialFields, programPayload } from "../../lib/editorial-payloads";
@@ -57,6 +67,9 @@ export default function ProgramsPage() {
   const [data, setData] = useState(empty);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [activeFilter, setActiveFilter] = useState<string>("all");
+  const [featuredFilter, setFeaturedFilter] = useState<string>("all");
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [form, setForm] = useState(initial);
@@ -69,6 +82,18 @@ export default function ProgramsPage() {
   const [deleting, setDeleting] = useState(false);
   const [target, setTarget] = useState<Program | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("programs_view_mode");
+    if (saved === "table" || saved === "grid") {
+      setViewMode(saved);
+    }
+  }, []);
+
+  const handleSetViewMode = (mode: "grid" | "table") => {
+    setViewMode(mode);
+    localStorage.setItem("programs_view_mode", mode);
+  };
 
   const load = useCallback(async () => {
     setError("");
@@ -171,37 +196,54 @@ export default function ProgramsPage() {
     }
   };
 
+  const filteredPrograms = data.results.filter((item) => {
+    if (activeFilter === "active" && !item.is_active) return false;
+    if (activeFilter === "inactive" && item.is_active) return false;
+    if (featuredFilter === "featured" && !item.is_featured) return false;
+    if (featuredFilter === "standard" && item.is_featured) return false;
+    return true;
+  });
+
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 pb-16 view-fade">
       <Toast message={toast} onDismiss={() => setToast(null)} />
 
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
             <Radio className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
             <span>Radio Programs</span>
           </h1>
           <p className="text-xs md:text-sm text-slate-500 dark:text-zinc-400 mt-1">
-            Manage shows, broadcast schedules, presenter assignments, and public visibility.
+            Manage station shows, broadcast schedules, presenter assignments, and public visibility.
           </p>
         </div>
-        <Button
-          onClick={() => (open ? close() : setOpen(true))}
-          className="bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-2"
-        >
-          {open ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-          <span>{open ? "Close Editor" : "Add New Program"}</span>
-        </Button>
+        <div className="flex items-center gap-2.5">
+          <Button
+            onClick={() => {
+              if (open) close();
+              else {
+                setEditing(null);
+                setForm(initial);
+                setOpen(true);
+              }
+            }}
+            className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs tracking-wide uppercase px-4 py-2 shadow-sm transition-all"
+          >
+            {open ? <X className="h-4 w-4 mr-1.5" /> : <Plus className="h-4 w-4 mr-1.5" />}
+            <span>{open ? "Close Editor" : "Add New Program"}</span>
+          </Button>
+        </div>
       </div>
 
       {/* Program Creation/Edit Form */}
       {open && (
         <Card className="border-emerald-500/30 bg-white shadow-xl dark:bg-zinc-950">
           <CardHeader className="border-b border-slate-100 dark:border-zinc-800 pb-4">
-            <CardTitle className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <CardTitle className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-              <span>{editing ? `Edit: ${editing.title}` : "Create Radio Program"}</span>
+              <span>{editing ? `Edit Program: ${editing.title}` : "Create Radio Program"}</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
@@ -385,162 +427,311 @@ export default function ProgramsPage() {
         </Card>
       )}
 
-      {/* Search Bar */}
-      <div className="relative">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500" />
-        <input
-          type="text"
-          value={search}
-          placeholder="Search programs by title, host, or schedule..."
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
-          }}
-          className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500"
-        />
-        {search && (
-          <button
-            onClick={() => {
-              setSearch("");
-              setPage(1);
-            }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-white text-xs"
-          >
-            Clear
-          </button>
-        )}
-      </div>
+      {/* Filter and View Mode Toolbar */}
+      <Card className="p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-1 items-center gap-3">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500" />
+              <input
+                type="text"
+                value={search}
+                placeholder="Search programs by title or host..."
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                className="w-full rounded-lg border border-slate-200 bg-white pl-9 pr-8 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-zinc-100 dark:placeholder:text-zinc-500"
+              />
+              {search && (
+                <button
+                  onClick={() => {
+                    setSearch("");
+                    setPage(1);
+                  }}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-white text-xs"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
 
-      {/* Programs List */}
+            {/* Quick Status Filters */}
+            <select
+              value={activeFilter}
+              onChange={(e) => setActiveFilter(e.target.value)}
+              className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-700 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-zinc-300"
+            >
+              <option value="all">All Visibility</option>
+              <option value="active">Active Only</option>
+              <option value="inactive">Inactive Only</option>
+            </select>
+
+            <select
+              value={featuredFilter}
+              onChange={(e) => setFeaturedFilter(e.target.value)}
+              className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-700 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-zinc-300"
+            >
+              <option value="all">All Placement</option>
+              <option value="featured">Featured Only</option>
+              <option value="standard">Standard Only</option>
+            </select>
+          </div>
+
+          {/* Hybrid View Mode Toggle */}
+          <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1 dark:border-zinc-800 dark:bg-black">
+            <button
+              onClick={() => handleSetViewMode("grid")}
+              className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-semibold transition cursor-pointer ${
+                viewMode === "grid"
+                  ? "bg-white text-emerald-600 shadow-xs dark:bg-zinc-900 dark:text-emerald-400"
+                  : "text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white"
+              }`}
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              <span>Grid</span>
+            </button>
+            <button
+              onClick={() => handleSetViewMode("table")}
+              className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-semibold transition cursor-pointer ${
+                viewMode === "table"
+                  ? "bg-white text-emerald-600 shadow-xs dark:bg-zinc-900 dark:text-emerald-400"
+                  : "text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white"
+              }`}
+            >
+              <List className="h-3.5 w-3.5" />
+              <span>Table</span>
+            </button>
+          </div>
+        </div>
+      </Card>
+
+      {/* Programs Content View */}
       {loading ? (
         <LoadingState label="Loading radio programs…" />
       ) : error && !data.results.length ? (
         <ErrorState message={error} onRetry={() => void load()} />
-      ) : !data.results.length ? (
+      ) : !filteredPrograms.length ? (
         <EmptyState
           icon={<Radio className="h-10 w-10 text-slate-400 dark:text-zinc-600" />}
           title="No Programs Found"
           description={
-            search ? "Try adjusting your search query." : "Click 'Add New Program' to create one."
+            search ? "Try adjusting your search query or filters." : "Click 'Add New Program' to create one."
           }
         />
-      ) : (
-        <>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {data.results.map((v) => (
-              <Card
-                key={v.id}
-                className="group flex flex-col justify-between overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:hover:shadow-xl dark:hover:shadow-emerald-950/20"
-              >
-                <div>
-                  {/* Cover Image Container */}
-                  <div className="relative aspect-video w-full overflow-hidden bg-slate-100 dark:bg-black">
-                    {v.coverImage ? (
-                      <Image
-                        src={v.coverImage}
-                        alt={v.title}
-                        fill
-                        unoptimized
-                        className="object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-400 dark:bg-zinc-900 dark:text-zinc-700">
-                        <Radio className="h-12 w-12" />
+      ) : viewMode === "grid" ? (
+        /* Rich Grid View */
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {filteredPrograms.map((v) => (
+            <Card
+              key={v.id}
+              className="group flex flex-col justify-between overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-md dark:hover:shadow-xl dark:hover:shadow-emerald-950/20"
+            >
+              <div>
+                {/* Cover Image Container */}
+                <div className="relative aspect-video w-full overflow-hidden bg-slate-100 dark:bg-black">
+                  {v.coverImage ? (
+                    <Image
+                      src={v.coverImage}
+                      alt={v.title}
+                      fill
+                      unoptimized
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-400 dark:bg-zinc-900 dark:text-zinc-700">
+                      <Radio className="h-12 w-12" />
+                    </div>
+                  )}
+
+                  {/* Overlay Badges */}
+                  <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
+                    {v.is_featured && (
+                      <Badge variant="default" className="text-[10px] shadow-sm">
+                        Featured
+                      </Badge>
+                    )}
+                    <Badge
+                      variant={v.is_active ? "default" : "secondary"}
+                      className="text-[10px] shadow-sm"
+                    >
+                      {v.is_active ? "Active" : "Inactive"}
+                    </Badge>
+                  </div>
+
+                  <div className="absolute bottom-2 left-2">
+                    <span className="rounded bg-black/60 px-1.5 py-0.5 font-mono text-[10px] text-slate-200 backdrop-blur-xs">
+                      Order #{v.display_order}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Body Content */}
+                <div className="p-5 space-y-3">
+                  <h2 className="font-bold text-lg text-slate-900 group-hover:text-emerald-600 transition-colors line-clamp-1 dark:text-white dark:group-hover:text-emerald-400">
+                    {v.title}
+                  </h2>
+
+                  <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed dark:text-zinc-400">
+                    {v.short_description || "No short description provided for this show."}
+                  </p>
+
+                  <div className="space-y-1.5 pt-1 text-xs text-slate-600 border-t border-slate-100 dark:border-zinc-800/60 dark:text-zinc-400">
+                    {v.presenter && (
+                      <div className="flex items-center gap-2 text-slate-700 dark:text-zinc-300">
+                        <User className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <span className="truncate">{v.presenter}</span>
                       </div>
                     )}
+                    {v.schedule && (
+                      <div className="flex items-center gap-2 text-slate-500 dark:text-zinc-400">
+                        <Clock className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500 shrink-0" />
+                        <span className="truncate">{v.schedule}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
 
-                    {/* Overlay Badges */}
-                    <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
-                      {v.is_featured && (
-                        <Badge variant="default" className="text-[10px] shadow-sm">
-                          Featured
-                        </Badge>
+              {/* Card Actions */}
+              <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/60 px-5 py-3 dark:border-zinc-800/80 dark:bg-zinc-950/40">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => edit(v)}
+                  className="flex items-center gap-1.5 text-xs text-slate-700 hover:text-emerald-600 dark:text-zinc-300 dark:hover:text-emerald-400"
+                >
+                  <Edit2 className="h-3.5 w-3.5" />
+                  <span>Edit</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setTarget(v)}
+                  className="flex items-center gap-1.5 text-xs text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-500/10 dark:hover:text-rose-300"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  <span>Delete</span>
+                </Button>
+              </div>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        /* Dense Data Table View */
+        <Card className="overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-16">Cover</TableHead>
+                <TableHead>Program Title</TableHead>
+                <TableHead>Host / Presenter</TableHead>
+                <TableHead>Schedule</TableHead>
+                <TableHead className="text-center">Order</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredPrograms.map((v) => (
+                <TableRow key={v.id}>
+                  <TableCell>
+                    <div className="relative h-10 w-16 overflow-hidden rounded border border-slate-200 bg-slate-100 dark:border-zinc-800 dark:bg-black">
+                      {v.coverImage ? (
+                        <Image
+                          src={v.coverImage}
+                          alt={v.title}
+                          fill
+                          unoptimized
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-slate-400 dark:text-zinc-600">
+                          <Radio className="h-4 w-4" />
+                        </div>
                       )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <p className="font-semibold text-sm text-slate-900 dark:text-white line-clamp-1">
+                      {v.title}
+                    </p>
+                    <p className="text-[11px] text-slate-400 dark:text-zinc-500 font-mono">
+                      /{v.slug}
+                    </p>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-xs text-slate-700 dark:text-zinc-300 font-medium">
+                      {v.presenter || "—"}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-xs text-slate-500 dark:text-zinc-400">
+                      {v.schedule || "—"}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-center font-mono text-xs">
+                    #{v.display_order}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1.5">
                       <Badge
                         variant={v.is_active ? "default" : "secondary"}
-                        className="text-[10px] shadow-sm"
+                        className="text-[10px]"
                       >
                         {v.is_active ? "Active" : "Inactive"}
                       </Badge>
-                    </div>
-
-                    <div className="absolute bottom-2 left-2">
-                      <span className="rounded bg-black/60 px-1.5 py-0.5 font-mono text-[10px] text-slate-200 backdrop-blur-xs">
-                        Order #{v.display_order}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Body Content */}
-                  <div className="p-5 space-y-3">
-                    <h2 className="font-bold text-lg text-slate-900 group-hover:text-emerald-600 transition-colors line-clamp-1 dark:text-white dark:group-hover:text-emerald-400">
-                      {v.title}
-                    </h2>
-
-                    <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed dark:text-zinc-400">
-                      {v.short_description || "No short description provided for this show."}
-                    </p>
-
-                    <div className="space-y-1.5 pt-1 text-xs text-slate-600 border-t border-slate-100 dark:border-zinc-800/60 dark:text-zinc-400">
-                      {v.presenter && (
-                        <div className="flex items-center gap-2 text-slate-700 dark:text-zinc-300">
-                          <User className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                          <span className="truncate">{v.presenter}</span>
-                        </div>
-                      )}
-                      {v.schedule && (
-                        <div className="flex items-center gap-2 text-slate-500 dark:text-zinc-400">
-                          <Clock className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500 shrink-0" />
-                          <span className="truncate">{v.schedule}</span>
-                        </div>
+                      {v.is_featured && (
+                        <Badge variant="outline" className="text-[10px] border-emerald-500/30 text-emerald-600 dark:text-emerald-400">
+                          Featured
+                        </Badge>
                       )}
                     </div>
-                  </div>
-                </div>
-
-                {/* Card Actions */}
-                <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/60 px-5 py-3 dark:border-zinc-800/80 dark:bg-zinc-950/40">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => edit(v)}
-                    className="flex items-center gap-1.5 text-xs text-slate-700 hover:text-emerald-600 dark:text-zinc-300 dark:hover:text-emerald-400"
-                  >
-                    <Edit2 className="h-3.5 w-3.5" />
-                    <span>Edit</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setTarget(v)}
-                    className="flex items-center gap-1.5 text-xs text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-500/10 dark:hover:text-rose-300"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                    <span>Delete</span>
-                  </Button>
-                </div>
-              </Card>
-            ))}
-          </div>
-
-          <Pagination
-            count={data.count}
-            currentPage={page}
-            hasNext={!!data.next}
-            hasPrevious={!!data.previous}
-            onNext={() => setPage((v) => v + 1)}
-            onPrevious={() => setPage((v) => Math.max(1, v - 1))}
-          />
-        </>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => edit(v)}
+                        className="h-8 w-8 p-0 text-slate-600 hover:text-emerald-600 dark:text-zinc-300 dark:hover:text-emerald-400"
+                        title="Edit program"
+                      >
+                        <Edit2 className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setTarget(v)}
+                        className="h-8 w-8 p-0 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10"
+                        title="Delete program"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
       )}
 
-      {/* Confirmation Dialog */}
+      <Pagination
+        count={data.count}
+        currentPage={page}
+        hasNext={!!data.next}
+        hasPrevious={!!data.previous}
+        onNext={() => setPage((p) => p + 1)}
+        onPrevious={() => setPage((p) => Math.max(1, p - 1))}
+      />
+
       <ConfirmationDialog
         open={!!target}
-        title="Delete Program?"
+        title="Delete Radio Program?"
         description={
           target
-            ? `Are you sure you want to permanently delete “${target.title}”? This action cannot be undone.`
+            ? `Are you sure you want to delete "${target.title}"? Associated broadcast episodes will also be affected.`
             : ""
         }
         loading={deleting}
