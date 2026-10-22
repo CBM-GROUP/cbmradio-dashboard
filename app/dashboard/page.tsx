@@ -119,7 +119,7 @@ export default function DashboardPage() {
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
             Studio Overview
           </h1>
-          <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs md:text-sm text-slate-500 dark:text-zinc-400 mt-1">
             Real-time analytics and management for CBM Radio broadcast & publications.
           </p>
         </div>
@@ -129,7 +129,7 @@ export default function DashboardPage() {
             size="sm"
             onClick={() => void loadOverview(true)}
             disabled={retrying}
-            className="flex items-center gap-1.5 border-slate-200 bg-white text-xs text-slate-700 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:text-white"
+            className="flex items-center gap-1.5 border-slate-200 bg-white text-xs text-slate-700 hover:bg-slate-50 hover:text-slate-900 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:text-white"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${retrying ? "animate-spin" : ""}`} />
             <span>{retrying ? "Refreshing…" : "Refresh"}</span>
@@ -154,7 +154,7 @@ export default function DashboardPage() {
 
       {/* Content Totals Grid */}
       <section aria-labelledby="overview-counts-title" className="space-y-3">
-        <h2 id="overview-counts-title" className="text-xs font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase">
+        <h2 id="overview-counts-title" className="text-xs font-bold tracking-widest text-slate-400 dark:text-zinc-500 uppercase">
           Content Metrics & Totals
         </h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
@@ -205,7 +205,7 @@ export default function DashboardPage() {
 
       {/* Latest Featured Content */}
       <section aria-labelledby="overview-latest-title" className="space-y-3">
-        <h2 id="overview-latest-title" className="text-xs font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase">
+        <h2 id="overview-latest-title" className="text-xs font-bold tracking-widest text-slate-400 dark:text-zinc-500 uppercase">
           On-Air & Latest Publications
         </h2>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -216,7 +216,7 @@ export default function DashboardPage() {
 
       {/* Recent Records Streams */}
       <section aria-labelledby="overview-recent-title" className="space-y-3">
-        <h2 id="overview-recent-title" className="text-xs font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase">
+        <h2 id="overview-recent-title" className="text-xs font-bold tracking-widest text-slate-400 dark:text-zinc-500 uppercase">
           Recent Activity & Moderation
         </h2>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -229,7 +229,7 @@ export default function DashboardPage() {
       {/* Quick Actions Bar */}
       <Card className="p-6">
         <CardHeader className="p-0 pb-4">
-          <CardTitle className="text-sm font-bold tracking-wider text-slate-700 dark:text-slate-300 uppercase">
+          <CardTitle className="text-sm font-bold tracking-wider text-slate-700 dark:text-zinc-300 uppercase">
             Quick Studio Shortcuts
           </CardTitle>
         </CardHeader>

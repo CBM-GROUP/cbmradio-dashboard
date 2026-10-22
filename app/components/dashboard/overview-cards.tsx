@@ -25,10 +25,10 @@ export function OverviewMetricCard({
     <Link href={href} className="group block focus-visible:outline-none">
       <Card className="relative overflow-hidden p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:hover:shadow-lg dark:hover:shadow-emerald-950/20">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400">
+          <span className="text-xs font-semibold tracking-wide text-slate-500 uppercase dark:text-zinc-400">
             {label}
           </span>
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-slate-100 text-emerald-600 transition-colors group-hover:border-emerald-500/30 group-hover:text-emerald-700 dark:border-slate-800 dark:bg-slate-950 dark:text-emerald-400 dark:group-hover:text-emerald-300">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-slate-100 text-emerald-600 transition-colors group-hover:border-emerald-500/30 group-hover:text-emerald-700 dark:border-zinc-800 dark:bg-black dark:text-emerald-400 dark:group-hover:border-emerald-500/30 dark:group-hover:text-emerald-300">
             {icon}
           </div>
         </div>
@@ -36,7 +36,7 @@ export function OverviewMetricCard({
           <span className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
             {value.toLocaleString()}
           </span>
-          <span className="flex items-center text-xs font-medium text-slate-400 transition-colors group-hover:text-emerald-600 dark:text-slate-500 dark:group-hover:text-emerald-400">
+          <span className="flex items-center text-xs font-medium text-slate-400 transition-colors group-hover:text-emerald-600 dark:text-zinc-500 dark:group-hover:text-emerald-400">
             <span>Manage</span>
             <ArrowUpRight className="ml-0.5 h-3.5 w-3.5" />
           </span>
@@ -56,12 +56,12 @@ function dateValue(value: string | null) {
 function DateDisplay({ value }: { value: string | null }) {
   const formatted = dateValue(value);
   return formatted ? (
-    <span className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400">
+    <span className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-zinc-400">
       <Calendar className="h-3 w-3" />
       <time dateTime={value || undefined}>{formatted}</time>
     </span>
   ) : (
-    <span className="text-[11px] text-slate-400 dark:text-slate-600">Date unavailable</span>
+    <span className="text-[11px] text-slate-400 dark:text-zinc-600">Date unavailable</span>
   );
 }
 
@@ -72,9 +72,9 @@ export function LatestArticleCard({
 }) {
   return (
     <Card className="overflow-hidden">
-      <CardHeader className="border-b border-slate-100 dark:border-slate-800/80 pb-3">
+      <CardHeader className="border-b border-slate-100 dark:border-zinc-800/80 pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+          <CardTitle className="text-sm font-bold text-slate-700 dark:text-zinc-300 uppercase tracking-wider">
             Latest Published Article
           </CardTitle>
           <Link
@@ -88,7 +88,7 @@ export function LatestArticleCard({
       <CardContent className="p-5">
         {article ? (
           <div className="space-y-4">
-            <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-100 dark:border-slate-800 dark:bg-slate-950">
+            <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-100 dark:border-zinc-800 dark:bg-black">
               {article.cover_image ? (
                 <Image
                   src={article.cover_image}
@@ -98,7 +98,7 @@ export function LatestArticleCard({
                   className="object-cover"
                 />
               ) : (
-                <div className="flex h-full items-center justify-center text-xs text-slate-400 dark:text-slate-600">
+                <div className="flex h-full items-center justify-center text-xs text-slate-400 dark:text-zinc-600">
                   No cover image
                 </div>
               )}
@@ -112,9 +112,9 @@ export function LatestArticleCard({
                   Published
                 </Badge>
               </div>
-              <div className="mt-2 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+              <div className="mt-2 flex items-center justify-between text-xs text-slate-500 dark:text-zinc-400">
                 <span className="flex items-center gap-1">
-                  <UserIcon className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+                  <UserIcon className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500" />
                   <span>{article.author || "Editorial Team"}</span>
                 </span>
                 <DateDisplay value={article.published_at} />
@@ -122,7 +122,7 @@ export function LatestArticleCard({
             </div>
           </div>
         ) : (
-          <div className="flex h-40 items-center justify-center text-xs text-slate-400 dark:text-slate-500">
+          <div className="flex h-40 items-center justify-center text-xs text-slate-400 dark:text-zinc-500">
             No published articles yet.
           </div>
         )}
@@ -138,9 +138,9 @@ export function LatestEpisodeCard({
 }) {
   return (
     <Card className="overflow-hidden">
-      <CardHeader className="border-b border-slate-100 dark:border-slate-800/80 pb-3">
+      <CardHeader className="border-b border-slate-100 dark:border-zinc-800/80 pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+          <CardTitle className="text-sm font-bold text-slate-700 dark:text-zinc-300 uppercase tracking-wider">
             Latest Radio Episode
           </CardTitle>
           <Link
@@ -154,7 +154,7 @@ export function LatestEpisodeCard({
       <CardContent className="p-5">
         {episode ? (
           <div className="space-y-4">
-            <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-100 dark:border-slate-800 dark:bg-slate-950">
+            <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-100 dark:border-zinc-800 dark:bg-black">
               {episode.cover_image ? (
                 <Image
                   src={episode.cover_image}
@@ -164,7 +164,7 @@ export function LatestEpisodeCard({
                   className="object-cover"
                 />
               ) : (
-                <div className="flex h-full items-center justify-center text-xs text-slate-400 dark:text-slate-600">
+                <div className="flex h-full items-center justify-center text-xs text-slate-400 dark:text-zinc-600">
                   No thumbnail
                 </div>
               )}
@@ -181,7 +181,7 @@ export function LatestEpisodeCard({
                   {episode.is_active ? "Active" : "Archived"}
                 </Badge>
               </div>
-              <div className="mt-2 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+              <div className="mt-2 flex items-center justify-between text-xs text-slate-500 dark:text-zinc-400">
                 <span className="font-medium text-emerald-600 dark:text-emerald-400 truncate">
                   {episode.program_title || "Radio Broadcast"}
                 </span>
@@ -190,7 +190,7 @@ export function LatestEpisodeCard({
             </div>
           </div>
         ) : (
-          <div className="flex h-40 items-center justify-center text-xs text-slate-400 dark:text-slate-500">
+          <div className="flex h-40 items-center justify-center text-xs text-slate-400 dark:text-zinc-500">
             No episodes recorded yet.
           </div>
         )}
@@ -209,13 +209,13 @@ export function RecentArticles({
       {articles.map((item) => (
         <li
           key={item.id}
-          className="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800/50 py-3 last:border-0"
+          className="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-zinc-800/60 py-3 last:border-0"
         >
           <div className="min-w-0 flex-1">
-            <p className="font-semibold text-sm text-slate-800 truncate hover:text-emerald-600 dark:text-slate-100 dark:hover:text-emerald-400">
+            <p className="font-semibold text-sm text-slate-800 truncate hover:text-emerald-600 dark:text-zinc-100 dark:hover:text-emerald-400">
               {item.title}
             </p>
-            <p className="text-xs text-slate-500 mt-0.5">By {item.author || "CBM Radio"}</p>
+            <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">By {item.author || "CBM Radio"}</p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <Badge
@@ -242,10 +242,10 @@ export function RecentEpisodes({
       {episodes.map((item) => (
         <li
           key={item.id}
-          className="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800/50 py-3 last:border-0"
+          className="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-zinc-800/60 py-3 last:border-0"
         >
           <div className="min-w-0 flex-1">
-            <p className="font-semibold text-sm text-slate-800 truncate hover:text-emerald-600 dark:text-slate-100 dark:hover:text-emerald-400">
+            <p className="font-semibold text-sm text-slate-800 truncate hover:text-emerald-600 dark:text-zinc-100 dark:hover:text-emerald-400">
               {item.title}
             </p>
             <p className="text-xs text-emerald-600 dark:text-emerald-400/90 font-medium mt-0.5 truncate">
@@ -277,10 +277,10 @@ export function RecentComments({
       {comments.map((item) => (
         <li
           key={item.id}
-          className="space-y-1.5 border-b border-slate-100 dark:border-slate-800/50 py-3 last:border-0"
+          className="space-y-1.5 border-b border-slate-100 dark:border-zinc-800/60 py-3 last:border-0"
         >
           <div className="flex items-center justify-between gap-2">
-            <span className="font-semibold text-xs text-slate-700 dark:text-slate-200">
+            <span className="font-semibold text-xs text-slate-700 dark:text-zinc-200">
               {item.name || "Anonymous Listener"}
             </span>
             <Badge
@@ -290,11 +290,11 @@ export function RecentComments({
               {item.is_approved ? "Approved" : "Pending"}
             </Badge>
           </div>
-          <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 italic bg-slate-50 border border-slate-200 p-2 rounded-lg dark:bg-slate-950/60 dark:border-slate-800/60">
+          <p className="text-xs text-slate-600 dark:text-zinc-300 line-clamp-2 italic bg-slate-50 border border-slate-200 p-2 rounded-lg dark:bg-black dark:border-zinc-800">
             &ldquo;{item.body}&rdquo;
           </p>
           <div className="flex items-center justify-between pt-1">
-            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
+            <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-mono">
               {item.article !== null
                 ? `Article #${item.article}`
                 : item.episode !== null
@@ -322,9 +322,9 @@ function OverviewList({
 }) {
   return (
     <Card className="flex flex-col justify-between">
-      <CardHeader className="border-b border-slate-100 dark:border-slate-800/80 pb-3">
+      <CardHeader className="border-b border-slate-100 dark:border-zinc-800/80 pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+          <CardTitle className="text-sm font-bold text-slate-700 dark:text-zinc-300 uppercase tracking-wider">
             {title}
           </CardTitle>
           <Link
@@ -339,7 +339,7 @@ function OverviewList({
         {count > 0 ? (
           <ul className="space-y-0.5">{children}</ul>
         ) : (
-          <div className="flex h-32 items-center justify-center text-xs text-slate-400 dark:text-slate-500">
+          <div className="flex h-32 items-center justify-center text-xs text-slate-400 dark:text-zinc-500">
             No entries recorded yet.
           </div>
         )}

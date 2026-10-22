@@ -28,9 +28,9 @@ function AuthenticatedShell({
   const menuTriggerRef = useRef<HTMLButtonElement>(null);
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-slate-50 font-sans text-slate-900 transition-colors duration-150 dark:bg-slate-950 dark:text-slate-100">
+    <div className="flex h-screen w-full overflow-hidden bg-slate-50 font-sans text-slate-900 transition-colors duration-150 dark:bg-black dark:text-zinc-100">
       {/* Desktop Sidebar */}
-      <aside className="hidden w-64 shrink-0 overflow-y-auto border-r border-slate-200/90 bg-white dark:border-slate-800/80 dark:bg-slate-950/95 md:block">
+      <aside className="hidden w-64 shrink-0 overflow-y-auto border-r border-slate-200/90 bg-white dark:border-zinc-800/80 dark:bg-zinc-950/95 md:block">
         <DashboardSidebar />
       </aside>
 

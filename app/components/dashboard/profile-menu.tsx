@@ -55,7 +55,7 @@ export default function ProfileMenu({ user }: { user: AdminUser }) {
       <button
         ref={triggerRef}
         type="button"
-        className="flex items-center gap-2.5 rounded-full border border-slate-200 bg-white py-1 pl-3 pr-1 text-left transition hover:border-slate-300 hover:bg-slate-50 cursor-pointer dark:border-slate-800 dark:bg-slate-900/90 dark:hover:border-slate-700 dark:hover:bg-slate-800"
+        className="flex items-center gap-2.5 rounded-full border border-slate-200 bg-white py-1 pl-3 pr-1 text-left transition hover:border-slate-300 hover:bg-slate-50 cursor-pointer dark:border-zinc-800 dark:bg-zinc-900/90 dark:hover:border-zinc-700 dark:hover:bg-zinc-800"
         aria-label={`Open account menu for ${displayName}`}
         aria-haspopup="menu"
         aria-expanded={open}
@@ -74,14 +74,14 @@ export default function ProfileMenu({ user }: { user: AdminUser }) {
         <div
           role="menu"
           aria-label="Account menu"
-          className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-slate-200 bg-white p-2 shadow-xl backdrop-blur-xl z-50 animate-in fade-in zoom-in-95 duration-100 dark:border-slate-800 dark:bg-slate-950"
+          className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-slate-200 bg-white p-2 shadow-xl backdrop-blur-xl z-50 animate-in fade-in zoom-in-95 duration-100 dark:border-zinc-800 dark:bg-zinc-950"
         >
-          <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800/80">
+          <div className="px-3 py-2 border-b border-slate-100 dark:border-zinc-800/80">
             <div className="flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               <p className="text-xs font-semibold text-slate-900 truncate dark:text-white">{displayName}</p>
             </div>
-            <p className="text-[11px] text-slate-500 truncate mt-0.5 dark:text-slate-400">{user.email || user.username}</p>
+            <p className="text-[11px] text-slate-500 truncate mt-0.5 dark:text-zinc-400">{user.email || user.username}</p>
           </div>
 
           <div className="pt-1.5">

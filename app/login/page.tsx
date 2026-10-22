@@ -52,36 +52,36 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 px-4 font-mono transition-colors duration-200">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-black px-4 font-mono transition-colors duration-200">
       <Toast message={toast} />
 
-      <form onSubmit={handleAdminSubmit} className="w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 space-y-4 shadow-xl relative overflow-hidden border-t-4 border-t-emerald-500">
+      <form onSubmit={handleAdminSubmit} className="w-full max-w-sm bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl p-6 space-y-4 shadow-xl relative overflow-hidden border-t-4 border-t-emerald-500">
         <div>
           <LockIcon className="mx-auto h-8 w-8 text-emerald-500" />
           <h1 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-widest text-center mt-2">Studio Console Access</h1>
-          <p className="text-[10px] text-slate-500 dark:text-slate-400 text-center mt-1">Authorized Station Personnel Only</p>
+          <p className="text-[10px] text-slate-500 dark:text-zinc-400 text-center mt-1">Authorized Station Personnel Only</p>
         </div>
 
         <div className="space-y-3 text-xs">
           <div>
-            <label className="block text-slate-700 dark:text-slate-300 mb-1">Admin Username</label>
+            <label className="block text-slate-700 dark:text-zinc-300 mb-1">Admin Username</label>
             <input
               type="text"
               required
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded px-3 py-2 text-slate-900 dark:text-white outline-none focus:border-emerald-500 transition"
+              className="w-full bg-slate-50 dark:bg-black border border-slate-200 dark:border-zinc-800 rounded px-3 py-2 text-slate-900 dark:text-white outline-none focus:border-emerald-500 transition"
               placeholder="e.g., admin_station"
             />
           </div>
           <div>
-            <label className="block text-slate-700 dark:text-slate-300 mb-1">Secure Password</label>
+            <label className="block text-slate-700 dark:text-zinc-300 mb-1">Secure Password</label>
             <input
               type="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded px-3 py-2 text-slate-900 dark:text-white outline-none focus:border-emerald-500 transition"
+              className="w-full bg-slate-50 dark:bg-black border border-slate-200 dark:border-zinc-800 rounded px-3 py-2 text-slate-900 dark:text-white outline-none focus:border-emerald-500 transition"
               placeholder="••••••••"
             />
           </div>
@@ -90,7 +90,7 @@ export default function AdminLoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 text-white font-bold rounded-md text-xs uppercase tracking-wider transition cursor-pointer"
+          className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-200 dark:disabled:bg-zinc-800 disabled:text-slate-400 dark:disabled:text-zinc-500 text-white font-bold rounded-md text-xs uppercase tracking-wider transition cursor-pointer"
         >
           {loading ? "Verifying Credentials..." : "Verify Authorization"}
         </button>

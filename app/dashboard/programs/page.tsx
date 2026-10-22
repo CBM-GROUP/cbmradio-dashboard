@@ -182,7 +182,7 @@ export default function ProgramsPage() {
             <Radio className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
             <span>Radio Programs</span>
           </h1>
-          <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs md:text-sm text-slate-500 dark:text-zinc-400 mt-1">
             Manage shows, broadcast schedules, presenter assignments, and public visibility.
           </p>
         </div>
@@ -197,8 +197,8 @@ export default function ProgramsPage() {
 
       {/* Program Creation/Edit Form */}
       {open && (
-        <Card className="border-emerald-500/30 bg-white shadow-xl dark:bg-slate-900/95">
-          <CardHeader className="border-b border-slate-100 dark:border-slate-800 pb-4">
+        <Card className="border-emerald-500/30 bg-white shadow-xl dark:bg-zinc-950">
+          <CardHeader className="border-b border-slate-100 dark:border-zinc-800 pb-4">
             <CardTitle className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               <span>{editing ? `Edit: ${editing.title}` : "Create Radio Program"}</span>
@@ -210,7 +210,7 @@ export default function ProgramsPage() {
                 {/* Column 1 */}
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
                       Program Title <span className="text-rose-500">*</span>
                     </label>
                     <input
@@ -219,7 +219,7 @@ export default function ProgramsPage() {
                       value={form.title}
                       placeholder="e.g. The Morning Drive"
                       onChange={(e) => setForm({ ...form, title: e.target.value })}
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-600"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white dark:placeholder:text-zinc-600"
                     />
                     {fieldErrors.title?.[0] && (
                       <p className="mt-1 text-xs text-rose-500">{fieldErrors.title[0]}</p>
@@ -227,7 +227,7 @@ export default function ProgramsPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
                       Presenter / Host
                     </label>
                     <input
@@ -235,7 +235,7 @@ export default function ProgramsPage() {
                       value={form.presenter}
                       placeholder="e.g. Alex & Sarah"
                       onChange={(e) => setForm({ ...form, presenter: e.target.value })}
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-600"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white dark:placeholder:text-zinc-600"
                     />
                     {fieldErrors.presenter?.[0] && (
                       <p className="mt-1 text-xs text-rose-500">{fieldErrors.presenter[0]}</p>
@@ -243,7 +243,7 @@ export default function ProgramsPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
                       Broadcast Schedule
                     </label>
                     <input
@@ -251,12 +251,12 @@ export default function ProgramsPage() {
                       value={form.schedule}
                       placeholder="e.g. Mon - Fri, 6:00 AM - 10:00 AM"
                       onChange={(e) => setForm({ ...form, schedule: e.target.value })}
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-600"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white dark:placeholder:text-zinc-600"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
                       Short Description (Summary)
                     </label>
                     <input
@@ -265,7 +265,7 @@ export default function ProgramsPage() {
                       value={form.short_description}
                       placeholder="Short teaser shown on cards"
                       onChange={(e) => setForm({ ...form, short_description: e.target.value })}
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-600"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white dark:placeholder:text-zinc-600"
                     />
                   </div>
 
@@ -284,7 +284,7 @@ export default function ProgramsPage() {
                 {/* Column 2 */}
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
                       Full Show Description
                     </label>
                     <textarea
@@ -292,12 +292,12 @@ export default function ProgramsPage() {
                       value={form.description}
                       placeholder="Detailed overview about this show, topics, call-in numbers, etc."
                       onChange={(e) => setForm({ ...form, description: e.target.value })}
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-600"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white dark:placeholder:text-zinc-600"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
                       Promo / Livestream YouTube URL
                     </label>
                     <input
@@ -305,9 +305,9 @@ export default function ProgramsPage() {
                       value={form.promo_video_url}
                       placeholder="https://www.youtube.com/watch?v=..."
                       onChange={(e) => setForm({ ...form, promo_video_url: e.target.value })}
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none font-mono text-xs dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-600"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none font-mono text-xs dark:border-zinc-800 dark:bg-black dark:text-white dark:placeholder:text-zinc-600"
                     />
-                    <p className="mt-1 text-[11px] text-slate-500">{YOUTUBE_EMBED_HELP}</p>
+                    <p className="mt-1 text-[11px] text-slate-500 dark:text-zinc-400">{YOUTUBE_EMBED_HELP}</p>
                     {fieldErrors.promo_video_url?.[0] && (
                       <p className="mt-1 text-xs text-rose-500">
                         {fieldErrors.promo_video_url[0]}
@@ -316,7 +316,7 @@ export default function ProgramsPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
                       Display Order (Position)
                     </label>
                     <input
@@ -326,35 +326,35 @@ export default function ProgramsPage() {
                       onChange={(e) =>
                         setForm({ ...form, display_order: Number(e.target.value) })
                       }
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white"
                     />
                   </div>
 
                   {/* Toggles */}
                   <div className="flex flex-col gap-3 pt-2">
-                    <label className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
+                    <label className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-zinc-300 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={form.is_featured}
                         onChange={(e) => setForm({ ...form, is_featured: e.target.checked })}
-                        className="h-4 w-4 rounded border-slate-300 bg-white text-emerald-600 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-900 dark:text-emerald-500"
+                        className="h-4 w-4 rounded border-slate-300 bg-white text-emerald-600 focus:ring-emerald-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-emerald-500"
                       />
                       <span>Feature this Program on Station Homepage</span>
                     </label>
 
-                    <label className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
+                    <label className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-zinc-300 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={form.is_active}
                         onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
-                        className="h-4 w-4 rounded border-slate-300 bg-white text-emerald-600 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-900 dark:text-emerald-500"
+                        className="h-4 w-4 rounded border-slate-300 bg-white text-emerald-600 focus:ring-emerald-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-emerald-500"
                       />
                       <span>Active (Publicly Visible)</span>
                     </label>
                   </div>
 
                   {editing && (
-                    <p className="text-[11px] text-slate-500 font-mono">
+                    <p className="text-[11px] text-slate-500 dark:text-zinc-400 font-mono">
                       Slug: {editing.slug}
                     </p>
                   )}
@@ -365,7 +365,7 @@ export default function ProgramsPage() {
                     </p>
                   )}
 
-                  <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-zinc-800">
                     <Button variant="outline" type="button" onClick={close} size="sm">
                       Cancel
                     </Button>
@@ -387,7 +387,7 @@ export default function ProgramsPage() {
 
       {/* Search Bar */}
       <div className="relative">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500" />
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500" />
         <input
           type="text"
           value={search}
@@ -396,7 +396,7 @@ export default function ProgramsPage() {
             setSearch(e.target.value);
             setPage(1);
           }}
-          className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-100 dark:placeholder:text-slate-500"
+          className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500"
         />
         {search && (
           <button
@@ -418,7 +418,7 @@ export default function ProgramsPage() {
         <ErrorState message={error} onRetry={() => void load()} />
       ) : !data.results.length ? (
         <EmptyState
-          icon={<Radio className="h-10 w-10 text-slate-400 dark:text-slate-600" />}
+          icon={<Radio className="h-10 w-10 text-slate-400 dark:text-zinc-600" />}
           title="No Programs Found"
           description={
             search ? "Try adjusting your search query." : "Click 'Add New Program' to create one."
@@ -434,7 +434,7 @@ export default function ProgramsPage() {
               >
                 <div>
                   {/* Cover Image Container */}
-                  <div className="relative aspect-video w-full overflow-hidden bg-slate-100 dark:bg-slate-950">
+                  <div className="relative aspect-video w-full overflow-hidden bg-slate-100 dark:bg-black">
                     {v.coverImage ? (
                       <Image
                         src={v.coverImage}
@@ -444,7 +444,7 @@ export default function ProgramsPage() {
                         className="object-cover transition-transform duration-300 group-hover:scale-105"
                       />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-400 dark:bg-slate-900 dark:text-slate-700">
+                      <div className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-400 dark:bg-zinc-900 dark:text-zinc-700">
                         <Radio className="h-12 w-12" />
                       </div>
                     )}
@@ -477,20 +477,20 @@ export default function ProgramsPage() {
                       {v.title}
                     </h2>
 
-                    <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed dark:text-slate-400">
+                    <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed dark:text-zinc-400">
                       {v.short_description || "No short description provided for this show."}
                     </p>
 
-                    <div className="space-y-1.5 pt-1 text-xs text-slate-600 border-t border-slate-100 dark:border-slate-800/60 dark:text-slate-400">
+                    <div className="space-y-1.5 pt-1 text-xs text-slate-600 border-t border-slate-100 dark:border-zinc-800/60 dark:text-zinc-400">
                       {v.presenter && (
-                        <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                        <div className="flex items-center gap-2 text-slate-700 dark:text-zinc-300">
                           <User className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                           <span className="truncate">{v.presenter}</span>
                         </div>
                       )}
                       {v.schedule && (
-                        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                          <Clock className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
+                        <div className="flex items-center gap-2 text-slate-500 dark:text-zinc-400">
+                          <Clock className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500 shrink-0" />
                           <span className="truncate">{v.schedule}</span>
                         </div>
                       )}
@@ -499,12 +499,12 @@ export default function ProgramsPage() {
                 </div>
 
                 {/* Card Actions */}
-                <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/60 px-5 py-3 dark:border-slate-800/80 dark:bg-slate-950/40">
+                <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/60 px-5 py-3 dark:border-zinc-800/80 dark:bg-zinc-950/40">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => edit(v)}
-                    className="flex items-center gap-1.5 text-xs text-slate-700 hover:text-emerald-600 dark:text-slate-300 dark:hover:text-emerald-400"
+                    className="flex items-center gap-1.5 text-xs text-slate-700 hover:text-emerald-600 dark:text-zinc-300 dark:hover:text-emerald-400"
                   >
                     <Edit2 className="h-3.5 w-3.5" />
                     <span>Edit</span>
