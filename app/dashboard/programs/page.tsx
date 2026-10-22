@@ -41,6 +41,14 @@ import {
 import type { PaginatedResponse } from "../../types/api";
 import type { ProgramEditorial as Program } from "../../types/editorial";
 
+interface TeamMemberOption {
+  id: string;
+  name: string;
+  role: string;
+  category?: string;
+  photo?: string;
+}
+
 const empty: PaginatedResponse<Program> = {
   count: 0,
   next: null,
@@ -84,6 +92,18 @@ export default function ProgramsPage() {
   const [deleting, setDeleting] = useState(false);
   const [target, setTarget] = useState<Program | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [teamMembers, setTeamMembers] = useState<TeamMemberOption[]>([]);
+
+  useEffect(() => {
+    apiClient
+      .get<PaginatedResponse<TeamMemberOption>>("/api/team?ordering=name")
+      .then((res) => setTeamMembers(res.results || []))
+      .catch(() => undefined);
+  }, []);
+
+  const matchedMember = teamMembers.find(
+    (m) => m.name.toLowerCase() === form.presenter.trim().toLowerCase(),
+  );
 
   const handleSetViewMode = (mode: "grid" | "table") => {
     setViewMode(mode);
@@ -263,17 +283,108 @@ export default function ProgramsPage() {
                     )}
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
-                      Presenter / Host
-                    </label>
-                    <input
-                      type="text"
-                      value={form.presenter}
-                      placeholder="e.g. Alex & Sarah"
-                      onChange={(e) => setForm({ ...form, presenter: e.target.value })}
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white dark:placeholder:text-zinc-600"
-                    />
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300">
+                        Presenter / Host
+                      </label>
+                      {matchedMember && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                          ✓ Verified Team Member: {matchedMember.role || "Host"}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <select
+                        value=""
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (!val) return;
+                          if (!form.presenter.trim()) {
+                            setForm({ ...form, presenter: val });
+                          } else if (!form.presenter.toLowerCase().includes(val.toLowerCase())) {
+                            setForm({ ...form, presenter: `${form.presenter.trim()} & ${val}` });
+                          }
+                        }}
+                        className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200"
+                      >
+                        <option value="">
+                          {teamMembers.length > 0 ? "-- Select from Team Roster --" : "Loading Team..."}
+                        </option>
+                        {teamMembers.map((m) => (
+                          <option key={m.id} value={m.name}>
+                            {m.name} ({m.role || "Presenter"})
+                          </option>
+                        ))}
+                      </select>
+
+                      <input
+                        type="text"
+                        list="team-members-list"
+                        value={form.presenter}
+                        placeholder="Type presenter name or co-hosts..."
+                        onChange={(e) => setForm({ ...form, presenter: e.target.value })}
+                        className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white dark:placeholder:text-zinc-600"
+                      />
+                      <datalist id="team-members-list">
+                        {teamMembers.map((m) => (
+                          <option key={m.id} value={m.name}>
+                            {m.name} — {m.role}
+                          </option>
+                        ))}
+                      </datalist>
+                    </div>
+
+                    {teamMembers.length > 0 && (
+                      <div className="space-y-1 pt-1">
+                        <span className="text-[10px] text-slate-400 dark:text-zinc-500">
+                          Quick-assign from active team roster:
+                        </span>
+                        <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-1.5 rounded-lg border border-slate-200/60 dark:border-zinc-800 bg-slate-50/60 dark:bg-zinc-900/40">
+                          {teamMembers.map((m) => {
+                            const isSelected = form.presenter
+                              .toLowerCase()
+                              .includes(m.name.toLowerCase());
+                            return (
+                              <button
+                                key={m.id}
+                                type="button"
+                                onClick={() => {
+                                  if (isSelected) {
+                                    const regex = new RegExp(`(^|\\s*&\\s*)${m.name}(\\s*&\\s*|$)`, "i");
+                                    const updated = form.presenter
+                                      .replace(regex, " ")
+                                      .replace(/\s+&\s+$/, "")
+                                      .replace(/^\s+&\s+/, "")
+                                      .trim();
+                                    setForm({ ...form, presenter: updated });
+                                  } else {
+                                    const updated = form.presenter.trim()
+                                      ? `${form.presenter.trim()} & ${m.name}`
+                                      : m.name;
+                                    setForm({ ...form, presenter: updated });
+                                  }
+                                }}
+                                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium transition-all border ${
+                                  isSelected
+                                    ? "bg-emerald-500 text-slate-950 font-bold border-emerald-400 shadow-xs"
+                                    : "bg-white text-slate-600 border-slate-200 hover:border-emerald-500/50 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700"
+                                }`}
+                              >
+                                <span>{m.name}</span>
+                                {m.role && (
+                                  <span className="text-[9px] opacity-75">
+                                    • {m.role}
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
                     {fieldErrors.presenter?.[0] && (
                       <p className="mt-1 text-xs text-rose-500">{fieldErrors.presenter[0]}</p>
                     )}
@@ -573,9 +684,18 @@ export default function ProgramsPage() {
 
                   <div className="space-y-1.5 pt-1 text-xs text-slate-600 border-t border-slate-100 dark:border-zinc-800/60 dark:text-zinc-400">
                     {v.presenter && (
-                      <div className="flex items-center gap-2 text-slate-700 dark:text-zinc-300">
-                        <User className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                        <span className="truncate">{v.presenter}</span>
+                      <div className="flex items-center justify-between gap-2 text-slate-700 dark:text-zinc-300">
+                        <div className="flex items-center gap-2 truncate">
+                          <User className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                          <span className="truncate">{v.presenter}</span>
+                        </div>
+                        {teamMembers.some((m) =>
+                          v.presenter.toLowerCase().includes(m.name.toLowerCase()),
+                        ) && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-bold shrink-0">
+                            Team
+                          </span>
+                        )}
                       </div>
                     )}
                     {v.schedule && (
@@ -656,9 +776,19 @@ export default function ProgramsPage() {
                     </p>
                   </TableCell>
                   <TableCell>
-                    <span className="text-xs text-slate-700 dark:text-zinc-300 font-medium">
-                      {v.presenter || "—"}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs text-slate-700 dark:text-zinc-300 font-medium">
+                        {v.presenter || "—"}
+                      </span>
+                      {v.presenter &&
+                        teamMembers.some((m) =>
+                          v.presenter.toLowerCase().includes(m.name.toLowerCase()),
+                        ) && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-bold shrink-0">
+                            Team
+                          </span>
+                        )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <span className="text-xs text-slate-500 dark:text-zinc-400">
