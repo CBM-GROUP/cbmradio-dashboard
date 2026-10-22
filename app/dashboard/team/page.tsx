@@ -3,7 +3,11 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import {
+  Briefcase,
   Edit2,
+  LayoutGrid,
+  List,
+  Mic,
   Plus,
   Search,
   Sparkles,
@@ -18,6 +22,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfirmationDialog } from "../../components/ui/confirmation-dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { EmptyState, LoadingState } from "../../components/ui/surfaces";
 
 interface TeamMember {
   id: string;
@@ -36,6 +49,9 @@ export default function TeamPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
   const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [toast, setToast] = useState<string | null>(null);
 
   const [name, setName] = useState("");
@@ -49,6 +65,18 @@ export default function TeamPage() {
   const [submitting, setSubmitting] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<TeamMember | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("team_view_mode");
+    if (saved === "table" || saved === "grid") {
+      setViewMode(saved);
+    }
+  }, []);
+
+  const handleSetViewMode = (mode: "grid" | "table") => {
+    setViewMode(mode);
+    localStorage.setItem("team_view_mode", mode);
+  };
 
   useEffect(() => {
     fetch("/api/team")
@@ -144,43 +172,52 @@ export default function TeamPage() {
     setShowForm(false);
   };
 
-  const filteredList = list.filter(
-    (m) =>
+  const filteredList = list.filter((m) => {
+    const matchesSearch =
       m.name.toLowerCase().includes(search.toLowerCase()) ||
-      m.position.toLowerCase().includes(search.toLowerCase())
-  );
+      m.position.toLowerCase().includes(search.toLowerCase()) ||
+      (m.bio && m.bio.toLowerCase().includes(search.toLowerCase()));
+
+    if (!matchesSearch) return false;
+    if (categoryFilter !== "all" && m.category !== categoryFilter) return false;
+    if (statusFilter === "active" && !m.is_active) return false;
+    if (statusFilter === "inactive" && m.is_active) return false;
+    return true;
+  });
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 pb-16 view-fade">
       <Toast message={toast} onDismiss={() => setToast(null)} />
 
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
             <Users className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
             <span>Station Team & Personnel</span>
           </h1>
           <p className="text-xs md:text-sm text-slate-500 dark:text-zinc-400 mt-1">
-            Manage hosts, DJs, producers, station management, and on-air contributors.
+            Manage station leadership, on-air presenters, broadcast producers, and guest contributors.
           </p>
         </div>
-        <Button
-          onClick={() => (showForm ? clearForm() : setShowForm(true))}
-          className="bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-2"
-        >
-          {showForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-          <span>{showForm ? "Close Form" : "Add Team Member"}</span>
-        </Button>
+        <div className="flex items-center gap-2.5">
+          <Button
+            onClick={() => (showForm ? clearForm() : setShowForm(true))}
+            className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs tracking-wide uppercase px-4 py-2 shadow-sm transition-all"
+          >
+            {showForm ? <X className="h-4 w-4 mr-1.5" /> : <Plus className="h-4 w-4 mr-1.5" />}
+            <span>{showForm ? "Close Form" : "Add Staff Member"}</span>
+          </Button>
+        </div>
       </div>
 
       {/* Editor Form */}
       {showForm && (
         <Card className="border-emerald-500/30 bg-white shadow-xl dark:bg-zinc-950">
           <CardHeader className="border-b border-slate-100 dark:border-zinc-800 pb-4">
-            <CardTitle className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <CardTitle className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-              <span>{editingMember ? `Edit: ${editingMember.name}` : "Add Staff Profile"}</span>
+              <span>{editingMember ? `Edit Profile: ${editingMember.name}` : "Add New Staff Member"}</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
@@ -197,7 +234,7 @@ export default function TeamPage() {
                       required
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder="e.g. Kawooya Mitzvah"
+                      placeholder="e.g. Pastor David Ssemwogerere"
                       className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white dark:placeholder:text-zinc-600"
                     />
                   </div>
@@ -211,7 +248,7 @@ export default function TeamPage() {
                       required
                       value={position}
                       onChange={(e) => setPosition(e.target.value)}
-                      placeholder="e.g. Presenter, Host, Station Manager"
+                      placeholder="e.g. Senior Pastor & Morning Drive Host"
                       className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white dark:placeholder:text-zinc-600"
                     />
                   </div>
@@ -226,8 +263,8 @@ export default function TeamPage() {
                       className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white"
                     >
                       <option value="Leadership">Leadership</option>
-                      <option value="Presenters">Presenters</option>
-                      <option value="Producers">Producers</option>
+                      <option value="Presenters">Presenters / Hosts</option>
+                      <option value="Producers">Producers & Tech</option>
                       <option value="Guest Contributors">Guest Contributors</option>
                     </select>
                   </div>
@@ -241,8 +278,8 @@ export default function TeamPage() {
                       onChange={(e) => setIsActive(e.target.value === "active")}
                       className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white"
                     >
-                      <option value="active">Active — Publicly displayed</option>
-                      <option value="inactive">Inactive — Hidden from public site</option>
+                      <option value="active">Active — Publicly displayed on website</option>
+                      <option value="inactive">Hidden — Unlisted from public site</option>
                     </select>
                   </div>
                 </div>
@@ -259,13 +296,13 @@ export default function TeamPage() {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
-                      Biography / Introduction
+                      Biography & Ministry Introduction
                     </label>
                     <textarea
-                      rows={3}
+                      rows={4}
                       value={bio}
                       onChange={(e) => setBio(e.target.value)}
-                      placeholder="Brief notes about the presenter, career highlights, shows they host..."
+                      placeholder="Brief notes about the presenter, their background, programs they host..."
                       className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white dark:placeholder:text-zinc-600"
                     />
                   </div>
@@ -300,115 +337,268 @@ export default function TeamPage() {
         </Card>
       )}
 
-      {/* Search Input */}
-      <div className="relative">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500" />
-        <input
-          type="text"
-          value={search}
-          placeholder="Search team by name or role..."
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500"
-        />
-        {search && (
-          <button
-            onClick={() => setSearch("")}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-white text-xs"
-          >
-            Clear
-          </button>
-        )}
-      </div>
+      {/* Filter and View Mode Toolbar */}
+      <Card className="p-4">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-1 flex-wrap items-center gap-3">
+            {/* Search */}
+            <div className="relative flex-1 min-w-[200px] max-w-sm">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500" />
+              <input
+                type="text"
+                value={search}
+                placeholder="Search team by name or role..."
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full rounded-lg border border-slate-200 bg-white pl-9 pr-8 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-zinc-100 dark:placeholder:text-zinc-500"
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-white text-xs"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
 
-      {/* Team Roster Grid */}
-      {loading ? (
-        <div className="flex h-40 items-center justify-center text-xs text-slate-400 dark:text-zinc-500">
-          Fetching team directory…
+            {/* Category Filter */}
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-700 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-zinc-300"
+            >
+              <option value="all">All Departments</option>
+              <option value="Leadership">Leadership</option>
+              <option value="Presenters">Presenters</option>
+              <option value="Producers">Producers</option>
+              <option value="Guest Contributors">Guest Contributors</option>
+            </select>
+
+            {/* Status Filter */}
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-700 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-zinc-300"
+            >
+              <option value="all">All Visibility</option>
+              <option value="active">Active Only</option>
+              <option value="inactive">Hidden Only</option>
+            </select>
+          </div>
+
+          {/* Hybrid View Mode Toggle */}
+          <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1 shrink-0 self-start lg:self-center dark:border-zinc-800 dark:bg-black">
+            <button
+              onClick={() => handleSetViewMode("grid")}
+              className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-semibold transition cursor-pointer ${
+                viewMode === "grid"
+                  ? "bg-white text-emerald-600 shadow-xs dark:bg-zinc-900 dark:text-emerald-400"
+                  : "text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white"
+              }`}
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              <span>Grid</span>
+            </button>
+            <button
+              onClick={() => handleSetViewMode("table")}
+              className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-semibold transition cursor-pointer ${
+                viewMode === "table"
+                  ? "bg-white text-emerald-600 shadow-xs dark:bg-zinc-900 dark:text-emerald-400"
+                  : "text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white"
+              }`}
+            >
+              <List className="h-3.5 w-3.5" />
+              <span>Table</span>
+            </button>
+          </div>
         </div>
+      </Card>
+
+      {/* Team Content View */}
+      {loading ? (
+        <LoadingState label="Loading station team roster…" />
       ) : filteredList.length === 0 ? (
-        <Card className="p-12 text-center">
-          <Users className="mx-auto h-12 w-12 text-slate-400 dark:text-zinc-600" />
-          <h3 className="mt-3 text-sm font-semibold text-slate-900 dark:text-white">No Team Profiles Found</h3>
-          <p className="mt-1 text-xs text-slate-500 dark:text-zinc-400">
-            {search ? "No profiles matched your search." : "Click 'Add Team Member' to create the first profile."}
-          </p>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <EmptyState
+          icon={<Users className="h-10 w-10 text-slate-400 dark:text-zinc-600" />}
+          title="No Team Profiles Found"
+          description={
+            search || categoryFilter !== "all" || statusFilter !== "all"
+              ? "No team members matched the selected filters."
+              : "Click 'Add Staff Member' to create the first profile."
+          }
+        />
+      ) : viewMode === "grid" ? (
+        /* Redesigned Visual Grid of Staff Cards */
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredList.map((m) => (
             <Card
               key={m.id}
-              className="group flex flex-col justify-between overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:hover:shadow-xl dark:hover:shadow-emerald-950/20"
+              className="group flex flex-col justify-between overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:border-emerald-500/40 hover:shadow-xl dark:hover:shadow-emerald-950/20"
             >
               <div>
-                {/* Photo Header */}
-                <div className="relative aspect-square w-full overflow-hidden bg-slate-100 dark:bg-black sm:aspect-[4/3]">
+                {/* Photo Portrait Container */}
+                <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100 dark:bg-black">
                   {m.image ? (
                     <Image
                       src={m.image}
                       alt={m.name}
                       fill
                       unoptimized
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      className="object-cover object-top transition-transform duration-300 group-hover:scale-105"
                     />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-400 dark:bg-zinc-900 dark:text-zinc-700">
-                      <User className="h-16 w-16" />
+                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-b from-slate-100 to-slate-200 text-slate-400 dark:from-zinc-900 dark:to-black dark:text-zinc-700">
+                      <User className="h-20 w-20" />
                     </div>
                   )}
 
+                  {/* Gradient shadow for text readability */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+                  {/* Badges on Portrait */}
                   <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
                     <Badge
                       variant={m.is_active ? "default" : "secondary"}
-                      className="text-[10px] shadow-sm"
+                      className="text-[10px] shadow-sm backdrop-blur-xs"
                     >
                       {m.is_active ? "Active" : "Hidden"}
                     </Badge>
                   </div>
 
-                  <div className="absolute bottom-2 left-2">
-                    <span className="rounded bg-black/60 px-2 py-0.5 text-[11px] font-semibold text-emerald-400 backdrop-blur-xs">
+                  <div className="absolute bottom-2.5 left-3 right-3">
+                    <span className="inline-block rounded-md bg-emerald-500/20 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold tracking-wider text-emerald-300 uppercase backdrop-blur-xs mb-1">
                       {m.category || "Staff"}
                     </span>
+                    <h3 className="font-bold text-base text-white line-clamp-1">
+                      {m.name}
+                    </h3>
                   </div>
                 </div>
 
                 {/* Profile Details */}
-                <div className="p-5 space-y-2">
-                  <h3 className="font-bold text-lg text-slate-900 group-hover:text-emerald-600 transition-colors dark:text-white dark:group-hover:text-emerald-400">
-                    {m.name}
-                  </h3>
-                  <p className="text-xs font-semibold text-slate-600 dark:text-zinc-300">{m.position}</p>
-                  <p className="text-xs text-slate-500 line-clamp-3 leading-relaxed pt-1 dark:text-zinc-400">
-                    {m.bio || "No biography details added yet."}
+                <div className="p-4 space-y-2.5">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                    <Mic className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">{m.position}</span>
+                  </div>
+
+                  <p className="text-xs text-slate-500 line-clamp-3 leading-relaxed dark:text-zinc-400">
+                    {m.bio || "No biography details added for this staff member."}
                   </p>
                 </div>
               </div>
 
               {/* Actions Footer */}
-              <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/60 px-5 py-3 dark:border-zinc-800/80 dark:bg-zinc-950/40">
+              <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/60 px-4 py-2.5 dark:border-zinc-800/80 dark:bg-zinc-950/40">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => startEdit(m)}
-                  className="flex items-center gap-1.5 text-xs text-slate-700 hover:text-emerald-600 dark:text-zinc-300 dark:hover:text-emerald-400"
+                  className="h-7 px-2 text-xs text-slate-700 hover:text-emerald-600 dark:text-zinc-300 dark:hover:text-emerald-400"
                 >
-                  <Edit2 className="h-3.5 w-3.5" />
+                  <Edit2 className="mr-1 h-3 w-3" />
                   <span>Edit</span>
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setDeleteTarget(m)}
-                  className="flex items-center gap-1.5 text-xs text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-500/10 dark:hover:text-rose-300"
+                  className="h-7 px-2 text-xs text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-500/10"
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Trash2 className="mr-1 h-3 w-3" />
                   <span>Delete</span>
                 </Button>
               </div>
             </Card>
           ))}
         </div>
+      ) : (
+        /* Dense Data Table View */
+        <Card className="overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-16">Photo</TableHead>
+                <TableHead>Staff Name</TableHead>
+                <TableHead>On-Air Position</TableHead>
+                <TableHead>Department</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredList.map((m) => (
+                <TableRow key={m.id}>
+                  <TableCell>
+                    <div className="relative h-10 w-10 overflow-hidden rounded-full border border-slate-200 bg-slate-100 dark:border-zinc-800 dark:bg-black">
+                      {m.image ? (
+                        <Image
+                          src={m.image}
+                          alt={m.name}
+                          fill
+                          unoptimized
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-slate-400 dark:text-zinc-600">
+                          <User className="h-5 w-5" />
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <p className="font-semibold text-sm text-slate-900 dark:text-white line-clamp-1">
+                      {m.name}
+                    </p>
+                    <p className="text-[11px] text-slate-400 dark:text-zinc-500 font-mono">
+                      ID: {m.id}
+                    </p>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-xs text-slate-700 dark:text-zinc-300 font-medium">
+                      {m.position}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="text-xs">
+                      {m.category || "Staff"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={m.is_active ? "default" : "secondary"}
+                      className="text-[10px]"
+                    >
+                      {m.is_active ? "Active" : "Hidden"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => startEdit(m)}
+                        className="h-8 w-8 p-0 text-slate-600 hover:text-emerald-600 dark:text-zinc-300 dark:hover:text-emerald-400"
+                        title="Edit profile"
+                      >
+                        <Edit2 className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setDeleteTarget(m)}
+                        className="h-8 w-8 p-0 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10"
+                        title="Delete profile"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
       )}
 
       {/* Delete Confirmation */}
@@ -417,7 +607,7 @@ export default function TeamPage() {
         title="Remove Team Member?"
         description={
           deleteTarget
-            ? `Are you sure you want to remove “${deleteTarget.name}”?`
+            ? `Are you sure you want to remove “${deleteTarget.name}” from the station directory?`
             : ""
         }
         loading={deleting}
