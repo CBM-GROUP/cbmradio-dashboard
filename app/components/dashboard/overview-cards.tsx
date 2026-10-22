@@ -1,30 +1,349 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import type { DashboardArticleSummary, DashboardCommentSummary, DashboardEpisodeSummary } from "../../types/dashboard-overview";
-import { Card, EmptyState, StatusBadge } from "../ui/surfaces";
+import { ArrowUpRight, Calendar, User as UserIcon } from "lucide-react";
+import type {
+  DashboardArticleSummary,
+  DashboardCommentSummary,
+  DashboardEpisodeSummary,
+} from "../../types/dashboard-overview";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export function OverviewMetricCard({ label, value, href, icon }: { label:string; value:number; href:string; icon:ReactNode }) {
-  return <Link href={href} className="overview-metric-link" aria-label={`${label}: ${value}. Manage ${label}.`}><Card className="overview-metric-card"><div><span>{label}</span><span aria-hidden="true">{icon}</span></div><strong>{value.toLocaleString()}</strong><small>Manage {label}</small></Card></Link>;
+export function OverviewMetricCard({
+  label,
+  value,
+  href,
+  icon,
+}: {
+  label: string;
+  value: number;
+  href: string;
+  icon: ReactNode;
+}) {
+  return (
+    <Link href={href} className="group block focus-visible:outline-none">
+      <Card className="relative overflow-hidden border-slate-800 bg-slate-900/60 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-700 hover:bg-slate-900/90 hover:shadow-lg hover:shadow-emerald-950/20">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold tracking-wide text-slate-400 uppercase">
+            {label}
+          </span>
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-800 bg-slate-950 text-emerald-400 group-hover:border-emerald-500/30 group-hover:text-emerald-300">
+            {icon}
+          </div>
+        </div>
+        <div className="mt-4 flex items-baseline justify-between">
+          <span className="text-3xl font-extrabold tracking-tight text-white">
+            {value.toLocaleString()}
+          </span>
+          <span className="flex items-center text-xs font-medium text-slate-500 transition-colors group-hover:text-emerald-400">
+            <span>Manage</span>
+            <ArrowUpRight className="ml-0.5 h-3.5 w-3.5" />
+          </span>
+        </div>
+      </Card>
+    </Link>
+  );
 }
 
-function dateValue(value:string|null) {
-  if(!value)return null;const date=new Date(value);if(Number.isNaN(date.getTime()))return null;
-  return new Intl.DateTimeFormat(undefined,{dateStyle:"medium"}).format(date);
-}
-function DateDisplay({ value }: { value:string|null }) { const formatted=dateValue(value); return formatted?<time dateTime={value||undefined}>{formatted}</time>:<span>Date unavailable</span>; }
-function ImageOrFallback({ src, alt }: { src:string; alt:string }) { return <div className="overview-content-image">{src.trim()?<Image src={src} alt={alt} fill unoptimized sizes="(max-width: 768px) 100vw, 320px" className="object-cover"/>:<span aria-hidden="true">No image</span>}</div>; }
-
-export function LatestArticleCard({ article }: { article:DashboardArticleSummary|null }) {
-  return <Card className="overview-feature-card"><h2>Latest published article</h2>{article?<><ImageOrFallback src={article.cover_image} alt={`Cover for ${article.title}`}/><div className="overview-feature-body"><div className="overview-title-row"><h3>{article.title}</h3><StatusBadge status="published" label="Published"/></div><p>{article.author||"Author unavailable"}</p><DateDisplay value={article.published_at}/><Link href="/dashboard/articles">Manage articles</Link></div></>:<EmptyState title="No published articles" description="No published articles are available yet."/>}</Card>;
+function dateValue(value: string | null) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(date);
 }
 
-export function LatestEpisodeCard({ episode }: { episode:DashboardEpisodeSummary|null }) {
-  return <Card className="overview-feature-card"><h2>Latest episode</h2>{episode?<><ImageOrFallback src={episode.cover_image} alt={`Cover for ${episode.title}`}/><div className="overview-feature-body"><div className="overview-title-row"><h3>{episode.title}</h3><StatusBadge status={episode.is_active?"active":"inactive"}/></div><p>{episode.program_title||"Program unavailable"}</p><DateDisplay value={episode.publish_date}/><Link href="/dashboard/episodes">Manage episodes</Link></div></>:<EmptyState title="No active episodes" description="No active episodes are available yet."/>}</Card>;
+function DateDisplay({ value }: { value: string | null }) {
+  const formatted = dateValue(value);
+  return formatted ? (
+    <span className="flex items-center gap-1 text-[11px] text-slate-500">
+      <Calendar className="h-3 w-3" />
+      <time dateTime={value || undefined}>{formatted}</time>
+    </span>
+  ) : (
+    <span className="text-[11px] text-slate-600">Date unavailable</span>
+  );
 }
 
-export function RecentArticles({ articles }: { articles:DashboardArticleSummary[] }) { return <OverviewList title="Recent articles" href="/dashboard/articles" empty="No recent articles are available.">{articles.map((item)=><li key={item.id}><div><strong>{item.title}</strong><span>{item.author||"Author unavailable"}</span></div><div><StatusBadge status={item.is_published?"published":"draft"}/><DateDisplay value={item.published_at}/></div></li>)}</OverviewList>; }
-export function RecentEpisodes({ episodes }: { episodes:DashboardEpisodeSummary[] }) { return <OverviewList title="Recent episodes" href="/dashboard/episodes" empty="No recent episodes are available.">{episodes.map((item)=><li key={item.id}><div><strong>{item.title}</strong><span>{item.program_title||"Program unavailable"}</span></div><div><StatusBadge status={item.is_active?"active":"inactive"}/><DateDisplay value={item.publish_date}/></div></li>)}</OverviewList>; }
-export function RecentComments({ comments }: { comments:DashboardCommentSummary[] }) { return <OverviewList title="Recent comments" href="/dashboard/comments" empty="No recent comments are available.">{comments.map((item)=><li key={item.id}><div><strong>{item.name||"Unnamed commenter"}</strong><span className="overview-comment-preview">{item.body}</span><small>{item.article!==null?`Article #${item.article}`:item.episode!==null?`Episode #${item.episode}`:"Unknown content"}</small></div><div><StatusBadge status={item.is_approved?"approved":"pending"} label={item.is_approved?"Approved":"Pending"}/><DateDisplay value={item.created_at}/></div></li>)}</OverviewList>; }
+export function LatestArticleCard({
+  article,
+}: {
+  article: DashboardArticleSummary | null;
+}) {
+  return (
+    <Card className="overflow-hidden border-slate-800 bg-slate-900/60">
+      <CardHeader className="border-b border-slate-800/80 pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm font-bold text-slate-300 uppercase tracking-wider">
+            Latest Published Article
+          </CardTitle>
+          <Link
+            href="/dashboard/articles"
+            className="text-xs font-semibold text-emerald-400 hover:underline"
+          >
+            All Articles &rarr;
+          </Link>
+        </div>
+      </CardHeader>
+      <CardContent className="p-5">
+        {article ? (
+          <div className="space-y-4">
+            <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-slate-800 bg-slate-950">
+              {article.cover_image ? (
+                <Image
+                  src={article.cover_image}
+                  alt={article.title}
+                  fill
+                  unoptimized
+                  className="object-cover"
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center text-xs text-slate-600">
+                  No cover image
+                </div>
+              )}
+            </div>
+            <div>
+              <div className="flex items-start justify-between gap-2">
+                <h3 className="font-bold text-base text-white line-clamp-1">
+                  {article.title}
+                </h3>
+                <Badge variant="default" className="shrink-0 text-[10px]">
+                  Published
+                </Badge>
+              </div>
+              <div className="mt-2 flex items-center justify-between text-xs text-slate-400">
+                <span className="flex items-center gap-1">
+                  <UserIcon className="h-3.5 w-3.5 text-slate-500" />
+                  <span>{article.author || "Editorial Team"}</span>
+                </span>
+                <DateDisplay value={article.published_at} />
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex h-40 items-center justify-center text-xs text-slate-500">
+            No published articles yet.
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
-function OverviewList({ title, href, empty, children }: { title:string; href:string; empty:string; children:ReactNode }) { const hasItems=Array.isArray(children)?children.length>0:Boolean(children);return <Card className="overview-list"><header><h2>{title}</h2><Link href={href}>View all</Link></header>{hasItems?<ul>{children}</ul>:<EmptyState title={empty}/>}</Card>; }
+export function LatestEpisodeCard({
+  episode,
+}: {
+  episode: DashboardEpisodeSummary | null;
+}) {
+  return (
+    <Card className="overflow-hidden border-slate-800 bg-slate-900/60">
+      <CardHeader className="border-b border-slate-800/80 pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm font-bold text-slate-300 uppercase tracking-wider">
+            Latest Radio Episode
+          </CardTitle>
+          <Link
+            href="/dashboard/episodes"
+            className="text-xs font-semibold text-emerald-400 hover:underline"
+          >
+            All Episodes &rarr;
+          </Link>
+        </div>
+      </CardHeader>
+      <CardContent className="p-5">
+        {episode ? (
+          <div className="space-y-4">
+            <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-slate-800 bg-slate-950">
+              {episode.cover_image ? (
+                <Image
+                  src={episode.cover_image}
+                  alt={episode.title}
+                  fill
+                  unoptimized
+                  className="object-cover"
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center text-xs text-slate-600">
+                  No thumbnail
+                </div>
+              )}
+            </div>
+            <div>
+              <div className="flex items-start justify-between gap-2">
+                <h3 className="font-bold text-base text-white line-clamp-1">
+                  {episode.title}
+                </h3>
+                <Badge
+                  variant={episode.is_active ? "default" : "secondary"}
+                  className="shrink-0 text-[10px]"
+                >
+                  {episode.is_active ? "Active" : "Archived"}
+                </Badge>
+              </div>
+              <div className="mt-2 flex items-center justify-between text-xs text-slate-400">
+                <span className="font-medium text-emerald-400 truncate">
+                  {episode.program_title || "Radio Broadcast"}
+                </span>
+                <DateDisplay value={episode.publish_date} />
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex h-40 items-center justify-center text-xs text-slate-500">
+            No episodes recorded yet.
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+export function RecentArticles({
+  articles,
+}: {
+  articles: DashboardArticleSummary[];
+}) {
+  return (
+    <OverviewList title="Recent Articles" href="/dashboard/articles" count={articles.length}>
+      {articles.map((item) => (
+        <li
+          key={item.id}
+          className="flex items-center justify-between gap-3 border-b border-slate-800/50 py-3 last:border-0"
+        >
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-sm text-slate-100 truncate hover:text-emerald-400">
+              {item.title}
+            </p>
+            <p className="text-xs text-slate-500 mt-0.5">By {item.author || "CBM Radio"}</p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Badge
+              variant={item.is_published ? "default" : "secondary"}
+              className="text-[10px]"
+            >
+              {item.is_published ? "Published" : "Draft"}
+            </Badge>
+            <DateDisplay value={item.published_at} />
+          </div>
+        </li>
+      ))}
+    </OverviewList>
+  );
+}
+
+export function RecentEpisodes({
+  episodes,
+}: {
+  episodes: DashboardEpisodeSummary[];
+}) {
+  return (
+    <OverviewList title="Recent Episodes" href="/dashboard/episodes" count={episodes.length}>
+      {episodes.map((item) => (
+        <li
+          key={item.id}
+          className="flex items-center justify-between gap-3 border-b border-slate-800/50 py-3 last:border-0"
+        >
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-sm text-slate-100 truncate hover:text-emerald-400">
+              {item.title}
+            </p>
+            <p className="text-xs text-emerald-400/90 font-medium mt-0.5 truncate">
+              {item.program_title || "Program"}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Badge
+              variant={item.is_active ? "default" : "secondary"}
+              className="text-[10px]"
+            >
+              {item.is_active ? "Active" : "Draft"}
+            </Badge>
+            <DateDisplay value={item.publish_date} />
+          </div>
+        </li>
+      ))}
+    </OverviewList>
+  );
+}
+
+export function RecentComments({
+  comments,
+}: {
+  comments: DashboardCommentSummary[];
+}) {
+  return (
+    <OverviewList title="Recent Listener Comments" href="/dashboard/comments" count={comments.length}>
+      {comments.map((item) => (
+        <li
+          key={item.id}
+          className="space-y-1.5 border-b border-slate-800/50 py-3 last:border-0"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-semibold text-xs text-slate-200">
+              {item.name || "Anonymous Listener"}
+            </span>
+            <Badge
+              variant={item.is_approved ? "default" : "destructive"}
+              className="text-[10px]"
+            >
+              {item.is_approved ? "Approved" : "Pending"}
+            </Badge>
+          </div>
+          <p className="text-xs text-slate-400 line-clamp-2 italic bg-slate-950/60 p-2 rounded-lg border border-slate-800/60">
+            &ldquo;{item.body}&rdquo;
+          </p>
+          <div className="flex items-center justify-between pt-1">
+            <span className="text-[10px] text-slate-500 font-mono">
+              {item.article !== null
+                ? `Article #${item.article}`
+                : item.episode !== null
+                ? `Episode #${item.episode}`
+                : "General comment"}
+            </span>
+            <DateDisplay value={item.created_at} />
+          </div>
+        </li>
+      ))}
+    </OverviewList>
+  );
+}
+
+function OverviewList({
+  title,
+  href,
+  count,
+  children,
+}: {
+  title: string;
+  href: string;
+  count: number;
+  children: ReactNode;
+}) {
+  return (
+    <Card className="border-slate-800 bg-slate-900/60 flex flex-col justify-between">
+      <CardHeader className="border-b border-slate-800/80 pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm font-bold text-slate-300 uppercase tracking-wider">
+            {title}
+          </CardTitle>
+          <Link
+            href={href}
+            className="text-xs font-semibold text-emerald-400 hover:underline"
+          >
+            View all &rarr;
+          </Link>
+        </div>
+      </CardHeader>
+      <CardContent className="p-4 flex-1">
+        {count > 0 ? (
+          <ul className="space-y-0.5">{children}</ul>
+        ) : (
+          <div className="flex h-32 items-center justify-center text-xs text-slate-500">
+            No entries recorded yet.
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

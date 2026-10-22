@@ -1,9 +1,23 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
+import {
+  Edit2,
+  Plus,
+  Search,
+  Sparkles,
+  Trash2,
+  User,
+  Users,
+  X,
+} from "lucide-react";
 import Toast from "../../components/toast";
 import { extractApiError, SiteImageFields } from "../../components/site-image-fields";
-import { StatusBadge } from "../../components/ui/surfaces";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ConfirmationDialog } from "../../components/ui/confirmation-dialog";
 
 interface TeamMember {
   id: string;
@@ -33,68 +47,18 @@ export default function TeamPage() {
   const [formError, setFormError] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<TeamMember | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetch("/api/team")
       .then((res) => res.json())
       .then((data) => {
         setList(Array.isArray(data) ? data : data.results || []);
-     
         setLoading(false);
       })
       .catch(() => setLoading(false));
   }, []);
-
-  const handleSaveLegacy = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name || !position) return;
-    if (editingMember) {
-      const res = await fetch("/api/team", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-        id: editingMember.id, 
-        name, 
-        role: position,   // 🔄 Maps 'position' to 'role'
-        category, 
-        bio, 
-        photo: image      // 🔄 Maps local 'image' state to 'photo'
-      }),
-      });
-      if (res.ok) {
-        const updated = await res.json();
-        const updatedList = list.map((m) => (m.id === updated.id ? updated : m));
-        setList(updatedList);
-        if (typeof window !== "undefined")
-        
-        setToast("👥 Team member details successfully updated!");
-      }
-    } else {
-      const res = await fetch("/api/team", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ 
-        name, 
-        role: position,   // 🔄 Maps 'position' to 'role' for the backend
-        category, 
-        bio: bio || "Station Staff Member.", 
-        photo: image || "https://unsplash.com" 
-              }),// 🔄 Maps 'image' to 'photo' for the backend
-      });
-
-      if (res.ok) {
-        const newMember = await res.json();
-        const updatedList = [newMember, ...list];
-        setList(updatedList);
-       
-        
-        setToast("👥 New staff profile added to directory live!");
-      }
-    }
-    clearForm();
-  };
-
-  void handleSaveLegacy;
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,8 +85,16 @@ export default function TeamPage() {
       return;
     }
     const saved = await res.json();
-    setList(editingMember ? list.map((m) => (m.id === saved.id ? saved : m)) : [saved, ...list]);
-    setToast(editingMember ? "Team member details successfully updated!" : "New staff profile added to directory!");
+    setList(
+      editingMember
+        ? list.map((m) => (m.id === saved.id ? saved : m))
+        : [saved, ...list]
+    );
+    setToast(
+      editingMember
+        ? "Team member details successfully updated!"
+        : "New staff profile added to directory!"
+    );
     setSubmitting(false);
     clearForm();
   };
@@ -140,17 +112,23 @@ export default function TeamPage() {
     setShowForm(true);
   };
 
-  const handleDelete = async (id: string, memberName: string) => {
-    const res = await fetch(`/api/team?id=${encodeURIComponent(id)}`, { method: "DELETE" });
-    if (!res.ok) {
-      setToast("Unable to delete the team member.");
-      return;
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/team?id=${encodeURIComponent(deleteTarget.id)}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        setToast("Unable to delete the team member.");
+        return;
+      }
+      setList(list.filter((item) => item.id !== deleteTarget.id));
+      setToast(`Profile for “${deleteTarget.name}” removed.`);
+      setDeleteTarget(null);
+    } finally {
+      setDeleting(false);
     }
-    const updatedList = list.filter((item) => item.id !== id);
-    setList(updatedList);
-    
-    setToast(`🗑️ Profile for "${memberName.toUpperCase()}" removed successfully.`);
-    setTimeout(() => setToast(null), 2500);
   };
 
   const clearForm = () => {
@@ -164,108 +142,288 @@ export default function TeamPage() {
     setFormError("");
     setEditingMember(null);
     setShowForm(false);
-    setTimeout(() => setToast(null), 2500);
   };
 
-  if (loading) return <div className="p-4 text-xs text-slate-500 animate-pulse">📡 Fetching Team Directory...</div>;
-
-  const filteredList = list.filter((m) => m.name.toLowerCase().includes(search) || m.position.toLowerCase().includes(search));
+  const filteredList = list.filter(
+    (m) =>
+      m.name.toLowerCase().includes(search.toLowerCase()) ||
+      m.position.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-    <div className="space-y-6 view-fade">
-      <Toast message={toast} />
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-800 pb-4">
+    <div className="space-y-6 pb-12">
+      <Toast message={toast} onDismiss={() => setToast(null)} />
+
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold text-white uppercase tracking-wider">Station Team</h1>
-          <p className="text-xs text-slate-400 mt-0.5">Manage all active radio staff personnel.</p>
+          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
+            <Users className="h-7 w-7 text-emerald-400" />
+            <span>Station Team & Personnel</span>
+          </h1>
+          <p className="text-xs md:text-sm text-slate-400 mt-1">
+            Manage hosts, DJs, producers, station management, and on-air contributors.
+          </p>
         </div>
-        <div className="flex items-center space-x-3">
-          <input type="text" placeholder="🔍 Search team..." value={search} onChange={(e) => setSearch(e.target.value.toLowerCase())} className="bg-slate-900 border border-slate-800 text-white rounded-md px-3 py-1.5 text-xs outline-none focus:border-emerald-500 w-48" />
-          <button onClick={() => { if (showForm) clearForm(); else setShowForm(true); }} className="px-3 py-1.5 bg-emerald-500 text-slate-950 text-xs font-bold rounded-md cursor-pointer">{showForm ? "✕ Dismiss" : "＋ Add Member"}</button>
-        </div>
+        <Button
+          onClick={() => (showForm ? clearForm() : setShowForm(true))}
+          className="bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-2"
+        >
+          {showForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+          <span>{showForm ? "Close Form" : "Add Team Member"}</span>
+        </Button>
       </div>
 
+      {/* Editor Form */}
       {showForm && (
-        <form onSubmit={handleSave} className="bg-slate-900 border border-slate-800 rounded-xl p-5 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs form-slide">
-          <div className="space-y-3">
-            <div>
-              <label className="block text-slate-400 mb-1">Full Name *</label>
-              <input type="text" required value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. John Doe" className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-white outline-none" />
-            </div>
-            <div>
-              <label className="block text-slate-400 mb-1">Position / Role *</label>
-              <input type="text" required value={position} onChange={(e) => setPosition(e.target.value)} placeholder="e.g. Head of Production" className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-white outline-none" />
-            </div>
-            <div>
-              <label className="block text-slate-400 mb-1">Roster Category</label>
-              <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-white outline-none">
-                <option value="Leadership">Leadership</option>
-                <option value="Presenters">Presenters</option>
-                <option value="Producers">Producers</option>
-                <option value="Guest Contributors">Guest Contributors</option>
-              </select>
-            </div>
-          </div>
-          <div className="space-y-3 flex flex-col justify-between">
-            <div>
-              <SiteImageFields
-                currentUrl={editingMember?.image}
-                externalUrl={image}
-                file={selectedFile}
-                onExternalUrlChange={setImage}
-                onFileChange={setSelectedFile}
-              />
-            </div>
-            <div>
-              <label className="block text-slate-400 mb-1">Biography</label>
-              <textarea rows={2} value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Brief introduction notes..." className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-white outline-none resize-none" />
-            </div>
-            <div>
-              <label htmlFor="team-visibility" className="block text-slate-400 mb-1">Public visibility</label>
-              <select id="team-visibility" value={isActive ? "active" : "inactive"} onChange={(e) => setIsActive(e.target.value === "active")} disabled={submitting} aria-describedby="team-visibility-help" className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-white">
-                <option value="active">Active — show this team member publicly</option>
-                <option value="inactive">Inactive — keep this team member hidden</option>
-              </select>
-              <p id="team-visibility-help" className="mt-1 text-[10px] text-slate-500">Controls visibility on the Team page and homepage.</p>
-            </div>
-            <div className="flex justify-end space-x-2">
-              <button type="button" onClick={clearForm} className="px-4 py-2 rounded bg-slate-800 text-slate-300 font-bold">Cancel</button>
-              <button type="submit" disabled={submitting} aria-busy={submitting} className="px-6 py-2 bg-emerald-500 text-slate-950 font-bold rounded uppercase tracking-wider disabled:opacity-50">{submitting ? "Saving…" : editingMember ? "Update Profile" : "Commit Profile"}</button>
-            </div>
-            {formError && <p className="text-rose-400">{formError}</p>}
-          </div>
-        </form>
+        <Card className="border-emerald-500/30 bg-slate-900/95 shadow-xl">
+          <CardHeader className="border-b border-slate-800 pb-4">
+            <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-emerald-400" />
+              <span>{editingMember ? `Edit: ${editingMember.name}` : "Add Staff Profile"}</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <form onSubmit={handleSave} className="space-y-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                {/* Column 1 */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                      Full Name <span className="text-rose-400">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="e.g. Kawooya Mitzvah"
+                      className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:border-emerald-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                      Role / On-Air Position <span className="text-rose-400">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={position}
+                      onChange={(e) => setPosition(e.target.value)}
+                      placeholder="e.g. Presenter, Host, Station Manager"
+                      className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:border-emerald-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                      Roster Category
+                    </label>
+                    <select
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white focus:border-emerald-500 focus:outline-none"
+                    >
+                      <option value="Leadership">Leadership</option>
+                      <option value="Presenters">Presenters</option>
+                      <option value="Producers">Producers</option>
+                      <option value="Guest Contributors">Guest Contributors</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                      Public Visibility
+                    </label>
+                    <select
+                      value={isActive ? "active" : "inactive"}
+                      onChange={(e) => setIsActive(e.target.value === "active")}
+                      className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white focus:border-emerald-500 focus:outline-none"
+                    >
+                      <option value="active">Active — Publicly displayed</option>
+                      <option value="inactive">Inactive — Hidden from public site</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Column 2 */}
+                <div className="space-y-4">
+                  <SiteImageFields
+                    currentUrl={editingMember?.image}
+                    externalUrl={image}
+                    file={selectedFile}
+                    onExternalUrlChange={setImage}
+                    onFileChange={setSelectedFile}
+                  />
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                      Biography / Introduction
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value)}
+                      placeholder="Brief notes about the presenter, career highlights, shows they host..."
+                      className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:border-emerald-500 focus:outline-none"
+                    />
+                  </div>
+
+                  {formError && (
+                    <p className="rounded-lg bg-rose-500/10 border border-rose-500/20 p-2.5 text-xs text-rose-400">
+                      {formError}
+                    </p>
+                  )}
+
+                  <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+                    <Button variant="outline" type="button" onClick={clearForm} size="sm">
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={submitting}
+                      size="sm"
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white"
+                    >
+                      {submitting
+                        ? "Saving…"
+                        : editingMember
+                        ? "Update Member"
+                        : "Save Member"}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
       )}
 
-      {filteredList.length === 0 ? (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-xs text-slate-500 font-mono tracking-wide animate-pulse">📡 No staff profiles match your query criteria.</div>
+      {/* Search Input */}
+      <div className="relative">
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+        <input
+          type="text"
+          value={search}
+          placeholder="Search team by name or role..."
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full rounded-xl border border-slate-800 bg-slate-900/60 pl-10 pr-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-emerald-500 focus:outline-none backdrop-blur-sm"
+        />
+        {search && (
+          <button
+            onClick={() => setSearch("")}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs"
+          >
+            Clear
+          </button>
+        )}
+      </div>
+
+      {/* Team Roster Grid */}
+      {loading ? (
+        <div className="flex h-40 items-center justify-center text-xs text-slate-500">
+          Fetching team directory…
+        </div>
+      ) : filteredList.length === 0 ? (
+        <Card className="border-slate-800 bg-slate-900/40 p-12 text-center">
+          <Users className="mx-auto h-12 w-12 text-slate-600" />
+          <h3 className="mt-3 text-sm font-semibold text-white">No Team Profiles Found</h3>
+          <p className="mt-1 text-xs text-slate-400">
+            {search ? "No profiles matched your search." : "Click 'Add Team Member' to create the first profile."}
+          </p>
+        </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredList.map((m) => (
-            <div key={m.id} className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm flex flex-col sm:flex-row group hover:border-slate-700 transition">
-              <div className="relative w-full sm:w-32 h-36 bg-slate-950 border-b sm:border-b-0 sm:border-r border-slate-800 shrink-0">
-                <Image src={m.image || "https://unsplash.com"} alt={m.name} fill className="w-full h-full object-cover" />
-              </div>
-              <div className="p-4 flex-1 min-w-0 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="text-sm font-bold text-white uppercase tracking-wide truncate">{m.name}</h3>
-                    <StatusBadge status={m.is_active ? "active" : "inactive"} label={m.is_active ? "Active" : "Inactive"} />
-                    <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded font-sans shrink-0">{m.category}</span>
+            <Card
+              key={m.id}
+              className="group flex flex-col justify-between overflow-hidden border-slate-800 bg-slate-900/60 transition-all duration-200 hover:border-slate-700 hover:bg-slate-900/90 hover:shadow-xl hover:shadow-emerald-950/20"
+            >
+              <div>
+                {/* Photo Header */}
+                <div className="relative aspect-square w-full overflow-hidden bg-slate-950 sm:aspect-[4/3]">
+                  {m.image ? (
+                    <Image
+                      src={m.image}
+                      alt={m.name}
+                      fill
+                      unoptimized
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-900 to-slate-950 text-slate-700">
+                      <User className="h-16 w-16" />
+                    </div>
+                  )}
+
+                  <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
+                    <Badge
+                      variant={m.is_active ? "default" : "secondary"}
+                      className="text-[10px] shadow-md"
+                    >
+                      {m.is_active ? "Active" : "Hidden"}
+                    </Badge>
                   </div>
-                  <p className="text-[11px] text-slate-400 font-semibold mt-0.5">{m.position}</p>
-                  <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed pt-1">{m.bio}</p>
+
+                  <div className="absolute bottom-2 left-2">
+                    <span className="rounded bg-black/75 px-2 py-0.5 text-[11px] font-semibold text-emerald-400 backdrop-blur-xs">
+                      {m.category || "Staff"}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center justify-end space-x-3 pt-2 border-t border-slate-800/60 font-bold text-xs">
-                  <button onClick={() => startEdit(m)} className="text-slate-400 hover:text-emerald-400 transition">Edit</button>
-                  <span className="text-slate-800">|</span>
-                  <button onClick={() => handleDelete(m.id, m.name)} className="text-rose-500 hover:text-rose-400 transition">Delete</button>
+
+                {/* Profile Details */}
+                <div className="p-5 space-y-2">
+                  <h3 className="font-bold text-lg text-white group-hover:text-emerald-400 transition-colors">
+                    {m.name}
+                  </h3>
+                  <p className="text-xs font-semibold text-slate-300">{m.position}</p>
+                  <p className="text-xs text-slate-400 line-clamp-3 leading-relaxed pt-1">
+                    {m.bio || "No biography details added yet."}
+                  </p>
                 </div>
               </div>
-            </div>
+
+              {/* Actions Footer */}
+              <div className="flex items-center justify-between border-t border-slate-800/80 bg-slate-950/40 px-5 py-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => startEdit(m)}
+                  className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-emerald-400"
+                >
+                  <Edit2 className="h-3.5 w-3.5" />
+                  <span>Edit</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setDeleteTarget(m)}
+                  className="flex items-center gap-1.5 text-xs text-rose-400 hover:bg-rose-500/10 hover:text-rose-300"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  <span>Delete</span>
+                </Button>
+              </div>
+            </Card>
           ))}
         </div>
       )}
+
+      {/* Delete Confirmation */}
+      <ConfirmationDialog
+        open={!!deleteTarget}
+        title="Remove Team Member?"
+        description={
+          deleteTarget
+            ? `Are you sure you want to remove “${deleteTarget.name}”?`
+            : ""
+        }
+        loading={deleting}
+        onConfirm={() => void confirmDelete()}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }
