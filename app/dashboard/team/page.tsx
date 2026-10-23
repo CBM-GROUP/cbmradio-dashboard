@@ -95,7 +95,7 @@ export default function TeamPage() {
     body.append("name", name);
     body.append("role", position);
     body.append("category", category);
-    body.append("bio", bio || "Station Staff Member.");
+    body.append("bio", bio.trim());
     body.append("photo", image);
     body.append("is_active", String(isActive));
     if (selectedFile) body.append("uploaded_photo", selectedFile);
@@ -129,7 +129,7 @@ export default function TeamPage() {
     setName(m.name);
     setPosition(m.position || "");
     setCategory(m.category || "Leadership");
-    setBio(m.bio);
+    setBio(m.bio === "Station Staff Member." ? "" : (m.bio || ""));
     setImage(m.externalImage || "");
     setIsActive(m.is_active);
     setSelectedFile(null);
@@ -245,7 +245,7 @@ export default function TeamPage() {
                       required
                       value={position}
                       onChange={(e) => setPosition(e.target.value)}
-                      placeholder="e.g. Senior Pastor & Morning Drive Host"
+                      placeholder="e.g. Station Presenter, Host, Creative Director, CTO"
                       className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white dark:placeholder:text-zinc-600"
                     />
                   </div>
@@ -293,15 +293,18 @@ export default function TeamPage() {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
-                      Biography & Ministry Introduction
+                      Staff Role Note & Biography (Optional)
                     </label>
                     <textarea
-                      rows={4}
+                      rows={3}
                       value={bio}
                       onChange={(e) => setBio(e.target.value)}
-                      placeholder="Brief notes about the presenter, their background, programs they host..."
+                      placeholder="Optional role description or bio displayed under the role on their profile card..."
                       className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white dark:placeholder:text-zinc-600"
                     />
+                    <p className="mt-1 text-[11px] text-slate-400 dark:text-zinc-500">
+                      Displayed below the member&apos;s title on the public site profile card. Leave blank if not needed.
+                    </p>
                   </div>
 
                   {formError && (
