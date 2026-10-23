@@ -4,7 +4,7 @@ import {
   BarChart3,
   Film,
   Image as ImageIcon,
-  MessageSquare,
+  LayoutTemplate,
   Newspaper,
   Radio,
   RefreshCw,
@@ -18,7 +18,6 @@ import {
   LatestEpisodeCard,
   OverviewMetricsGrid,
   RecentArticles,
-  RecentComments,
   RecentEpisodes,
   StationLiveHero,
 } from "../components/dashboard/overview-cards";
@@ -160,12 +159,11 @@ export default function DashboardPage() {
       {/* Real-Time Activity Streams */}
       <section aria-labelledby="activity-title" className="space-y-3">
         <h2 id="activity-title" className="text-xs font-bold tracking-widest text-slate-400 dark:text-zinc-500 uppercase">
-          Live Content Stream & Listener Activity
+          Live Content Stream & Editorial Activity
         </h2>
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <RecentEpisodes episodes={overview.recent_episodes} />
           <RecentArticles articles={overview.recent_articles} />
-          <RecentComments comments={overview.recent_comments} />
         </div>
       </section>
 
@@ -221,11 +219,11 @@ export default function DashboardPage() {
               <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">Staff Team</span>
             </Link>
             <Link
-              href="/dashboard/comments"
+              href="/dashboard/page-sections"
               className="flex flex-col items-center justify-center gap-2 rounded-lg border border-slate-200/80 bg-slate-50/50 p-3.5 text-center transition hover:border-emerald-500/40 hover:bg-emerald-50/40 dark:border-zinc-800 dark:bg-zinc-900/40 dark:hover:border-emerald-500/40 dark:hover:bg-emerald-950/20"
             >
-              <MessageSquare className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-              <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">Feedback</span>
+              <LayoutTemplate className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">Sections</span>
             </Link>
             <Link
               href="/dashboard/site-settings/social-links"

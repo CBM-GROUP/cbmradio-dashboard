@@ -11,7 +11,7 @@ import {
   Film,
   Newspaper,
   Image,
-  MessageSquare,
+  Trophy,
   SunMoon,
 } from "lucide-react";
 
@@ -41,13 +41,9 @@ export default function Sidebar({
     { href: "/dashboard/team", label: "Station Team", icon: Users },
     { href: "/dashboard/programs", label: "Radio Programs", icon: Radio },
     { href: "/dashboard/episodes", label: "Episode Archives", icon: Film },
+    { href: "/dashboard/charts", label: "Music Charts", icon: Trophy },
     { href: "/dashboard/articles", label: "News Articles", icon: Newspaper },
     { href: "/dashboard/gallery", label: "Media Gallery", icon: Image },
-    {
-      href: "/dashboard/comments",
-      label: "User Comments",
-      icon: MessageSquare,
-    },
   ];
 
   const activeLinkClass = resolvedDark

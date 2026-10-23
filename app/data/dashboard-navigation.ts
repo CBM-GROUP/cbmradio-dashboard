@@ -1,4 +1,4 @@
-import { Contact, Film, Image, Images, LayoutDashboard, LayoutTemplate, ListOrdered, MessageSquare, Newspaper, Radio, Share2, Users, type LucideIcon } from "lucide-react";
+import { Contact, Film, Image, Images, LayoutDashboard, LayoutTemplate, ListOrdered, Newspaper, Radio, Share2, Users, type LucideIcon } from "lucide-react";
 
 export type DashboardNavigationItem = { href: string; label: string; icon: LucideIcon; exact?: boolean };
 export type DashboardNavigationGroup = { label: string; items: DashboardNavigationItem[] };
@@ -13,8 +13,7 @@ export const dashboardNavigation: DashboardNavigationGroup[] = [
     { href: "/dashboard/gallery", label: "Gallery", icon: Image },
   ] },
   { label: "People and Engagement", items: [
-    { href: "/dashboard/team", label: "Team", icon: Users },
-    { href: "/dashboard/comments", label: "Comments", icon: MessageSquare },
+    { href: "/dashboard/team", label: "Station Team", icon: Users },
   ] },
   { label: "Site Management", items: [
     { href: "/dashboard/site-settings/social-links", label: "Social Links", icon: Share2 },

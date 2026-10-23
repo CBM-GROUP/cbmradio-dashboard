@@ -11,7 +11,6 @@ import {
   Film,
   FileText,
   Image as ImageIcon,
-  MessageSquare,
   Newspaper,
   Play,
   Plus,
@@ -23,7 +22,6 @@ import {
 
 import type {
   DashboardArticleSummary,
-  DashboardCommentSummary,
   DashboardEpisodeSummary,
   DashboardOverviewCounts,
 } from "../../types/dashboard-overview";
@@ -267,9 +265,9 @@ export function OverviewMetricsGrid({ counts }: { counts: DashboardOverviewCount
               <ImageIcon className="h-3 w-3 text-emerald-500" />
               <span>{counts.gallery_items} Photos</span>
             </span>
-            <span className="flex items-center gap-1 font-medium text-teal-600 dark:text-teal-400">
-              <MessageSquare className="h-3 w-3" />
-              <span>{counts.comments} Comments</span>
+            <span className="flex items-center gap-1 font-medium text-emerald-600 dark:text-emerald-400">
+              <Radio className="h-3 w-3" />
+              <span>Studio Live</span>
             </span>
           </div>
         </Card>
@@ -526,48 +524,6 @@ export function RecentEpisodes({
               {item.is_active ? "Active" : "Archived"}
             </Badge>
             <DateDisplay value={item.publish_date} />
-          </div>
-        </li>
-      ))}
-    </OverviewList>
-  );
-}
-
-export function RecentComments({
-  comments,
-}: {
-  comments: DashboardCommentSummary[];
-}) {
-  return (
-    <OverviewList title="Listener Feedback" href="/dashboard/comments" count={comments.length}>
-      {comments.map((item) => (
-        <li
-          key={item.id}
-          className="space-y-1.5 border-b border-slate-100 dark:border-zinc-800/60 py-3 last:border-0"
-        >
-          <div className="flex items-center justify-between gap-2">
-            <span className="font-semibold text-xs text-slate-700 dark:text-zinc-200">
-              {item.name || "Anonymous Listener"}
-            </span>
-            <Badge
-              variant={item.is_approved ? "default" : "destructive"}
-              className="text-[10px]"
-            >
-              {item.is_approved ? "Approved" : "Pending"}
-            </Badge>
-          </div>
-          <p className="text-xs text-slate-600 dark:text-zinc-300 line-clamp-2 italic bg-slate-50 border border-slate-200/80 p-2 rounded-md dark:bg-zinc-900/60 dark:border-zinc-800">
-            &ldquo;{item.body}&rdquo;
-          </p>
-          <div className="flex items-center justify-between pt-0.5">
-            <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-mono">
-              {item.article !== null
-                ? `Article #${item.article}`
-                : item.episode !== null
-                ? `Episode #${item.episode}`
-                : "General Feedback"}
-            </span>
-            <DateDisplay value={item.created_at} />
           </div>
         </li>
       ))}
