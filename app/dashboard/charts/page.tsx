@@ -581,88 +581,199 @@ export default function ChartsDashboardPage() {
       ) : (
         <>
           {/* Chart Selection & Control Deck */}
-          <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-xs dark:border-zinc-800/80 dark:bg-zinc-950/80">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              {/* Left: Chart Switcher Selector */}
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                <span className="text-xs font-semibold text-slate-500 dark:text-zinc-400 shrink-0">
-                  Select Chart:
+          <div className="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs dark:border-zinc-800/80 dark:bg-zinc-950/80 transition-all">
+            {/* Mobile View (< md): Compact select with quick status */}
+            <div className="flex flex-col gap-3 md:hidden">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
+                  Select Chart
                 </span>
-                <div className="relative min-w-[260px] sm:min-w-[320px]">
-                  <select
-                    value={selectedSlug}
-                    onChange={(e) => setSelectedSlug(e.target.value)}
-                    className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3.5 py-2 text-xs font-semibold text-slate-800 shadow-2xs focus:border-amber-500 focus:outline-hidden focus:ring-1 focus:ring-amber-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+                {activeChart && (
+                  <Badge
+                    variant={activeChart.is_active ? "default" : "secondary"}
+                    className={
+                      activeChart.is_active
+                        ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[11px]"
+                        : "text-[11px]"
+                    }
                   >
-                    {charts.map((c) => (
-                      <option key={c.id} value={c.slug}>
-                        {c.title} ({c.entries_count ?? 0} tracks) • {c.is_active ? "Public" : "Draft"}
-                      </option>
-                    ))}
-                  </select>
+                    {activeChart.is_active ? "Public Active" : "Draft"}
+                  </Badge>
+                )}
+              </div>
+              <select
+                value={selectedSlug}
+                onChange={(e) => setSelectedSlug(e.target.value)}
+                className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-xs font-semibold text-slate-900 shadow-2xs focus:border-amber-500 focus:outline-hidden focus:ring-1 focus:ring-amber-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+              >
+                {charts.map((c) => (
+                  <option key={c.id} value={c.slug}>
+                    {c.title} ({c.entries_count ?? 0} tracks) • {c.is_active ? "Public" : "Draft"}
+                  </option>
+                ))}
+              </select>
+
+              {/* Mobile actions */}
+              {activeChart && (
+                <div className="flex items-center justify-between border-t border-slate-100 pt-3 dark:border-zinc-800/80">
+                  <Badge variant="outline" className="text-[11px]">
+                    {chartTypeLabel}
+                  </Badge>
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={openEditChartModal}
+                      className="h-7 px-2.5 text-xs"
+                    >
+                      <Pencil className="h-3 w-3 mr-1" />
+                      Edit
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void loadChartDetail(selectedSlug)}
+                      disabled={entriesLoading}
+                      className="h-7 px-2.5 text-xs"
+                    >
+                      <RefreshCw className={`h-3 w-3 ${entriesLoading ? "animate-spin" : ""}`} />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setDeleteChartSlug(activeChart.slug)}
+                      className="h-7 px-2 text-rose-500 hover:text-rose-600 hover:bg-rose-50"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Tablet & Desktop View (md & lg screens): Interactive Segmented Bar */}
+            <div className="hidden md:flex md:flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+              {/* Left: Interactive Segmented Chart Tabs */}
+              <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
+                <div className="flex items-center gap-2 mr-1">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:bg-amber-400/10 dark:text-amber-400 ring-1 ring-amber-500/20">
+                    <Trophy className="h-4 w-4" />
+                  </div>
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
+                    Charts:
+                  </span>
                 </div>
 
-                {/* Quick switcher buttons for recent charts */}
-                <div className="hidden xl:flex items-center gap-1.5 overflow-x-auto pl-2 border-l border-slate-200 dark:border-zinc-800">
-                  {charts.slice(0, 4).map((c) => {
+                <div className="flex flex-wrap items-center gap-2">
+                  {charts.map((c) => {
                     const isSelected = c.slug === selectedSlug;
                     return (
                       <button
                         key={c.id}
                         type="button"
                         onClick={() => setSelectedSlug(c.slug)}
-                        className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                        className={`group relative flex items-center gap-2.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all duration-200 border ${
                           isSelected
-                            ? "bg-slate-900 text-white dark:bg-white dark:text-black font-semibold"
-                            : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                            ? "bg-slate-900 text-white border-slate-900 shadow-sm dark:bg-white dark:text-zinc-950 dark:border-white ring-2 ring-slate-900/10 dark:ring-white/20"
+                            : "bg-slate-50/80 text-slate-700 border-slate-200 hover:bg-slate-100 hover:border-slate-300 dark:bg-zinc-900/70 dark:text-zinc-300 dark:border-zinc-800 dark:hover:bg-zinc-850 dark:hover:border-zinc-700"
                         }`}
                       >
-                        {c.title}
+                        {/* Status indicator dot */}
+                        <span
+                          className={`h-2 w-2 rounded-full shrink-0 transition-opacity ${
+                            c.is_active
+                              ? isSelected
+                                ? "bg-emerald-400 dark:bg-emerald-600 ring-2 ring-emerald-400/40"
+                                : "bg-emerald-500 dark:bg-emerald-400"
+                              : isSelected
+                              ? "bg-slate-400 dark:bg-zinc-400"
+                              : "bg-slate-300 dark:bg-zinc-600"
+                          }`}
+                          title={c.is_active ? "Public Active" : "Draft"}
+                        />
+
+                        {/* Title */}
+                        <span className="truncate max-w-[180px] lg:max-w-[220px]">
+                          {c.title}
+                        </span>
+
+                        {/* Track count pill */}
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                            isSelected
+                              ? "bg-slate-800 text-slate-200 dark:bg-zinc-200 dark:text-zinc-900"
+                              : "bg-slate-200/80 text-slate-600 group-hover:bg-slate-300/80 dark:bg-zinc-800 dark:text-zinc-400 dark:group-hover:bg-zinc-750"
+                          }`}
+                        >
+                          {c.entries_count ?? 0}
+                        </span>
                       </button>
                     );
                   })}
                 </div>
+
+                {/* If there are more than 4 charts, also show a compact select jump menu */}
+                {charts.length > 4 && (
+                  <div className="relative inline-block ml-1">
+                    <select
+                      value={selectedSlug}
+                      onChange={(e) => setSelectedSlug(e.target.value)}
+                      className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-600 shadow-2xs hover:bg-slate-50 focus:border-amber-500 focus:outline-hidden dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300"
+                      title="Jump to another chart"
+                    >
+                      <option disabled value="">
+                        Quick Jump…
+                      </option>
+                      {charts.map((c) => (
+                        <option key={c.id} value={c.slug}>
+                          {c.title} ({c.entries_count ?? 0} tracks)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
 
               {/* Right: Chart Metadata & Actions */}
               {activeChart && (
-                <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3 lg:border-t-0 lg:pt-0">
-                  <Badge
-                    variant="outline"
-                    className="border-slate-200 bg-slate-50 text-xs font-medium text-slate-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300"
-                  >
-                    {chartTypeLabel}
-                  </Badge>
-
-                  {activeChart.is_active ? (
-                    <Badge className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/10 border-emerald-500/20 dark:text-emerald-400 gap-1 text-xs">
-                      <Eye className="h-3 w-3" />
-                      Public Active
+                <div className="flex items-center gap-2 shrink-0 border-t border-slate-100 pt-3 lg:border-t-0 lg:pt-0 lg:pl-3 lg:border-l lg:border-slate-200 dark:border-zinc-800">
+                  <div className="flex items-center gap-1.5 mr-1">
+                    <Badge
+                      variant="outline"
+                      className="border-slate-200/90 bg-slate-50 text-[11px] font-medium text-slate-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300"
+                    >
+                      {chartTypeLabel}
                     </Badge>
-                  ) : (
-                    <Badge variant="secondary" className="gap-1 text-xs text-slate-500">
-                      <EyeOff className="h-3 w-3" />
-                      Draft / Hidden
-                    </Badge>
-                  )}
 
-                  <div className="h-4 w-px bg-slate-200 dark:bg-zinc-800 mx-1 hidden sm:block" />
+                    {activeChart.is_active ? (
+                      <Badge className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/10 border-emerald-500/20 dark:text-emerald-400 gap-1 text-[11px]">
+                        <Eye className="h-3 w-3" />
+                        Active
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary" className="gap-1 text-[11px] text-slate-500">
+                        <EyeOff className="h-3 w-3" />
+                        Draft
+                      </Badge>
+                    )}
+                  </div>
 
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={openEditChartModal}
-                    className="h-8 gap-1.5 text-xs border-slate-300 dark:border-zinc-700 font-medium"
+                    className="h-8 gap-1.5 text-xs border-slate-300 hover:bg-slate-50 dark:border-zinc-700 dark:hover:bg-zinc-800 font-semibold"
                   >
                     <Pencil className="h-3 w-3" />
-                    Edit Chart
+                    Edit
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => void loadChartDetail(selectedSlug)}
                     disabled={entriesLoading}
-                    className="h-8 gap-1.5 text-xs border-slate-300 dark:border-zinc-700 font-medium"
+                    className="h-8 gap-1.5 text-xs border-slate-300 hover:bg-slate-50 dark:border-zinc-700 dark:hover:bg-zinc-800 font-semibold"
+                    title="Reload track data"
                   >
                     <RefreshCw className={`h-3 w-3 ${entriesLoading ? "animate-spin" : ""}`} />
                     Refresh
@@ -671,8 +782,8 @@ export default function ChartsDashboardPage() {
                     variant="ghost"
                     size="sm"
                     onClick={() => setDeleteChartSlug(activeChart.slug)}
-                    className="h-8 px-2 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
-                    title="Delete chart"
+                    className="h-8 px-2.5 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                    title="Delete entire chart"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
