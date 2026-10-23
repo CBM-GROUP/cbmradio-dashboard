@@ -24,8 +24,10 @@ import {
   Sparkles,
   Trash2,
   Trophy,
+  Upload,
   Video,
   X,
+  ImageIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -81,6 +83,9 @@ export interface ChartSummary {
   slug: string;
   chart_type: string;
   edition_date: string;
+  cover_image?: string;
+  cover_image_url?: string;
+  coverImage?: string;
   is_active: boolean;
   entries_count?: number;
   updated_at?: string;
@@ -88,7 +93,6 @@ export interface ChartSummary {
 
 export interface ChartDetail extends ChartSummary {
   description?: string;
-  cover_image?: string;
   entries: ChartEntry[];
 }
 
@@ -115,6 +119,7 @@ const initialChartForm = {
   description: "",
   edition_date: new Date().toISOString().split("T")[0],
   chart_type: "hot_100",
+  cover_image_url: "",
   is_active: true,
 };
 
@@ -158,8 +163,11 @@ export default function ChartsDashboardPage() {
 
   const [chartModalOpen, setChartModalOpen] = useState(false);
   const [chartForm, setChartForm] = useState(initialChartForm);
+  const [chartFile, setChartFile] = useState<File | null>(null);
+  const [chartFilePreview, setChartFilePreview] = useState("");
   const [isEditingChart, setIsEditingChart] = useState(false);
   const [chartSaving, setChartSaving] = useState(false);
+  const [quickHeroUploading, setQuickHeroUploading] = useState(false);
 
   // Deletion confirmations
   const [deleteEntryId, setDeleteEntryId] = useState<string | null>(null);
@@ -396,6 +404,8 @@ export default function ChartsDashboardPage() {
       ...initialChartForm,
       slug: `chart-${Date.now().toString().slice(-4)}`,
     });
+    setChartFile(null);
+    setChartFilePreview("");
     setChartModalOpen(true);
   };
 
@@ -408,41 +418,87 @@ export default function ChartsDashboardPage() {
       description: activeChart.description || "",
       edition_date: activeChart.edition_date,
       chart_type: activeChart.chart_type || "hot_100",
+      cover_image_url: activeChart.cover_image_url || activeChart.cover_image || activeChart.coverImage || "",
       is_active: activeChart.is_active,
     });
+    setChartFile(null);
+    setChartFilePreview("");
     setChartModalOpen(true);
+  };
+
+  // Quick 1-click Hero Upgrade from chart header
+  const handleQuickHeroUpgrade = async (file: File) => {
+    if (!activeChart) return;
+    setQuickHeroUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("slug", activeChart.slug);
+      formData.append("cover_image", file);
+      await apiClient.put("/api/charts", formData);
+      setToast({ message: `Updated hero image for "${activeChart.title}"`, variant: "success" });
+      void loadCharts(activeChart.slug);
+      void loadChartDetail(activeChart.slug);
+    } catch (err) {
+      if (isApiError(err)) {
+        setToast({ message: err.message, variant: "error" });
+      } else {
+        setToast({ message: "Failed to upgrade chart hero image.", variant: "error" });
+      }
+    } finally {
+      setQuickHeroUploading(false);
+    }
   };
 
   const handleSaveChart = async (e: React.FormEvent) => {
     e.preventDefault();
     setChartSaving(true);
     try {
-      if (isEditingChart) {
-        await apiClient.put("/api/charts", {
-          slug: chartForm.slug,
-          title: chartForm.title.trim(),
-          description: chartForm.description.trim(),
-          edition_date: chartForm.edition_date,
-          chart_type: chartForm.chart_type,
-          is_active: chartForm.is_active,
-        });
-        setToast({ message: `Updated chart "${chartForm.title}"`, variant: "success" });
-        setChartModalOpen(false);
-        void loadCharts(chartForm.slug);
-        void loadChartDetail(chartForm.slug);
+      const targetSlug = isEditingChart
+        ? chartForm.slug
+        : chartForm.slug.trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-");
+
+      if (chartFile) {
+        const formData = new FormData();
+        formData.append("slug", targetSlug);
+        formData.append("title", chartForm.title.trim());
+        formData.append("description", chartForm.description.trim());
+        formData.append("edition_date", chartForm.edition_date);
+        formData.append("chart_type", chartForm.chart_type);
+        formData.append("is_active", String(chartForm.is_active));
+        formData.append("cover_image", chartFile);
+
+        if (isEditingChart) {
+          await apiClient.put("/api/charts", formData);
+          setToast({ message: `Updated chart "${chartForm.title}"`, variant: "success" });
+        } else {
+          await apiClient.post("/api/charts", formData);
+          setToast({ message: `Created new chart "${chartForm.title}"`, variant: "success" });
+        }
       } else {
-        await apiClient.post("/api/charts", {
+        const payload: Record<string, unknown> = {
+          slug: targetSlug,
           title: chartForm.title.trim(),
-          slug: chartForm.slug.trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-"),
           description: chartForm.description.trim(),
           edition_date: chartForm.edition_date,
           chart_type: chartForm.chart_type,
           is_active: chartForm.is_active,
-        });
-        setToast({ message: `Created new chart "${chartForm.title}"`, variant: "success" });
-        setChartModalOpen(false);
-        void loadCharts(chartForm.slug);
+        };
+        if (chartForm.cover_image_url.trim()) {
+          payload.cover_image = chartForm.cover_image_url.trim();
+        }
+
+        if (isEditingChart) {
+          await apiClient.put("/api/charts", payload);
+          setToast({ message: `Updated chart "${chartForm.title}"`, variant: "success" });
+        } else {
+          await apiClient.post("/api/charts", payload);
+          setToast({ message: `Created new chart "${chartForm.title}"`, variant: "success" });
+        }
       }
+
+      setChartModalOpen(false);
+      void loadCharts(targetSlug);
+      void loadChartDetail(targetSlug);
     } catch (err) {
       if (isApiError(err)) {
         setToast({ message: err.message, variant: "error" });
@@ -791,6 +847,87 @@ export default function ChartsDashboardPage() {
               )}
             </div>
           </div>
+
+          {/* Active Chart Dedicated Hero Banner Card */}
+          {activeChart && (
+            <div className="relative overflow-hidden rounded-2xl border border-slate-200/90 bg-slate-900 text-white shadow-md dark:border-zinc-800">
+              {/* Background cover image if present */}
+              {(activeChart.cover_image_url || activeChart.cover_image || activeChart.coverImage) ? (
+                <>
+                  <Image
+                    src={activeChart.cover_image_url || activeChart.cover_image || activeChart.coverImage || ""}
+                    alt={`${activeChart.title} Hero Banner`}
+                    fill
+                    className="object-cover object-center opacity-35 transition-transform duration-700 hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/85 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-black/30" />
+                </>
+              ) : (
+                <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-zinc-900 to-amber-950/40" />
+              )}
+
+              <div className="relative z-10 p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="space-y-2 max-w-2xl">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 gap-1 text-[11px] font-semibold">
+                      <Trophy className="h-3 w-3" />
+                      {chartTypeLabel}
+                    </Badge>
+                    <Badge variant="outline" className="border-white/20 text-white/80 gap-1 text-[11px]">
+                      <Calendar className="h-3 w-3 text-amber-400" />
+                      {activeChart.edition_date || "Current Edition"}
+                    </Badge>
+                    {activeChart.is_active ? (
+                      <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 gap-1 text-[11px]">
+                        <Eye className="h-3 w-3" />
+                        Live on Public Site
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-zinc-700/60 text-zinc-300 border-zinc-600 gap-1 text-[11px]">
+                        <EyeOff className="h-3 w-3" />
+                        Draft
+                      </Badge>
+                    )}
+                  </div>
+
+                  <h2 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-white">
+                    {activeChart.title}
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-300 line-clamp-2">
+                    {activeChart.description || "Official weekly countdown and gospel music ranking."}
+                  </p>
+                </div>
+
+                {/* Hero Image Actions / Quick Upgrade */}
+                <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+                  <label className="relative inline-flex items-center gap-1.5 rounded-xl bg-amber-500 px-3.5 py-2 text-xs font-bold text-slate-950 shadow-sm transition-all hover:bg-amber-400 cursor-pointer">
+                    <Upload className="h-3.5 w-3.5" />
+                    <span>{quickHeroUploading ? "Upgrading..." : "Upgrade Hero Image"}</span>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      disabled={quickHeroUploading}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) void handleQuickHeroUpgrade(file);
+                      }}
+                      className="sr-only"
+                    />
+                  </label>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={openEditChartModal}
+                    className="border-white/20 bg-white/10 text-white hover:bg-white/20 hover:text-white text-xs font-semibold backdrop-blur-xs"
+                  >
+                    <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                    Edit Chart
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Quick Metrics Bar (Executive summary of the active chart) */}
           {activeChart && (
@@ -1831,6 +1968,66 @@ export default function ChartsDashboardPage() {
                   onChange={(e) => setChartForm({ ...chartForm, description: e.target.value })}
                   className="mt-1 text-xs"
                 />
+              </div>
+
+              {/* Dedicated Chart Hero Image */}
+              <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-3.5 dark:border-zinc-800 dark:bg-zinc-900/50">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-semibold flex items-center gap-1.5">
+                    <ImageIcon className="h-3.5 w-3.5 text-amber-500" />
+                    Dedicated Chart Hero Image
+                  </Label>
+                  <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-medium">
+                    16:9 or Banner format recommended
+                  </span>
+                </div>
+                
+                <div className="flex items-center gap-4">
+                  <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white dark:border-zinc-700 dark:bg-zinc-800 shadow-2xs">
+                    {chartFilePreview || chartForm.cover_image_url ? (
+                      <Image
+                        src={chartFilePreview || chartForm.cover_image_url}
+                        alt="Hero Preview"
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full flex-col items-center justify-center text-slate-400 dark:text-zinc-500">
+                        <ImageIcon className="h-5 w-5" />
+                        <span className="text-[9px] mt-0.5">No Hero</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex-1 space-y-1.5">
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] || null;
+                        setChartFile(file);
+                        if (file) {
+                          setChartFilePreview(URL.createObjectURL(file));
+                        } else {
+                          setChartFilePreview("");
+                        }
+                      }}
+                      className="w-full text-xs file:mr-2 file:rounded-md file:border-0 file:bg-slate-200 file:px-2.5 file:py-1 file:text-xs file:font-semibold hover:file:bg-slate-300 dark:file:bg-zinc-800 dark:file:text-zinc-200"
+                    />
+                    <Input
+                      type="url"
+                      placeholder="Or enter image URL (https://…)"
+                      value={chartForm.cover_image_url}
+                      onChange={(e) => {
+                        setChartForm({ ...chartForm, cover_image_url: e.target.value });
+                        if (e.target.value && !chartFile) {
+                          setChartFilePreview("");
+                        }
+                      }}
+                      className="h-7 text-[11px]"
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/50 p-3.5 dark:border-zinc-800 dark:bg-zinc-900/50">

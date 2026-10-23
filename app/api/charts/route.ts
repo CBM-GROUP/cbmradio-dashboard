@@ -62,6 +62,10 @@ export async function POST(request: Request) {
       if (!form.has("is_active")) form.set("is_active", "true");
       const currentChartType = form.get("chart_type") || form.get("chartType");
       form.set("chart_type", normalizeChartType(currentChartType, "hot_100"));
+      if (form.get("cover_image") instanceof File) {
+        form.set("uploaded_cover_image", form.get("cover_image")!);
+        form.delete("cover_image");
+      }
       body = form;
     } else {
       const incoming = asRecord(await request.json());
@@ -71,6 +75,7 @@ export async function POST(request: Request) {
         description: text(incoming.description),
         edition_date: text(incoming.edition_date, text(incoming.editionDate)),
         chart_type: normalizeChartType(incoming.chart_type ?? incoming.chartType, "hot_100"),
+        cover_image: text(incoming.cover_image, text(incoming.cover_image_url)),
         display_order: number(incoming.display_order) ?? number(incoming.displayOrder) ?? 0,
         is_active: incoming.is_active !== false,
       });
@@ -104,6 +109,10 @@ export async function PUT(request: Request) {
         const ct = form.get("chart_type") || form.get("chartType");
         form.set("chart_type", normalizeChartType(ct, "hot_100"));
       }
+      if (form.get("cover_image") instanceof File) {
+        form.set("uploaded_cover_image", form.get("cover_image")!);
+        form.delete("cover_image");
+      }
       body = form;
     } else {
       const incoming = asRecord(await request.json());
@@ -116,6 +125,7 @@ export async function PUT(request: Request) {
           incoming.chart_type !== undefined || incoming.chartType !== undefined
             ? normalizeChartType(incoming.chart_type ?? incoming.chartType, "hot_100")
             : undefined,
+        cover_image: text(incoming.cover_image, text(incoming.cover_image_url)),
         display_order: number(incoming.display_order) ?? number(incoming.displayOrder),
         is_active: bool(incoming.is_active),
       });
