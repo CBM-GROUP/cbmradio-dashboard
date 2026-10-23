@@ -17,4 +17,5 @@ export type DashboardArticle = {
   external_cover_image_url: string; coverImage: string; externalCoverImage: string;
   is_featured: boolean; is_published: boolean; published_at: string | null;
   created_at: string; updated_at: string; summary: string; status: "Draft" | "Published";
+  views_count?: number;
 };

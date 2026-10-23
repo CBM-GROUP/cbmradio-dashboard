@@ -9,6 +9,7 @@ import {
   Copy,
   Edit2,
   ExternalLink,
+  Eye,
   FileEdit,
   FileText,
   Filter,
@@ -705,14 +706,20 @@ export default function ArticlesPage() {
 
                     {/* Metadata Strip */}
                     <div className="pt-2 border-t border-slate-100 dark:border-zinc-800/80 flex items-center justify-between text-xs text-slate-500 dark:text-zinc-400 font-medium">
-                      <span className="flex items-center gap-1.5 truncate max-w-[55%]">
+                      <span className="flex items-center gap-1.5 truncate max-w-[45%]">
                         <User className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500 shrink-0" />
                         <span className="truncate">{article.author || "CBM Editorial"}</span>
                       </span>
-                      <span className="flex items-center gap-1 text-[11px] font-mono shrink-0">
-                        <Calendar className="h-3 w-3 text-slate-400 dark:text-zinc-500" />
-                        <span>{formatDate(article.published_at || article.created_at)}</span>
-                      </span>
+                      <div className="flex items-center gap-2.5 shrink-0">
+                        <span className="flex items-center gap-1 text-[11px] font-mono text-amber-600 dark:text-amber-400 font-semibold" title="Total public views">
+                          <Eye className="h-3 w-3" />
+                          <span>{article.views_count ?? 0}</span>
+                        </span>
+                        <span className="flex items-center gap-1 text-[11px] font-mono">
+                          <Calendar className="h-3 w-3 text-slate-400 dark:text-zinc-500" />
+                          <span>{formatDate(article.published_at || article.created_at)}</span>
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -811,6 +818,7 @@ export default function ArticlesPage() {
                 <TableHead>Category</TableHead>
                 <TableHead>Author</TableHead>
                 <TableHead>Published Date</TableHead>
+                <TableHead className="text-center w-20">Views</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Featured</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -868,6 +876,12 @@ export default function ArticlesPage() {
                     <TableCell>
                       <span className="text-xs text-slate-500 dark:text-zinc-400 font-mono">
                         {formatDate(article.published_at || article.created_at)}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-600 dark:text-amber-400 font-mono">
+                        <Eye className="h-3 w-3" />
+                        {article.views_count ?? 0}
                       </span>
                     </TableCell>
                     <TableCell>

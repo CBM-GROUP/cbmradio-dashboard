@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   Clock,
   ExternalLink,
+  Eye,
   FileEdit,
   Globe,
   Save,
@@ -122,6 +123,19 @@ export default function PublicationCard({
             </Button>
           )}
         </div>
+
+        {/* Readership Metric */}
+        {isPublished && (
+          <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-xs border border-slate-200/80 dark:bg-zinc-900/60 dark:border-zinc-800">
+            <span className="flex items-center gap-1.5 text-slate-600 dark:text-zinc-400 font-medium">
+              <Eye className="h-3.5 w-3.5 text-amber-500" />
+              <span>Public Readership:</span>
+            </span>
+            <span className="font-mono font-bold text-slate-900 dark:text-white">
+              {(article?.views_count ?? 0).toLocaleString()} views
+            </span>
+          </div>
+        )}
 
         {/* Unsaved changes pill */}
         {dirty && (
