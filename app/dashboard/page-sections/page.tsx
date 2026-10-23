@@ -34,6 +34,7 @@ export const TARGET_PAGES = [
   { value: "about", label: "About Page (/about)" },
   { value: "programs", label: "Programs (/programs)" },
   { value: "episodes", label: "Episodes (/episodes)" },
+  { value: "charts", label: "Charts (/charts)" },
   { value: "news", label: "News & Articles (/news)" },
   { value: "gallery", label: "Gallery (/gallery)" },
   { value: "contact", label: "Contact (/contact)" },
@@ -107,6 +108,8 @@ function getPageBadgeStyle(page: string) {
       return "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20";
     case "episodes":
       return "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20";
+    case "charts":
+      return "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20";
     case "news":
       return "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20";
     case "gallery":
@@ -122,6 +125,9 @@ function getPageBadgeStyle(page: string) {
 
 export default function PageSectionsPage() {
   const [list, setList] = useState<Section[]>([]);
+  const [availablePages, setAvailablePages] = useState<{ value: string; label: string }[]>([
+    ...TARGET_PAGES,
+  ]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Section | null>(null);
   const [creating, setCreating] = useState(false);
@@ -137,9 +143,23 @@ export default function PageSectionsPage() {
 
   const load = async () => {
     try {
-      const response = await fetch("/api/sections");
-      const data = await response.json();
+      const [sectionsRes, pagesRes] = await Promise.all([
+        fetch("/api/sections"),
+        fetch("/api/site-settings/pages").catch(() => null),
+      ]);
+      const data = await sectionsRes.json();
       setList(data.results || []);
+      if (pagesRes?.ok) {
+        const pagesConfig = await pagesRes.json();
+        if (pagesConfig?.pages?.length) {
+          setAvailablePages(
+            pagesConfig.pages.map((p: { key: string; label: string }) => ({
+              value: p.key,
+              label: p.label,
+            }))
+          );
+        }
+      }
     } catch {
       setToast("Failed to load page sections.");
     } finally {
@@ -313,7 +333,7 @@ export default function PageSectionsPage() {
           >
             All Pages ({list.length})
           </button>
-          {TARGET_PAGES.map((page) => {
+          {availablePages.map((page) => {
             const count = list.filter((i) => i.page === page.value).length;
             const isSelected = selectedPageFilter === page.value;
             return (
@@ -362,7 +382,7 @@ export default function PageSectionsPage() {
                 </div>
               </div>
               <Badge variant="outline" className={getPageBadgeStyle(form.page)}>
-                {TARGET_PAGES.find((p) => p.value === form.page)?.label || form.page}
+                {availablePages.find((p) => p.value === form.page)?.label || form.page}
               </Badge>
             </div>
           </CardHeader>
@@ -385,7 +405,7 @@ export default function PageSectionsPage() {
                       onChange={(e) => updateForm("page", e.target.value as TargetPage)}
                       className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-100"
                     >
-                      {TARGET_PAGES.map((target) => (
+                      {availablePages.map((target) => (
                         <option key={target.value} value={target.value}>
                           {target.label}
                         </option>
@@ -547,7 +567,7 @@ export default function PageSectionsPage() {
       <div className="space-y-3">
         {filteredList.map((section) => {
           const targetPageLabel =
-            TARGET_PAGES.find((p) => p.value === section.page)?.label.split(" ")[0] || section.page;
+            availablePages.find((p) => p.value === section.page)?.label.split(" ")[0] || section.page;
           const positionLabel =
             SECTION_POSITIONS.find((pos) => pos.value === section.position)?.label.split(" ")[0] ||
             section.position;

@@ -6,6 +6,7 @@ import {
   AlignCenter,
   AlignLeft,
   AlignRight,
+  BarChart3,
   ExternalLink,
   Eye,
   Film,
@@ -50,6 +51,7 @@ import {
   type OverlayPosition,
   type PageHero,
   type PageKey,
+  type SitePagesConfigResponse,
 } from "../../../types/site-settings";
 
 type HeroForm = {
@@ -118,6 +120,8 @@ function getPageIcon(key: PageKey) {
       return <Radio className="h-4 w-4" />;
     case "episodes":
       return <Film className="h-4 w-4" />;
+    case "charts":
+      return <BarChart3 className="h-4 w-4" />;
     case "news":
       return <Newspaper className="h-4 w-4" />;
     case "gallery":
@@ -133,6 +137,7 @@ function getPageIcon(key: PageKey) {
 
 export default function PageHeroesPage() {
   const [heroes, setHeroes] = useState<PageHero[]>([]);
+  const [availableKeys, setAvailableKeys] = useState<PageKey[]>(pageKeys);
   const [selectedKey, setSelectedKey] = useState<PageKey | null>("programs");
   const [form, setForm] = useState<HeroForm | null>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -152,12 +157,18 @@ export default function PageHeroesPage() {
   const load = useCallback(async () => {
     setError("");
     try {
-      const data = await apiClient.get<PaginatedResponse<PageHero>>("/api/site-settings/page-heroes");
-      setHeroes(data.results);
-      const activeKey = selectedKey || "programs";
-      const fresh = data.results.find((v) => v.page_key === activeKey);
+      const [heroesData, configData] = await Promise.all([
+        apiClient.get<PaginatedResponse<PageHero>>("/api/site-settings/page-heroes"),
+        apiClient.get<SitePagesConfigResponse>("/api/site-settings/pages").catch(() => null),
+      ]);
+      setHeroes(heroesData.results);
+      if (configData?.hero_page_keys?.length) {
+        setAvailableKeys(configData.hero_page_keys);
+      }
+      const activeKey = selectedKey || (configData?.hero_page_keys?.[0] as PageKey) || "programs";
+      const fresh = heroesData.results.find((v) => v.page_key === activeKey);
       setForm(heroForm(activeKey, fresh));
-      if (!selectedKey) setSelectedKey("programs");
+      if (!selectedKey) setSelectedKey(activeKey);
     } catch (v) {
       setError(isApiError(v) ? v.message : "Unable to load Page Heroes.");
     } finally {
@@ -304,8 +315,8 @@ export default function PageHeroesPage() {
       {error && !form && <ErrorState message={error} onRetry={() => void load()} />}
 
       {/* Page Tabs / Selector Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        {pageKeys.map((key) => {
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
+        {availableKeys.map((key) => {
           const hero = heroes.find((v) => v.page_key === key);
           const isSelected = selectedKey === key;
           const isConfigured = !!hero;
