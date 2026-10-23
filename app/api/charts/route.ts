@@ -9,6 +9,17 @@ import {
   unauthorizedResponse,
 } from "../../lib/backend-auth";
 
+function normalizeChartType(val: unknown, fallback = "hot_100"): string {
+  if (typeof val !== "string") return fallback;
+  const cleaned = val.trim().toLowerCase();
+  if (cleaned === "hot100" || cleaned === "hot-100" || cleaned === "hot_100") return "hot_100";
+  if (cleaned === "top50" || cleaned === "top-50" || cleaned === "top_50") return "top_50";
+  if (cleaned === "top40" || cleaned === "top-40" || cleaned === "top_40") return "top_40";
+  if (cleaned === "top20" || cleaned === "top-20" || cleaned === "top_20") return "top_20";
+  if (cleaned === "top10" || cleaned === "top-10" || cleaned === "top_10") return "top_10";
+  return cleaned || fallback;
+}
+
 function toChart(item: Record<string, unknown>) {
   return {
     ...item,
@@ -49,6 +60,8 @@ export async function POST(request: Request) {
     if (multipart) {
       const form = await request.formData();
       if (!form.has("is_active")) form.set("is_active", "true");
+      const currentChartType = form.get("chart_type") || form.get("chartType");
+      form.set("chart_type", normalizeChartType(currentChartType, "hot_100"));
       body = form;
     } else {
       const incoming = asRecord(await request.json());
@@ -57,7 +70,7 @@ export async function POST(request: Request) {
         slug: text(incoming.slug),
         description: text(incoming.description),
         edition_date: text(incoming.edition_date, text(incoming.editionDate)),
-        chart_type: text(incoming.chart_type, text(incoming.chartType, "hot100")),
+        chart_type: normalizeChartType(incoming.chart_type ?? incoming.chartType, "hot_100"),
         display_order: number(incoming.display_order) ?? number(incoming.displayOrder) ?? 0,
         is_active: incoming.is_active !== false,
       });
@@ -87,6 +100,10 @@ export async function PUT(request: Request) {
     if (multipart) {
       const form = await request.formData();
       slug = text(form.get("slug"));
+      if (form.has("chart_type") || form.has("chartType")) {
+        const ct = form.get("chart_type") || form.get("chartType");
+        form.set("chart_type", normalizeChartType(ct, "hot_100"));
+      }
       body = form;
     } else {
       const incoming = asRecord(await request.json());
@@ -95,7 +112,10 @@ export async function PUT(request: Request) {
         title: text(incoming.title),
         description: text(incoming.description),
         edition_date: text(incoming.edition_date, text(incoming.editionDate)),
-        chart_type: text(incoming.chart_type, text(incoming.chartType)),
+        chart_type:
+          incoming.chart_type !== undefined || incoming.chartType !== undefined
+            ? normalizeChartType(incoming.chart_type ?? incoming.chartType, "hot_100")
+            : undefined,
         display_order: number(incoming.display_order) ?? number(incoming.displayOrder),
         is_active: bool(incoming.is_active),
       });

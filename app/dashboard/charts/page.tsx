@@ -100,9 +100,21 @@ const initialChartForm = {
   slug: "",
   description: "",
   edition_date: new Date().toISOString().split("T")[0],
-  chart_type: "hot100",
+  chart_type: "hot_100",
   is_active: true,
 };
+
+const CHART_TYPE_OPTIONS = [
+  { value: "hot_100", label: "Top 100 Hot Countdown" },
+  { value: "top_50", label: "Top 50 Countdown" },
+  { value: "top_40", label: "Top 40 Countdown" },
+  { value: "top_20", label: "Top 20 Countdown" },
+  { value: "top_10", label: "Top 10 Countdown" },
+  { value: "weekly", label: "Weekly Chart" },
+  { value: "monthly", label: "Monthly Chart" },
+  { value: "special", label: "Special Countdown" },
+  { value: "custom", label: "Custom Chart" },
+];
 
 export default function ChartsDashboardPage() {
   const [charts, setCharts] = useState<ChartSummary[]>([]);
@@ -564,7 +576,7 @@ export default function ChartsDashboardPage() {
                           <Badge variant="secondary">Draft / Hidden</Badge>
                         )}
                         <Badge variant="outline" className="text-xs">
-                          {activeChart.chart_type}
+                          {CHART_TYPE_OPTIONS.find((t) => t.value === activeChart.chart_type)?.label || activeChart.chart_type}
                         </Badge>
                       </div>
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-zinc-400">
@@ -1258,7 +1270,7 @@ export default function ChartsDashboardPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label htmlFor="chart-slug" className="text-xs font-semibold">
                     Slug <span className="text-rose-500">*</span>
@@ -1275,20 +1287,40 @@ export default function ChartsDashboardPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="chart-edition-date" className="text-xs font-semibold">
-                    Edition Date <span className="text-rose-500">*</span>
+                  <Label htmlFor="chart-type" className="text-xs font-semibold">
+                    Chart Type <span className="text-rose-500">*</span>
                   </Label>
-                  <Input
-                    id="chart-edition-date"
-                    type="date"
-                    required
-                    value={chartForm.edition_date}
+                  <select
+                    id="chart-type"
+                    value={chartForm.chart_type}
                     onChange={(e) =>
-                      setChartForm({ ...chartForm, edition_date: e.target.value })
+                      setChartForm({ ...chartForm, chart_type: e.target.value })
                     }
-                    className="mt-1 text-xs"
-                  />
+                    className="mt-1 flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-xs shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50"
+                  >
+                    {CHART_TYPE_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value} className="bg-white dark:bg-zinc-900">
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
+              </div>
+
+              <div>
+                <Label htmlFor="chart-edition-date" className="text-xs font-semibold">
+                  Edition Date <span className="text-rose-500">*</span>
+                </Label>
+                <Input
+                  id="chart-edition-date"
+                  type="date"
+                  required
+                  value={chartForm.edition_date}
+                  onChange={(e) =>
+                    setChartForm({ ...chartForm, edition_date: e.target.value })
+                  }
+                  className="mt-1 text-xs"
+                />
               </div>
 
               <div>
