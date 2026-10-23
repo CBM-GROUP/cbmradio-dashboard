@@ -3,9 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
-  Calendar,
   CheckCircle2,
-  Clock,
   Copy,
   Edit2,
   ExternalLink,
@@ -22,7 +20,6 @@ import {
   Star,
   Tags,
   Trash2,
-  User,
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -32,6 +29,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ConfirmationDialog } from "../../components/ui/confirmation-dialog";
 import { Pagination } from "../../components/ui/pagination";
+import { DashboardArticleCard } from "../../components/articles/dashboard-article-card";
 import {
   Table,
   TableBody,
@@ -51,12 +49,6 @@ const emptyPage: PaginatedResponse<DashboardArticle> = {
   previous: null,
   results: [],
 };
-
-function estimateReadingTime(text: string): string {
-  const wordCount = text ? text.trim().split(/\s+/).length : 0;
-  const minutes = Math.max(1, Math.ceil(wordCount / 180));
-  return `${minutes} min read`;
-}
 
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return "Draft";
@@ -594,218 +586,20 @@ export default function ArticlesPage() {
           }
         />
       ) : viewMode === "grid" ? (
-        /* Magazine Visual Grid of Editorial Articles */
+        /* Visual Grid of Editorial Articles */
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {data.results.map((article) => {
-            const isPublishing = actionLoading[`publish-${article.id}`];
-            const isFeaturing = actionLoading[`feature-${article.id}`];
-            const readingTime = estimateReadingTime(article.body || article.summary);
-
-            return (
-              <Card
-                key={article.id}
-                className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/80 bg-white transition-all duration-300 hover:-translate-y-1.5 hover:border-emerald-500/40 hover:shadow-xl dark:border-zinc-800/80 dark:bg-zinc-950 dark:hover:shadow-emerald-950/20"
-              >
-                <div>
-                  {/* Aspect-Video Editorial Cover Image */}
-                  <div className="relative aspect-video w-full overflow-hidden bg-slate-100 dark:bg-black">
-                    {article.cover_image ? (
-                      <Image
-                        src={article.cover_image}
-                        alt={article.title}
-                        fill
-                        unoptimized
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-tr from-slate-100 to-slate-200 text-slate-400 dark:from-zinc-900 dark:to-black dark:text-zinc-600">
-                        <FileText className="h-10 w-10 opacity-40" />
-                        <span className="mt-1 text-[11px] font-medium">No Cover Image</span>
-                      </div>
-                    )}
-
-                    {/* Gradient Scrim */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/30" />
-
-                    {/* Top Badges */}
-                    <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2">
-                      {article.category?.name ? (
-                        <span className="rounded-full bg-black/60 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-400 backdrop-blur-md border border-white/10">
-                          {article.category.name}
-                        </span>
-                      ) : (
-                        <span className="rounded-full bg-black/60 px-2.5 py-0.5 text-[10px] font-medium text-slate-300 backdrop-blur-md">
-                          General News
-                        </span>
-                      )}
-
-                      <div className="flex items-center gap-1.5">
-                        {article.is_featured && (
-                          <span
-                            title="Featured on front page"
-                            className="flex items-center gap-1 rounded-full bg-amber-500/90 px-2 py-0.5 text-[10px] font-black text-black uppercase tracking-wider shadow-md backdrop-blur-xs"
-                          >
-                            <Sparkles className="h-3 w-3" />
-                            <span>Featured</span>
-                          </span>
-                        )}
-                        <Badge
-                          variant={article.is_published ? "default" : "secondary"}
-                          className="flex items-center gap-1 shadow-md backdrop-blur-xs text-[10px]"
-                        >
-                          <span
-                            className={`h-1.5 w-1.5 rounded-full ${
-                              article.is_published ? "bg-emerald-400 animate-pulse" : "bg-slate-400"
-                            }`}
-                          />
-                          <span>{article.is_published ? "Published" : "Draft"}</span>
-                        </Badge>
-                      </div>
-                    </div>
-
-                    {/* Reading time & quick view on public site */}
-                    <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between text-white/90 text-[11px]">
-                      <span className="flex items-center gap-1 font-mono text-[10px] bg-black/60 px-2 py-0.5 rounded backdrop-blur-xs">
-                        <Clock className="h-3 w-3 text-emerald-400" />
-                        <span>{readingTime}</span>
-                      </span>
-
-                      {article.is_published && (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            window.open(
-                              `http://localhost:3000/news/${encodeURIComponent(article.slug)}`,
-                              "_blank"
-                            )
-                          }
-                          className="flex items-center gap-1 bg-black/60 hover:bg-black/90 px-2 py-0.5 rounded text-[10px] font-semibold text-white backdrop-blur-xs transition cursor-pointer"
-                          title="Open live article on radio website"
-                        >
-                          <span>Live Story</span>
-                          <ExternalLink className="h-3 w-3 text-emerald-400" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Editorial Body Card */}
-                  <div className="p-5 space-y-3">
-                    <Link
-                      href={`/dashboard/articles/${encodeURIComponent(article.slug)}/edit`}
-                      className="block group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors"
-                    >
-                      <h3 className="font-extrabold text-base leading-snug text-slate-900 dark:text-white line-clamp-2">
-                        {article.title}
-                      </h3>
-                    </Link>
-
-                    <p className="text-xs text-slate-600 dark:text-zinc-300 leading-relaxed line-clamp-2">
-                      {article.summary || "No teaser or summary preview written for this publication."}
-                    </p>
-
-                    {/* Metadata Strip */}
-                    <div className="pt-2 border-t border-slate-100 dark:border-zinc-800/80 flex items-center justify-between text-xs text-slate-500 dark:text-zinc-400 font-medium">
-                      <span className="flex items-center gap-1.5 truncate max-w-[45%]">
-                        <User className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500 shrink-0" />
-                        <span className="truncate">{article.author || "CBM Editorial"}</span>
-                      </span>
-                      <div className="flex items-center gap-2.5 shrink-0">
-                        <span className="flex items-center gap-1 text-[11px] font-mono text-amber-600 dark:text-amber-400 font-semibold" title="Total public views">
-                          <Eye className="h-3 w-3" />
-                          <span>{article.views_count ?? 0}</span>
-                        </span>
-                        <span className="flex items-center gap-1 text-[11px] font-mono">
-                          <Calendar className="h-3 w-3 text-slate-400 dark:text-zinc-500" />
-                          <span>{formatDate(article.published_at || article.created_at)}</span>
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Direct Action Control Footer */}
-                <div className="flex items-center justify-between gap-1.5 border-t border-slate-100 bg-slate-50/80 p-3 dark:border-zinc-800/80 dark:bg-black/40">
-                  <div className="flex items-center gap-1">
-                    {/* Quick Toggle Publish */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={isPublishing}
-                      onClick={() => void handleTogglePublish(article)}
-                      className={`h-7 px-2.5 text-[11px] font-bold border transition ${
-                        article.is_published
-                          ? "text-amber-700 border-amber-300/60 hover:bg-amber-50 dark:text-amber-300 dark:border-amber-800 dark:hover:bg-amber-950/30"
-                          : "text-emerald-700 border-emerald-300/60 hover:bg-emerald-50 dark:text-emerald-300 dark:border-emerald-800 dark:hover:bg-emerald-950/30"
-                      }`}
-                      title={article.is_published ? "Unpublish to draft" : "Publish live immediately"}
-                    >
-                      {isPublishing ? (
-                        <span>Updating…</span>
-                      ) : article.is_published ? (
-                        <span>To Draft</span>
-                      ) : (
-                        <span>Publish</span>
-                      )}
-                    </Button>
-
-                    {/* Quick Toggle Featured */}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      disabled={isFeaturing}
-                      onClick={() => void handleToggleFeatured(article)}
-                      className={`h-7 w-7 p-0 rounded-md transition ${
-                        article.is_featured
-                          ? "text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30"
-                          : "text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-zinc-800"
-                      }`}
-                      title={article.is_featured ? "Remove from frontpage featured" : "Pin to frontpage featured"}
-                    >
-                      <Star className={`h-3.5 w-3.5 ${article.is_featured ? "fill-amber-400" : ""}`} />
-                    </Button>
-
-                    {/* Copy Link */}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleCopyLink(article.slug)}
-                      className="h-7 w-7 p-0 text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-zinc-800 dark:hover:text-white"
-                      title="Copy public link"
-                    >
-                      <Copy className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-
-                  <div className="flex items-center gap-1">
-                    {/* Edit Article */}
-                    <Button
-                      asChild
-                      variant="outline"
-                      size="sm"
-                      className="h-7 px-2.5 text-[11px] font-semibold border-slate-200 hover:border-emerald-500 hover:text-emerald-600 dark:border-zinc-800 dark:text-zinc-200 dark:hover:border-emerald-500/50 dark:hover:text-emerald-400"
-                    >
-                      <Link href={`/dashboard/articles/${encodeURIComponent(article.slug)}/edit`}>
-                        <Edit2 className="h-3 w-3 mr-1" />
-                        <span>Edit</span>
-                      </Link>
-                    </Button>
-
-                    {/* Delete */}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setDeleteTarget(article)}
-                      className="h-7 w-7 p-0 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30"
-                      title="Delete article"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            );
-          })}
+          {data.results.map((article) => (
+            <DashboardArticleCard
+              key={article.id}
+              article={article}
+              isPublishing={actionLoading[`publish-${article.id}`]}
+              isFeaturing={actionLoading[`feature-${article.id}`]}
+              onTogglePublish={handleTogglePublish}
+              onToggleFeatured={handleToggleFeatured}
+              onCopyLink={handleCopyLink}
+              onDelete={setDeleteTarget}
+            />
+          ))}
         </div>
       ) : (
         /* Dense Data Table View */
