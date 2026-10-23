@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import {
-  Clock,
   Edit2,
   LayoutGrid,
   List,
@@ -11,7 +10,6 @@ import {
   Search,
   Sparkles,
   Trash2,
-  User,
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -20,8 +18,12 @@ import Toast from "../../components/toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { ConfirmationDialog } from "../../components/ui/confirmation-dialog";
 import { Pagination } from "../../components/ui/pagination";
+import { ProgramCard } from "../../components/programs/program-card";
 import {
   Table,
   TableBody,
@@ -254,29 +256,28 @@ export default function ProgramsPage() {
 
       {/* Program Creation/Edit Form */}
       {open && (
-        <Card className="border-emerald-500/30 bg-white shadow-xl dark:bg-zinc-950">
-          <CardHeader className="border-b border-slate-100 dark:border-zinc-800 pb-4">
+        <Card className="rounded-xl border border-emerald-500/30 bg-white shadow-xl dark:bg-zinc-950">
+          <CardHeader className="border-b border-slate-100 dark:border-zinc-800/80 p-5 pb-4">
             <CardTitle className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               <span>{editing ? `Edit Program: ${editing.title}` : "Create Radio Program"}</span>
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardContent className="p-5 md:p-6">
             <form onSubmit={save} className="space-y-6">
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 {/* Column 1 */}
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold">
                       Program Title <span className="text-rose-500">*</span>
-                    </label>
-                    <input
+                    </Label>
+                    <Input
                       type="text"
                       required
                       value={form.title}
                       placeholder="e.g. The Morning Drive"
                       onChange={(e) => setForm({ ...form, title: e.target.value })}
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white dark:placeholder:text-zinc-600"
                     />
                     {fieldErrors.title?.[0] && (
                       <p className="mt-1 text-xs text-rose-500">{fieldErrors.title[0]}</p>
@@ -285,9 +286,9 @@ export default function ProgramsPage() {
 
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300">
+                      <Label className="text-xs font-semibold">
                         Presenter / Host
-                      </label>
+                      </Label>
                       {matchedMember && (
                         <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
                           ✓ Verified Team Member: {matchedMember.role || "Host"}
@@ -307,7 +308,7 @@ export default function ProgramsPage() {
                             setForm({ ...form, presenter: `${form.presenter.trim()} & ${val}` });
                           }
                         }}
-                        className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200"
+                        className="h-9 rounded-md border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700 shadow-xs focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200"
                       >
                         <option value="">
                           {teamMembers.length > 0 ? "-- Select from Team Roster --" : "Loading Team..."}
@@ -319,13 +320,12 @@ export default function ProgramsPage() {
                         ))}
                       </select>
 
-                      <input
+                      <Input
                         type="text"
                         list="team-members-list"
                         value={form.presenter}
                         placeholder="Type presenter name or co-hosts..."
                         onChange={(e) => setForm({ ...form, presenter: e.target.value })}
-                        className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white dark:placeholder:text-zinc-600"
                       />
                       <datalist id="team-members-list">
                         {teamMembers.map((m) => (
@@ -390,30 +390,28 @@ export default function ProgramsPage() {
                     )}
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold">
                       Broadcast Schedule
-                    </label>
-                    <input
+                    </Label>
+                    <Input
                       type="text"
                       value={form.schedule}
                       placeholder="e.g. Mon - Fri, 6:00 AM - 10:00 AM"
                       onChange={(e) => setForm({ ...form, schedule: e.target.value })}
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white dark:placeholder:text-zinc-600"
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold">
                       Short Description (Summary)
-                    </label>
-                    <input
+                    </Label>
+                    <Input
                       type="text"
                       maxLength={300}
                       value={form.short_description}
                       placeholder="Short teaser shown on cards"
                       onChange={(e) => setForm({ ...form, short_description: e.target.value })}
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white dark:placeholder:text-zinc-600"
                     />
                   </div>
 
@@ -431,31 +429,30 @@ export default function ProgramsPage() {
 
                 {/* Column 2 */}
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold">
                       Full Show Description
-                    </label>
-                    <textarea
+                    </Label>
+                    <Textarea
                       rows={5}
                       value={form.description}
                       placeholder="Detailed overview about this show, topics, call-in numbers, etc."
                       onChange={(e) => setForm({ ...form, description: e.target.value })}
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white dark:placeholder:text-zinc-600"
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold">
                       Promo / Livestream YouTube URL
-                    </label>
-                    <input
+                    </Label>
+                    <Input
                       type="url"
                       value={form.promo_video_url}
                       placeholder="https://www.youtube.com/watch?v=..."
                       onChange={(e) => setForm({ ...form, promo_video_url: e.target.value })}
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none font-mono text-xs dark:border-zinc-800 dark:bg-black dark:text-white dark:placeholder:text-zinc-600"
+                      className="font-mono text-xs"
                     />
-                    <p className="mt-1 text-[11px] text-slate-500 dark:text-zinc-400">{YOUTUBE_EMBED_HELP}</p>
+                    <p className="text-[11px] text-slate-500 dark:text-zinc-400">{YOUTUBE_EMBED_HELP}</p>
                     {fieldErrors.promo_video_url?.[0] && (
                       <p className="mt-1 text-xs text-rose-500">
                         {fieldErrors.promo_video_url[0]}
@@ -463,18 +460,17 @@ export default function ProgramsPage() {
                     )}
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold">
                       Display Order (Position)
-                    </label>
-                    <input
+                    </Label>
+                    <Input
                       type="number"
                       min={0}
                       value={form.display_order}
                       onChange={(e) =>
                         setForm({ ...form, display_order: Number(e.target.value) })
                       }
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white"
                     />
                   </div>
 
@@ -534,12 +530,12 @@ export default function ProgramsPage() {
       )}
 
       {/* Filter and View Mode Toolbar */}
-      <Card className="p-4">
+      <Card className="rounded-xl border border-slate-200/80 bg-white p-3.5 shadow-xs dark:border-zinc-800 dark:bg-zinc-950">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-1 items-center gap-3">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500" />
-              <input
+          <div className="flex flex-1 flex-wrap items-center gap-2.5">
+            <div className="relative flex-1 min-w-[220px] max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 dark:text-zinc-500" />
+              <Input
                 type="text"
                 value={search}
                 placeholder="Search programs by title or host..."
@@ -547,15 +543,16 @@ export default function ProgramsPage() {
                   setSearch(e.target.value);
                   setPage(1);
                 }}
-                className="w-full rounded-lg border border-slate-200 bg-white pl-9 pr-8 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-zinc-100 dark:placeholder:text-zinc-500"
+                className="pl-8 pr-8 h-9 text-xs"
               />
               {search && (
                 <button
+                  type="button"
                   onClick={() => {
                     setSearch("");
                     setPage(1);
                   }}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-white text-xs"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-white"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -566,7 +563,7 @@ export default function ProgramsPage() {
             <select
               value={activeFilter}
               onChange={(e) => setActiveFilter(e.target.value)}
-              className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-700 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-zinc-300"
+              className="h-9 rounded-md border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700 shadow-xs focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200"
             >
               <option value="all">All Visibility</option>
               <option value="active">Active Only</option>
@@ -576,7 +573,7 @@ export default function ProgramsPage() {
             <select
               value={featuredFilter}
               onChange={(e) => setFeaturedFilter(e.target.value)}
-              className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-700 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-zinc-300"
+              className="h-9 rounded-md border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700 shadow-xs focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200"
             >
               <option value="all">All Placement</option>
               <option value="featured">Featured Only</option>
@@ -585,12 +582,13 @@ export default function ProgramsPage() {
           </div>
 
           {/* Hybrid View Mode Toggle */}
-          <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1 dark:border-zinc-800 dark:bg-black">
+          <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1 dark:border-zinc-800 dark:bg-zinc-900/60">
             <button
+              type="button"
               onClick={() => handleSetViewMode("grid")}
-              className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-semibold transition cursor-pointer ${
+              className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition cursor-pointer ${
                 viewMode === "grid"
-                  ? "bg-white text-emerald-600 shadow-xs dark:bg-zinc-900 dark:text-emerald-400"
+                  ? "bg-white text-emerald-600 shadow-xs dark:bg-zinc-800 dark:text-emerald-400"
                   : "text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white"
               }`}
             >
@@ -598,10 +596,11 @@ export default function ProgramsPage() {
               <span>Grid</span>
             </button>
             <button
+              type="button"
               onClick={() => handleSetViewMode("table")}
-              className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-semibold transition cursor-pointer ${
+              className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition cursor-pointer ${
                 viewMode === "table"
-                  ? "bg-white text-emerald-600 shadow-xs dark:bg-zinc-900 dark:text-emerald-400"
+                  ? "bg-white text-emerald-600 shadow-xs dark:bg-zinc-800 dark:text-emerald-400"
                   : "text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white"
               }`}
             >
@@ -629,107 +628,13 @@ export default function ProgramsPage() {
         /* Rich Grid View */
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredPrograms.map((v) => (
-            <Card
+            <ProgramCard
               key={v.id}
-              className="group flex flex-col justify-between overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-md dark:hover:shadow-xl dark:hover:shadow-emerald-950/20"
-            >
-              <div>
-                {/* Cover Image Container */}
-                <div className="relative aspect-video w-full overflow-hidden bg-slate-100 dark:bg-black">
-                  {v.coverImage ? (
-                    <Image
-                      src={v.coverImage}
-                      alt={v.title}
-                      fill
-                      unoptimized
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-400 dark:bg-zinc-900 dark:text-zinc-700">
-                      <Radio className="h-12 w-12" />
-                    </div>
-                  )}
-
-                  {/* Overlay Badges */}
-                  <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
-                    {v.is_featured && (
-                      <Badge variant="default" className="text-[10px] shadow-sm">
-                        Featured
-                      </Badge>
-                    )}
-                    <Badge
-                      variant={v.is_active ? "default" : "secondary"}
-                      className="text-[10px] shadow-sm"
-                    >
-                      {v.is_active ? "Active" : "Inactive"}
-                    </Badge>
-                  </div>
-
-                  <div className="absolute bottom-2 left-2">
-                    <span className="rounded bg-black/60 px-1.5 py-0.5 font-mono text-[10px] text-slate-200 backdrop-blur-xs">
-                      Order #{v.display_order}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Body Content */}
-                <div className="p-5 space-y-3">
-                  <h2 className="font-bold text-lg text-slate-900 group-hover:text-emerald-600 transition-colors line-clamp-1 dark:text-white dark:group-hover:text-emerald-400">
-                    {v.title}
-                  </h2>
-
-                  <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed dark:text-zinc-400">
-                    {v.short_description || "No short description provided for this show."}
-                  </p>
-
-                  <div className="space-y-1.5 pt-1 text-xs text-slate-600 border-t border-slate-100 dark:border-zinc-800/60 dark:text-zinc-400">
-                    {v.presenter && (
-                      <div className="flex items-center justify-between gap-2 text-slate-700 dark:text-zinc-300">
-                        <div className="flex items-center gap-2 truncate">
-                          <User className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                          <span className="truncate">{v.presenter}</span>
-                        </div>
-                        {teamMembers.some((m) =>
-                          v.presenter.toLowerCase().includes(m.name.toLowerCase()),
-                        ) && (
-                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-bold shrink-0">
-                            Team
-                          </span>
-                        )}
-                      </div>
-                    )}
-                    {v.schedule && (
-                      <div className="flex items-center gap-2 text-slate-500 dark:text-zinc-400">
-                        <Clock className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500 shrink-0" />
-                        <span className="truncate">{v.schedule}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Card Actions */}
-              <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/60 px-5 py-3 dark:border-zinc-800/80 dark:bg-zinc-950/40">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => edit(v)}
-                  className="flex items-center gap-1.5 text-xs text-slate-700 hover:text-emerald-600 dark:text-zinc-300 dark:hover:text-emerald-400"
-                >
-                  <Edit2 className="h-3.5 w-3.5" />
-                  <span>Edit</span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setTarget(v)}
-                  className="flex items-center gap-1.5 text-xs text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-500/10 dark:hover:text-rose-300"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  <span>Delete</span>
-                </Button>
-              </div>
-            </Card>
+              program={v}
+              teamMembers={teamMembers}
+              onEdit={edit}
+              onDelete={setTarget}
+            />
           ))}
         </div>
       ) : (

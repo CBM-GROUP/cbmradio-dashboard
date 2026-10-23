@@ -2,18 +2,15 @@
 
 import Image from "next/image";
 import {
-  Calendar,
   Clapperboard,
   Edit2,
   Film,
   LayoutGrid,
   List,
-  Play,
   Plus,
   Search,
   Sparkles,
   Trash2,
-  Video,
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -22,8 +19,12 @@ import Toast from "../../components/toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { ConfirmationDialog } from "../../components/ui/confirmation-dialog";
 import { Pagination } from "../../components/ui/pagination";
+import { EpisodeCard } from "../../components/episodes/episode-card";
 import {
   Table,
   TableBody,
@@ -252,27 +253,27 @@ export default function EpisodesPage() {
 
       {/* Episode Creation/Edit Form */}
       {open && (
-        <Card className="border-emerald-500/30 bg-white shadow-xl dark:bg-zinc-950">
-          <CardHeader className="border-b border-slate-100 dark:border-zinc-800 pb-4">
+        <Card className="rounded-xl border border-emerald-500/30 bg-white shadow-xl dark:bg-zinc-950">
+          <CardHeader className="border-b border-slate-100 dark:border-zinc-800/80 p-5 pb-4">
             <CardTitle className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               <span>{editing ? `Edit Episode: ${editing.title}` : "Record Radio Episode"}</span>
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardContent className="p-5 md:p-6">
             <form onSubmit={save} className="space-y-6">
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 {/* Column 1 */}
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold">
                       Parent Radio Show / Program <span className="text-rose-500">*</span>
-                    </label>
+                    </Label>
                     <select
                       required
                       value={form.program_id || ""}
                       onChange={(e) => setForm({ ...form, program_id: Number(e.target.value) })}
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white"
+                      className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700 shadow-xs focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200"
                     >
                       <option value="">Select Parent Show</option>
                       {programs.map((v) => (
@@ -286,32 +287,30 @@ export default function EpisodesPage() {
                     )}
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold">
                       Episode Title <span className="text-rose-500">*</span>
-                    </label>
-                    <input
+                    </Label>
+                    <Input
                       type="text"
                       required
                       value={form.title}
-                      placeholder="e.g. Episode #42: Sunday Gospel Reflections"
+                      placeholder="e.g. Episode #42: Sunday Reflections"
                       onChange={(e) => setForm({ ...form, title: e.target.value })}
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white dark:placeholder:text-zinc-600"
                     />
                     {fieldErrors.title?.[0] && (
                       <p className="mt-1 text-xs text-rose-500">{fieldErrors.title[0]}</p>
                     )}
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold">
                       Broadcast / Air Date
-                    </label>
-                    <input
+                    </Label>
+                    <Input
                       type="date"
                       value={form.publish_date}
                       onChange={(e) => setForm({ ...form, publish_date: e.target.value })}
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white"
                     />
                     {fieldErrors.publish_date?.[0] && (
                       <p className="mt-1 text-xs text-rose-500">{fieldErrors.publish_date[0]}</p>
@@ -332,47 +331,45 @@ export default function EpisodesPage() {
 
                 {/* Column 2 */}
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold">
                       YouTube Recording / Livestream URL <span className="text-rose-500">*</span>
-                    </label>
-                    <input
+                    </Label>
+                    <Input
                       type="url"
                       required
                       value={form.youtube_link}
                       placeholder="https://www.youtube.com/watch?v=..."
                       onChange={(e) => setForm({ ...form, youtube_link: e.target.value })}
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none font-mono text-xs dark:border-zinc-800 dark:bg-black dark:text-white dark:placeholder:text-zinc-600"
+                      className="font-mono text-xs"
                     />
-                    <p className="mt-1 text-[11px] text-slate-500 dark:text-zinc-400">{YOUTUBE_EMBED_HELP}</p>
+                    <p className="text-[11px] text-slate-500 dark:text-zinc-400">{YOUTUBE_EMBED_HELP}</p>
                     {fieldErrors.youtube_link?.[0] && (
                       <p className="mt-1 text-xs text-rose-500">{fieldErrors.youtube_link[0]}</p>
                     )}
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold">
                       Episode Summary & Notes
-                    </label>
-                    <textarea
+                    </Label>
+                    <Textarea
                       rows={5}
                       value={form.description}
                       placeholder="Show notes, scripture references, musical tracks featured, speaker notes..."
                       onChange={(e) => setForm({ ...form, description: e.target.value })}
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white dark:placeholder:text-zinc-600"
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold">
                       Featured Placement Order
-                    </label>
-                    <input
+                    </Label>
+                    <Input
                       type="number"
                       min={0}
                       value={form.featured_order}
                       onChange={(e) => setForm({ ...form, featured_order: Number(e.target.value) })}
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white"
                     />
                   </div>
 
@@ -426,13 +423,13 @@ export default function EpisodesPage() {
       )}
 
       {/* Advanced Filter Toolbar */}
-      <Card className="p-4">
+      <Card className="rounded-xl border border-slate-200/80 bg-white p-3.5 shadow-xs dark:border-zinc-800 dark:bg-zinc-950">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:flex lg:flex-1 lg:items-center">
+          <div className="flex flex-1 flex-wrap items-center gap-2.5">
             {/* Search */}
-            <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500" />
-              <input
+            <div className="relative flex-1 min-w-[200px] max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 dark:text-zinc-500" />
+              <Input
                 type="text"
                 value={search}
                 placeholder="Search episodes by title..."
@@ -440,15 +437,16 @@ export default function EpisodesPage() {
                   setSearch(e.target.value);
                   setPage(1);
                 }}
-                className="w-full rounded-lg border border-slate-200 bg-white pl-9 pr-8 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-zinc-100 dark:placeholder:text-zinc-500"
+                className="pl-8 pr-8 h-9 text-xs"
               />
               {search && (
                 <button
+                  type="button"
                   onClick={() => {
                     setSearch("");
                     setPage(1);
                   }}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-white text-xs"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-white"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -462,9 +460,9 @@ export default function EpisodesPage() {
                 setProgram(e.target.value);
                 setPage(1);
               }}
-              className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-700 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-zinc-300"
+              className="h-9 rounded-md border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700 shadow-xs focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200"
             >
-              <option value="">All Radio Programs</option>
+              <option value="">All Programs</option>
               {programs.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.title}
@@ -479,9 +477,9 @@ export default function EpisodesPage() {
                 setFeatured(e.target.value);
                 setPage(1);
               }}
-              className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-700 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-zinc-300"
+              className="h-9 rounded-md border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700 shadow-xs focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200"
             >
-              <option value="">All Features</option>
+              <option value="">All Placements</option>
               <option value="true">Featured Only</option>
               <option value="false">Standard Only</option>
             </select>
@@ -493,7 +491,7 @@ export default function EpisodesPage() {
                 setActive(e.target.value);
                 setPage(1);
               }}
-              className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-700 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-zinc-300"
+              className="h-9 rounded-md border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700 shadow-xs focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200"
             >
               <option value="">All Statuses</option>
               <option value="true">Active Only</option>
@@ -507,7 +505,7 @@ export default function EpisodesPage() {
                 setOrdering(e.target.value);
                 setPage(1);
               }}
-              className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-700 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-zinc-300"
+              className="h-9 rounded-md border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700 shadow-xs focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200"
             >
               <option value="-publish_date">Newest Air Date</option>
               <option value="publish_date">Oldest Air Date</option>
@@ -516,12 +514,13 @@ export default function EpisodesPage() {
           </div>
 
           {/* Hybrid View Mode Toggle */}
-          <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1 shrink-0 self-start lg:self-center dark:border-zinc-800 dark:bg-black">
+          <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1 shrink-0 self-start lg:self-center dark:border-zinc-800 dark:bg-zinc-900/60">
             <button
+              type="button"
               onClick={() => handleSetViewMode("grid")}
-              className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-semibold transition cursor-pointer ${
+              className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition cursor-pointer ${
                 viewMode === "grid"
-                  ? "bg-white text-emerald-600 shadow-xs dark:bg-zinc-900 dark:text-emerald-400"
+                  ? "bg-white text-emerald-600 shadow-xs dark:bg-zinc-800 dark:text-emerald-400"
                   : "text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white"
               }`}
             >
@@ -529,10 +528,11 @@ export default function EpisodesPage() {
               <span>Grid</span>
             </button>
             <button
+              type="button"
               onClick={() => handleSetViewMode("table")}
-              className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-semibold transition cursor-pointer ${
+              className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition cursor-pointer ${
                 viewMode === "table"
-                  ? "bg-white text-emerald-600 shadow-xs dark:bg-zinc-900 dark:text-emerald-400"
+                  ? "bg-white text-emerald-600 shadow-xs dark:bg-zinc-800 dark:text-emerald-400"
                   : "text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white"
               }`}
             >
@@ -562,105 +562,12 @@ export default function EpisodesPage() {
         /* Rich Media Cards Grid */
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {data.results.map((v) => (
-            <Card
+            <EpisodeCard
               key={v.id}
-              className="group flex flex-col justify-between overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-md dark:hover:shadow-xl dark:hover:shadow-emerald-950/20"
-            >
-              <div>
-                {/* Media Thumbnail Container */}
-                <div className="relative aspect-video w-full overflow-hidden bg-slate-100 dark:bg-black">
-                  {v.thumbnailImage ? (
-                    <Image
-                      src={v.thumbnailImage}
-                      alt={v.title}
-                      fill
-                      unoptimized
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-400 dark:bg-zinc-900 dark:text-zinc-700">
-                      <Film className="h-12 w-12" />
-                    </div>
-                  )}
-
-                  {/* Play Overlay */}
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500 text-black shadow-lg">
-                      <Play className="h-5 w-5 fill-current ml-0.5" />
-                    </span>
-                  </div>
-
-                  {/* Overlay Badges */}
-                  <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
-                    {v.is_featured && (
-                      <Badge variant="default" className="text-[10px] shadow-sm">
-                        Featured #{v.featured_order}
-                      </Badge>
-                    )}
-                    <Badge
-                      variant={v.is_active ? "default" : "secondary"}
-                      className="text-[10px] shadow-sm"
-                    >
-                      {v.is_active ? "Active" : "Archived"}
-                    </Badge>
-                  </div>
-
-                  {v.youtubeLink && (
-                    <div className="absolute bottom-2 left-2">
-                      <span className="flex items-center gap-1 rounded bg-black/70 px-2 py-0.5 font-mono text-[10px] text-white backdrop-blur-xs">
-                        <Video className="h-3 w-3 text-red-500" />
-                        <span>YouTube Stream</span>
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Content Details */}
-                <div className="p-5 space-y-3">
-                  <div>
-                    <span className="font-semibold text-xs text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block mb-1">
-                      {v.programTitle || "Radio Show"}
-                    </span>
-                    <h2 className="font-bold text-base text-slate-900 group-hover:text-emerald-600 transition-colors line-clamp-2 dark:text-white dark:group-hover:text-emerald-400">
-                      {v.title}
-                    </h2>
-                  </div>
-
-                  <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed dark:text-zinc-400">
-                    {v.description || "No episode summary recorded."}
-                  </p>
-
-                  <div className="pt-2 border-t border-slate-100 dark:border-zinc-800/60 flex items-center justify-between text-xs text-slate-500 dark:text-zinc-400">
-                    <span className="flex items-center gap-1.5">
-                      <Calendar className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500" />
-                      <span>{v.publishDate || "Unscheduled"}</span>
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/60 px-5 py-3 dark:border-zinc-800/80 dark:bg-zinc-950/40">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => edit(v)}
-                  className="flex items-center gap-1.5 text-xs text-slate-700 hover:text-emerald-600 dark:text-zinc-300 dark:hover:text-emerald-400"
-                >
-                  <Edit2 className="h-3.5 w-3.5" />
-                  <span>Edit</span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setTarget(v)}
-                  className="flex items-center gap-1.5 text-xs text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-500/10 dark:hover:text-rose-300"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  <span>Delete</span>
-                </Button>
-              </div>
-            </Card>
+              episode={v}
+              onEdit={edit}
+              onDelete={setTarget}
+            />
           ))}
         </div>
       ) : (

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  BarChart3,
   Film,
   Image as ImageIcon,
   MessageSquare,
@@ -169,62 +170,69 @@ export default function DashboardPage() {
       </section>
 
       {/* Studio Quick Shortcuts */}
-      <Card className="p-6">
+      <Card className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-950">
         <CardHeader className="p-0 pb-4">
-          <CardTitle className="text-xs font-bold tracking-wider text-slate-700 dark:text-zinc-300 uppercase">
-            Studio Quick Shortcuts
+          <CardTitle className="text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-zinc-400">
+            Studio Quick Access & Modules
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5">
             <Link
               href="/dashboard/programs"
-              className="flex flex-col items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4 text-center transition hover:border-emerald-500/40 hover:bg-emerald-50/50 dark:border-zinc-800 dark:bg-black dark:hover:border-emerald-500/40 dark:hover:bg-emerald-950/20"
+              className="flex flex-col items-center justify-center gap-2 rounded-lg border border-slate-200/80 bg-slate-50/50 p-3.5 text-center transition hover:border-emerald-500/40 hover:bg-emerald-50/40 dark:border-zinc-800 dark:bg-zinc-900/40 dark:hover:border-emerald-500/40 dark:hover:bg-emerald-950/20"
             >
-              <Radio className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-              <span className="text-xs font-semibold text-slate-700 dark:text-zinc-300">Programs</span>
+              <Radio className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">Programs</span>
             </Link>
             <Link
               href="/dashboard/episodes"
-              className="flex flex-col items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4 text-center transition hover:border-emerald-500/40 hover:bg-emerald-50/50 dark:border-zinc-800 dark:bg-black dark:hover:border-emerald-500/40 dark:hover:bg-emerald-950/20"
+              className="flex flex-col items-center justify-center gap-2 rounded-lg border border-slate-200/80 bg-slate-50/50 p-3.5 text-center transition hover:border-emerald-500/40 hover:bg-emerald-50/40 dark:border-zinc-800 dark:bg-zinc-900/40 dark:hover:border-emerald-500/40 dark:hover:bg-emerald-950/20"
             >
-              <Film className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-              <span className="text-xs font-semibold text-slate-700 dark:text-zinc-300">Episodes</span>
+              <Film className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">Episodes</span>
             </Link>
             <Link
               href="/dashboard/articles"
-              className="flex flex-col items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4 text-center transition hover:border-emerald-500/40 hover:bg-emerald-50/50 dark:border-zinc-800 dark:bg-black dark:hover:border-emerald-500/40 dark:hover:bg-emerald-950/20"
+              className="flex flex-col items-center justify-center gap-2 rounded-lg border border-slate-200/80 bg-slate-50/50 p-3.5 text-center transition hover:border-emerald-500/40 hover:bg-emerald-50/40 dark:border-zinc-800 dark:bg-zinc-900/40 dark:hover:border-emerald-500/40 dark:hover:bg-emerald-950/20"
             >
-              <Newspaper className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-              <span className="text-xs font-semibold text-slate-700 dark:text-zinc-300">Articles</span>
+              <Newspaper className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">Articles</span>
+            </Link>
+            <Link
+              href="/dashboard/charts"
+              className="flex flex-col items-center justify-center gap-2 rounded-lg border border-slate-200/80 bg-slate-50/50 p-3.5 text-center transition hover:border-emerald-500/40 hover:bg-emerald-50/40 dark:border-zinc-800 dark:bg-zinc-900/40 dark:hover:border-emerald-500/40 dark:hover:bg-emerald-950/20"
+            >
+              <BarChart3 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">Charts</span>
             </Link>
             <Link
               href="/dashboard/gallery"
-              className="flex flex-col items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4 text-center transition hover:border-emerald-500/40 hover:bg-emerald-50/50 dark:border-zinc-800 dark:bg-black dark:hover:border-emerald-500/40 dark:hover:bg-emerald-950/20"
+              className="flex flex-col items-center justify-center gap-2 rounded-lg border border-slate-200/80 bg-slate-50/50 p-3.5 text-center transition hover:border-emerald-500/40 hover:bg-emerald-50/40 dark:border-zinc-800 dark:bg-zinc-900/40 dark:hover:border-emerald-500/40 dark:hover:bg-emerald-950/20"
             >
-              <ImageIcon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-              <span className="text-xs font-semibold text-slate-700 dark:text-zinc-300">Gallery</span>
+              <ImageIcon className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">Gallery</span>
             </Link>
             <Link
               href="/dashboard/team"
-              className="flex flex-col items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4 text-center transition hover:border-emerald-500/40 hover:bg-emerald-50/50 dark:border-zinc-800 dark:bg-black dark:hover:border-emerald-500/40 dark:hover:bg-emerald-950/20"
+              className="flex flex-col items-center justify-center gap-2 rounded-lg border border-slate-200/80 bg-slate-50/50 p-3.5 text-center transition hover:border-emerald-500/40 hover:bg-emerald-50/40 dark:border-zinc-800 dark:bg-zinc-900/40 dark:hover:border-emerald-500/40 dark:hover:bg-emerald-950/20"
             >
-              <Users className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-              <span className="text-xs font-semibold text-slate-700 dark:text-zinc-300">Staff & Team</span>
+              <Users className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">Staff Team</span>
             </Link>
             <Link
               href="/dashboard/comments"
-              className="flex flex-col items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4 text-center transition hover:border-emerald-500/40 hover:bg-emerald-50/50 dark:border-zinc-800 dark:bg-black dark:hover:border-emerald-500/40 dark:hover:bg-emerald-950/20"
+              className="flex flex-col items-center justify-center gap-2 rounded-lg border border-slate-200/80 bg-slate-50/50 p-3.5 text-center transition hover:border-emerald-500/40 hover:bg-emerald-50/40 dark:border-zinc-800 dark:bg-zinc-900/40 dark:hover:border-emerald-500/40 dark:hover:bg-emerald-950/20"
             >
-              <MessageSquare className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-              <span className="text-xs font-semibold text-slate-700 dark:text-zinc-300">Comments</span>
+              <MessageSquare className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">Feedback</span>
             </Link>
             <Link
               href="/dashboard/site-settings/social-links"
-              className="flex flex-col items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4 text-center transition hover:border-emerald-500/40 hover:bg-emerald-50/50 dark:border-zinc-800 dark:bg-black dark:hover:border-emerald-500/40 dark:hover:bg-emerald-950/20"
+              className="flex flex-col items-center justify-center gap-2 rounded-lg border border-slate-200/80 bg-slate-50/50 p-3.5 text-center transition hover:border-emerald-500/40 hover:bg-emerald-50/40 dark:border-zinc-800 dark:bg-zinc-900/40 dark:hover:border-emerald-500/40 dark:hover:bg-emerald-950/20"
             >
-              <Share2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-              <span className="text-xs font-semibold text-slate-700 dark:text-zinc-300">Site Settings</span>
+              <Share2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">Settings</span>
             </Link>
           </div>
         </CardContent>
