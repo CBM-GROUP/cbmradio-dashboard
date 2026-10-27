@@ -926,6 +926,27 @@ export default function ChartsDashboardPage() {
                   </Button>
                 </div>
               </div>
+
+              {/* Dedicated Hero Image Display - Fits cleanly in container, responsive */}
+              {(activeChart.cover_image_url || activeChart.cover_image || activeChart.coverImage) && (
+                <div className="relative z-10 mx-5 sm:mx-6 mb-5 sm:mb-6 overflow-hidden rounded-xl border border-white/15 bg-black/60 shadow-inner aspect-[16/9] max-h-72">
+                  <Image
+                    src={activeChart.cover_image_url || activeChart.cover_image || activeChart.coverImage || ""}
+                    alt=""
+                    fill
+                    aria-hidden="true"
+                    unoptimized
+                    className="object-cover blur-xl opacity-30 pointer-events-none scale-105"
+                  />
+                  <Image
+                    src={activeChart.cover_image_url || activeChart.cover_image || activeChart.coverImage || ""}
+                    alt={`${activeChart.title} Dedicated Hero Banner`}
+                    fill
+                    unoptimized
+                    className="object-contain object-center"
+                  />
+                </div>
+              )}
             </div>
           )}
 
@@ -1983,13 +2004,14 @@ export default function ChartsDashboardPage() {
                 </div>
                 
                 <div className="flex items-center gap-4">
-                  <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white dark:border-zinc-700 dark:bg-zinc-800 shadow-2xs">
+                  <div className="relative h-16 w-28 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-950 dark:border-zinc-700 shadow-2xs">
                     {chartFilePreview || chartForm.cover_image_url ? (
                       <Image
                         src={chartFilePreview || chartForm.cover_image_url}
                         alt="Hero Preview"
                         fill
-                        className="object-cover"
+                        unoptimized
+                        className="object-contain object-center"
                       />
                     ) : (
                       <div className="flex h-full w-full flex-col items-center justify-center text-slate-400 dark:text-zinc-500">
