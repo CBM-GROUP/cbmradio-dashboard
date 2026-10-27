@@ -123,6 +123,16 @@ const initialChartForm = {
   is_active: true,
 };
 
+function safeNormalizeUrl(url: string | null | undefined): string {
+  const trimmed = (url || "").trim();
+  if (!trimmed) return "";
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  if (trimmed.includes(".") && !trimmed.includes(" ")) {
+    return `https://${trimmed}`;
+  }
+  return trimmed;
+}
+
 const CHART_TYPE_OPTIONS = [
   { value: "hot_100", label: "Top 100 Hot Countdown", target: 100 },
   { value: "top_50", label: "Top 50 Countdown", target: 50 },
@@ -292,10 +302,14 @@ export default function ChartsDashboardPage() {
         formData.append("artist", entryForm.artist.trim());
         if (entryForm.featured_artists) formData.append("featured_artists", entryForm.featured_artists.trim());
         if (entryForm.album) formData.append("album", entryForm.album.trim());
-        if (entryForm.audio_url) formData.append("audio_url", entryForm.audio_url.trim());
-        if (entryForm.youtube_url) formData.append("youtube_url", entryForm.youtube_url.trim());
-        if (entryForm.spotify_url) formData.append("spotify_url", entryForm.spotify_url.trim());
-        if (entryForm.apple_music_url) formData.append("apple_music_url", entryForm.apple_music_url.trim());
+        const audio = safeNormalizeUrl(entryForm.audio_url);
+        const yt = safeNormalizeUrl(entryForm.youtube_url);
+        const spotify = safeNormalizeUrl(entryForm.spotify_url);
+        const apple = safeNormalizeUrl(entryForm.apple_music_url);
+        if (audio) formData.append("audio_url", audio);
+        if (yt) formData.append("youtube_url", yt);
+        if (spotify) formData.append("spotify_url", spotify);
+        if (apple) formData.append("apple_music_url", apple);
         formData.append("cover_image", entryFile);
 
         if (entryForm.id) {
@@ -316,10 +330,10 @@ export default function ChartsDashboardPage() {
           artist: entryForm.artist.trim(),
           featured_artists: entryForm.featured_artists.trim() || null,
           album: entryForm.album.trim() || null,
-          audio_url: entryForm.audio_url.trim(),
-          youtube_url: entryForm.youtube_url.trim(),
-          spotify_url: entryForm.spotify_url.trim(),
-          apple_music_url: entryForm.apple_music_url.trim(),
+          audio_url: safeNormalizeUrl(entryForm.audio_url),
+          youtube_url: safeNormalizeUrl(entryForm.youtube_url),
+          spotify_url: safeNormalizeUrl(entryForm.spotify_url),
+          apple_music_url: safeNormalizeUrl(entryForm.apple_music_url),
         };
 
         if (entryForm.id) {
@@ -1627,7 +1641,7 @@ export default function ChartsDashboardPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSaveEntry} className="mt-5 space-y-5">
+            <form onSubmit={handleSaveEntry} noValidate className="mt-5 space-y-5">
               {/* Section 1: Track Details */}
               <div className="space-y-3">
                 <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500 flex items-center gap-1.5">
@@ -1925,7 +1939,7 @@ export default function ChartsDashboardPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSaveChart} className="mt-5 space-y-4">
+            <form onSubmit={handleSaveChart} noValidate className="mt-5 space-y-4">
               <div>
                 <Label htmlFor="chart-title" className="text-xs font-semibold">
                   Chart Title <span className="text-rose-500">*</span>
@@ -2056,7 +2070,8 @@ export default function ChartsDashboardPage() {
                       className="w-full text-xs file:mr-2 file:rounded-md file:border-0 file:bg-slate-200 file:px-2.5 file:py-1 file:text-xs file:font-semibold hover:file:bg-slate-300 dark:file:bg-zinc-800 dark:file:text-zinc-200"
                     />
                     <Input
-                      type="url"
+                      type="text"
+                      inputMode="url"
                       placeholder="Or enter image URL (https://…)"
                       value={chartForm.cover_image_url}
                       onChange={(e) => {
