@@ -53,10 +53,10 @@ export async function POST(request: Request) {
         artist: text(incoming.artist),
         featured_artists: text(incoming.featured_artists),
         album: text(incoming.album),
-        audio_url: text(incoming.audio_url),
-        youtube_url: text(incoming.youtube_url),
-        spotify_url: text(incoming.spotify_url),
-        apple_music_url: text(incoming.apple_music_url),
+        audio_url: text(incoming.audio_url, ""),
+        youtube_url: text(incoming.youtube_url, ""),
+        spotify_url: text(incoming.spotify_url, ""),
+        apple_music_url: text(incoming.apple_music_url, ""),
       });
     }
 
@@ -105,10 +105,10 @@ export async function PUT(request: Request) {
         artist: incoming.artist !== undefined ? text(incoming.artist) : undefined,
         featured_artists: incoming.featured_artists !== undefined ? text(incoming.featured_artists) : undefined,
         album: incoming.album !== undefined ? text(incoming.album) : undefined,
-        audio_url: incoming.audio_url !== undefined ? text(incoming.audio_url) : undefined,
-        youtube_url: incoming.youtube_url !== undefined ? text(incoming.youtube_url) : undefined,
-        spotify_url: incoming.spotify_url !== undefined ? text(incoming.spotify_url) : undefined,
-        apple_music_url: incoming.apple_music_url !== undefined ? text(incoming.apple_music_url) : undefined,
+        audio_url: incoming.audio_url !== undefined ? text(incoming.audio_url, "") : undefined,
+        youtube_url: incoming.youtube_url !== undefined ? text(incoming.youtube_url, "") : undefined,
+        spotify_url: incoming.spotify_url !== undefined ? text(incoming.spotify_url, "") : undefined,
+        apple_music_url: incoming.apple_music_url !== undefined ? text(incoming.apple_music_url, "") : undefined,
       });
     }
 

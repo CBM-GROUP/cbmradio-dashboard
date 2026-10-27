@@ -316,10 +316,10 @@ export default function ChartsDashboardPage() {
           artist: entryForm.artist.trim(),
           featured_artists: entryForm.featured_artists.trim() || null,
           album: entryForm.album.trim() || null,
-          audio_url: entryForm.audio_url.trim() || null,
-          youtube_url: entryForm.youtube_url.trim() || null,
-          spotify_url: entryForm.spotify_url.trim() || null,
-          apple_music_url: entryForm.apple_music_url.trim() || null,
+          audio_url: entryForm.audio_url.trim(),
+          youtube_url: entryForm.youtube_url.trim(),
+          spotify_url: entryForm.spotify_url.trim(),
+          apple_music_url: entryForm.apple_music_url.trim(),
         };
 
         if (entryForm.id) {
@@ -1802,59 +1802,78 @@ export default function ChartsDashboardPage() {
                   </div>
                 </div>
 
-                {/* Streaming Inputs */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                  <div>
-                    <Label htmlFor="entry-spotify" className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                      Spotify Track URL
-                    </Label>
-                    <Input
-                      id="entry-spotify"
-                      type="url"
-                      placeholder="https://open.spotify.com/track/…"
-                      value={entryForm.spotify_url}
-                      onChange={(e) => setEntryForm({ ...entryForm, spotify_url: e.target.value })}
-                      className="mt-1 text-xs"
-                    />
+                {/* Streaming Inputs - Optional */}
+                <div className="pt-2">
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
+                      Streaming & Media Links
+                    </p>
+                    <span className="text-[10px] font-normal text-slate-400 dark:text-zinc-500">
+                      All URLs are optional
+                    </span>
                   </div>
-                  <div>
-                    <Label htmlFor="entry-apple" className="text-[11px] font-semibold text-pink-600 dark:text-pink-400">
-                      Apple Music URL
-                    </Label>
-                    <Input
-                      id="entry-apple"
-                      type="url"
-                      placeholder="https://music.apple.com/…"
-                      value={entryForm.apple_music_url}
-                      onChange={(e) => setEntryForm({ ...entryForm, apple_music_url: e.target.value })}
-                      className="mt-1 text-xs"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="entry-youtube" className="text-[11px] font-semibold text-rose-500">
-                      YouTube Video URL
-                    </Label>
-                    <Input
-                      id="entry-youtube"
-                      type="url"
-                      placeholder="https://youtube.com/watch?v=…"
-                      value={entryForm.youtube_url}
-                      onChange={(e) => setEntryForm({ ...entryForm, youtube_url: e.target.value })}
-                      className="mt-1 text-xs"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="entry-audio" className="text-[11px] font-semibold text-amber-600 dark:text-amber-400">
-                      Direct Audio MP3 URL
-                    </Label>
-                    <Input
-                      id="entry-audio"
-                      type="url"
-                      placeholder="https://…/song.mp3"
-                      value={entryForm.audio_url}
-                      onChange={(e) => setEntryForm({ ...entryForm, audio_url: e.target.value })}
-                      className="mt-1 text-xs"
-                    />
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <Label htmlFor="entry-spotify" className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center justify-between">
+                        <span>Spotify Track URL</span>
+                        <span className="text-[10px] font-normal text-slate-400 dark:text-zinc-500">Optional</span>
+                      </Label>
+                      <Input
+                        id="entry-spotify"
+                        type="text"
+                        inputMode="url"
+                        placeholder="https://open.spotify.com/track/…"
+                        value={entryForm.spotify_url}
+                        onChange={(e) => setEntryForm({ ...entryForm, spotify_url: e.target.value })}
+                        className="mt-1 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="entry-apple" className="text-[11px] font-semibold text-pink-600 dark:text-pink-400 flex items-center justify-between">
+                        <span>Apple Music URL</span>
+                        <span className="text-[10px] font-normal text-slate-400 dark:text-zinc-500">Optional</span>
+                      </Label>
+                      <Input
+                        id="entry-apple"
+                        type="text"
+                        inputMode="url"
+                        placeholder="https://music.apple.com/…"
+                        value={entryForm.apple_music_url}
+                        onChange={(e) => setEntryForm({ ...entryForm, apple_music_url: e.target.value })}
+                        className="mt-1 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="entry-youtube" className="text-[11px] font-semibold text-rose-500 flex items-center justify-between">
+                        <span>YouTube Video URL</span>
+                        <span className="text-[10px] font-normal text-slate-400 dark:text-zinc-500">Optional</span>
+                      </Label>
+                      <Input
+                        id="entry-youtube"
+                        type="text"
+                        inputMode="url"
+                        placeholder="https://youtube.com/watch?v=…"
+                        value={entryForm.youtube_url}
+                        onChange={(e) => setEntryForm({ ...entryForm, youtube_url: e.target.value })}
+                        className="mt-1 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="entry-audio" className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 flex items-center justify-between">
+                        <span>Direct Audio MP3 URL</span>
+                        <span className="text-[10px] font-normal text-slate-400 dark:text-zinc-500">Optional</span>
+                      </Label>
+                      <Input
+                        id="entry-audio"
+                        type="text"
+                        inputMode="url"
+                        placeholder="https://…/song.mp3"
+                        value={entryForm.audio_url}
+                        onChange={(e) => setEntryForm({ ...entryForm, audio_url: e.target.value })}
+                        className="mt-1 text-xs"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
