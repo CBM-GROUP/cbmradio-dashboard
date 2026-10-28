@@ -310,7 +310,10 @@ export default function ChartsDashboardPage() {
         if (yt) formData.append("youtube_url", yt);
         if (spotify) formData.append("spotify_url", spotify);
         if (apple) formData.append("apple_music_url", apple);
-        formData.append("cover_image", entryFile);
+        formData.append("uploaded_cover_image", entryFile);
+        if (entryForm.cover_image_url.trim()) {
+          formData.append("cover_image", safeNormalizeUrl(entryForm.cover_image_url));
+        }
 
         if (entryForm.id) {
           await apiClient.put(`/api/charts/entries?id=${encodeURIComponent(entryForm.id)}`, formData);
@@ -334,6 +337,7 @@ export default function ChartsDashboardPage() {
           youtube_url: safeNormalizeUrl(entryForm.youtube_url),
           spotify_url: safeNormalizeUrl(entryForm.spotify_url),
           apple_music_url: safeNormalizeUrl(entryForm.apple_music_url),
+          cover_image: safeNormalizeUrl(entryForm.cover_image_url),
         };
 
         if (entryForm.id) {
@@ -1056,6 +1060,7 @@ export default function ChartsDashboardPage() {
                           src={numberOneTrack.cover_image_url || numberOneTrack.cover_image || ""}
                           alt={numberOneTrack.title}
                           fill
+                          unoptimized
                           className="object-cover"
                         />
                       ) : (
@@ -1251,7 +1256,7 @@ export default function ChartsDashboardPage() {
                       {/* Left: Artwork + Rank Over Badge */}
                       <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 dark:border-zinc-800 dark:bg-zinc-900 shadow-2xs">
                         {artworkUrl ? (
-                          <Image src={artworkUrl} alt={entry.title} fill className="object-cover" />
+                          <Image src={artworkUrl} alt={entry.title} fill unoptimized className="object-cover" />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center text-slate-400">
                             <Disc3 className="h-8 w-8" />
@@ -1456,7 +1461,7 @@ export default function ChartsDashboardPage() {
                           <div className="flex items-center gap-3">
                             <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg bg-slate-100 dark:bg-zinc-800 border border-slate-200/90 dark:border-zinc-800 shadow-2xs">
                               {artworkUrl ? (
-                                <Image src={artworkUrl} alt={entry.title} fill className="object-cover" />
+                                <Image src={artworkUrl} alt={entry.title} fill unoptimized className="object-cover" />
                               ) : (
                                 <div className="flex h-full w-full items-center justify-center text-slate-400">
                                   <Disc3 className="h-5 w-5" />
@@ -1789,6 +1794,7 @@ export default function ChartsDashboardPage() {
                         src={entryFilePreview || entryForm.cover_image_url}
                         alt="Preview"
                         fill
+                        unoptimized
                         className="object-cover"
                       />
                     ) : (
@@ -1797,8 +1803,8 @@ export default function ChartsDashboardPage() {
                       </div>
                     )}
                   </div>
-                  <div className="flex-1 space-y-1">
-                    <Label className="text-xs font-semibold">Select Artwork Image</Label>
+                  <div className="flex-1 space-y-1.5">
+                    <Label className="text-xs font-semibold">Track Artwork Image</Label>
                     <input
                       type="file"
                       accept="image/jpeg,image/png,image/webp,image/gif"
@@ -1812,6 +1818,19 @@ export default function ChartsDashboardPage() {
                         }
                       }}
                       className="w-full text-xs file:mr-2 file:rounded-md file:border-0 file:bg-slate-200 file:px-2.5 file:py-1 file:text-xs file:font-semibold hover:file:bg-slate-300 dark:file:bg-zinc-800 dark:file:text-zinc-200"
+                    />
+                    <Input
+                      type="text"
+                      inputMode="url"
+                      placeholder="Or enter artwork URL (https://…)"
+                      value={entryForm.cover_image_url}
+                      onChange={(e) => {
+                        setEntryForm({ ...entryForm, cover_image_url: e.target.value });
+                        if (e.target.value && !entryFile) {
+                          setEntryFilePreview("");
+                        }
+                      }}
+                      className="h-7 text-[11px]"
                     />
                   </div>
                 </div>

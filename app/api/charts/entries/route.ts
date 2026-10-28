@@ -36,6 +36,10 @@ export async function POST(request: Request) {
       }
       form.delete("chart");
       form.delete("chart_slug");
+      if (form.get("cover_image") instanceof File) {
+        form.set("uploaded_cover_image", form.get("cover_image")!);
+        form.delete("cover_image");
+      }
       body = form;
     } else {
       const incoming = asRecord(await request.json());
@@ -53,6 +57,7 @@ export async function POST(request: Request) {
         artist: text(incoming.artist),
         featured_artists: text(incoming.featured_artists),
         album: text(incoming.album),
+        cover_image: text(incoming.cover_image, text(incoming.cover_image_url, "")),
         audio_url: text(incoming.audio_url, ""),
         youtube_url: text(incoming.youtube_url, ""),
         spotify_url: text(incoming.spotify_url, ""),
@@ -90,6 +95,10 @@ export async function PUT(request: Request) {
       const form = await request.formData();
       if (!id) id = text(form.get("id"));
       form.delete("id");
+      if (form.get("cover_image") instanceof File) {
+        form.set("uploaded_cover_image", form.get("cover_image")!);
+        form.delete("cover_image");
+      }
       body = form;
     } else {
       const incoming = asRecord(await request.json());
@@ -105,6 +114,9 @@ export async function PUT(request: Request) {
         artist: incoming.artist !== undefined ? text(incoming.artist) : undefined,
         featured_artists: incoming.featured_artists !== undefined ? text(incoming.featured_artists) : undefined,
         album: incoming.album !== undefined ? text(incoming.album) : undefined,
+        cover_image: incoming.cover_image !== undefined || incoming.cover_image_url !== undefined
+          ? text(incoming.cover_image, text(incoming.cover_image_url, ""))
+          : undefined,
         audio_url: incoming.audio_url !== undefined ? text(incoming.audio_url, "") : undefined,
         youtube_url: incoming.youtube_url !== undefined ? text(incoming.youtube_url, "") : undefined,
         spotify_url: incoming.spotify_url !== undefined ? text(incoming.spotify_url, "") : undefined,
