@@ -1,9 +1,35 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
+import {
+  Edit2,
+  LayoutGrid,
+  List,
+  Mic,
+  Plus,
+  Search,
+  Sparkles,
+  Trash2,
+  User,
+  Users,
+  X,
+} from "lucide-react";
 import Toast from "../../components/toast";
 import { extractApiError, SiteImageFields } from "../../components/site-image-fields";
-import { StatusBadge } from "../../components/ui/surfaces";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ConfirmationDialog } from "../../components/ui/confirmation-dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { EmptyState, LoadingState } from "../../components/ui/surfaces";
 
 interface TeamMember {
   id: string;
@@ -22,6 +48,13 @@ export default function TeamPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
   const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [viewMode, setViewMode] = useState<"grid" | "table">(() => {
+    if (typeof window === "undefined") return "grid";
+    const saved = localStorage.getItem("team_view_mode");
+    return saved === "table" || saved === "grid" ? saved : "grid";
+  });
   const [toast, setToast] = useState<string | null>(null);
 
   const [name, setName] = useState("");
@@ -33,68 +66,23 @@ export default function TeamPage() {
   const [formError, setFormError] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<TeamMember | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleSetViewMode = (mode: "grid" | "table") => {
+    setViewMode(mode);
+    localStorage.setItem("team_view_mode", mode);
+  };
 
   useEffect(() => {
     fetch("/api/team")
       .then((res) => res.json())
       .then((data) => {
         setList(Array.isArray(data) ? data : data.results || []);
-     
         setLoading(false);
       })
       .catch(() => setLoading(false));
   }, []);
-
-  const handleSaveLegacy = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name || !position) return;
-    if (editingMember) {
-      const res = await fetch("/api/team", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-        id: editingMember.id, 
-        name, 
-        role: position,   // 🔄 Maps 'position' to 'role'
-        category, 
-        bio, 
-        photo: image      // 🔄 Maps local 'image' state to 'photo'
-      }),
-      });
-      if (res.ok) {
-        const updated = await res.json();
-        const updatedList = list.map((m) => (m.id === updated.id ? updated : m));
-        setList(updatedList);
-        if (typeof window !== "undefined")
-        
-        setToast("👥 Team member details successfully updated!");
-      }
-    } else {
-      const res = await fetch("/api/team", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ 
-        name, 
-        role: position,   // 🔄 Maps 'position' to 'role' for the backend
-        category, 
-        bio: bio || "Station Staff Member.", 
-        photo: image || "https://unsplash.com" 
-              }),// 🔄 Maps 'image' to 'photo' for the backend
-      });
-
-      if (res.ok) {
-        const newMember = await res.json();
-        const updatedList = [newMember, ...list];
-        setList(updatedList);
-       
-        
-        setToast("👥 New staff profile added to directory live!");
-      }
-    }
-    clearForm();
-  };
-
-  void handleSaveLegacy;
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,7 +94,8 @@ export default function TeamPage() {
     if (editingMember) body.append("id", editingMember.id);
     body.append("name", name);
     body.append("role", position);
-    body.append("bio", bio || "Station Staff Member.");
+    body.append("category", category);
+    body.append("bio", bio.trim());
     body.append("photo", image);
     body.append("is_active", String(isActive));
     if (selectedFile) body.append("uploaded_photo", selectedFile);
@@ -121,8 +110,16 @@ export default function TeamPage() {
       return;
     }
     const saved = await res.json();
-    setList(editingMember ? list.map((m) => (m.id === saved.id ? saved : m)) : [saved, ...list]);
-    setToast(editingMember ? "Team member details successfully updated!" : "New staff profile added to directory!");
+    setList(
+      editingMember
+        ? list.map((m) => (m.id === saved.id ? saved : m))
+        : [saved, ...list]
+    );
+    setToast(
+      editingMember
+        ? "Team member details successfully updated!"
+        : "New staff profile added to directory!"
+    );
     setSubmitting(false);
     clearForm();
   };
@@ -130,9 +127,9 @@ export default function TeamPage() {
   const startEdit = (m: TeamMember) => {
     setEditingMember(m);
     setName(m.name);
-    setPosition(m.position);
-    setCategory(m.category);
-    setBio(m.bio);
+    setPosition(m.position || "");
+    setCategory(m.category || "Leadership");
+    setBio(m.bio === "Station Staff Member." ? "" : (m.bio || ""));
     setImage(m.externalImage || "");
     setIsActive(m.is_active);
     setSelectedFile(null);
@@ -140,17 +137,23 @@ export default function TeamPage() {
     setShowForm(true);
   };
 
-  const handleDelete = async (id: string, memberName: string) => {
-    const res = await fetch(`/api/team?id=${encodeURIComponent(id)}`, { method: "DELETE" });
-    if (!res.ok) {
-      setToast("Unable to delete the team member.");
-      return;
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/team?id=${encodeURIComponent(deleteTarget.id)}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        setToast("Unable to delete the team member.");
+        return;
+      }
+      setList(list.filter((item) => item.id !== deleteTarget.id));
+      setToast(`Profile for “${deleteTarget.name}” removed.`);
+      setDeleteTarget(null);
+    } finally {
+      setDeleting(false);
     }
-    const updatedList = list.filter((item) => item.id !== id);
-    setList(updatedList);
-    
-    setToast(`🗑️ Profile for "${memberName.toUpperCase()}" removed successfully.`);
-    setTimeout(() => setToast(null), 2500);
   };
 
   const clearForm = () => {
@@ -164,108 +167,463 @@ export default function TeamPage() {
     setFormError("");
     setEditingMember(null);
     setShowForm(false);
-    setTimeout(() => setToast(null), 2500);
   };
 
-  if (loading) return <div className="p-4 text-xs text-slate-500 animate-pulse">📡 Fetching Team Directory...</div>;
+  const filteredList = list.filter((m) => {
+    const matchesSearch =
+      m.name.toLowerCase().includes(search.toLowerCase()) ||
+      m.position.toLowerCase().includes(search.toLowerCase()) ||
+      (m.bio && m.bio.toLowerCase().includes(search.toLowerCase()));
 
-  const filteredList = list.filter((m) => m.name.toLowerCase().includes(search) || m.position.toLowerCase().includes(search));
+    if (!matchesSearch) return false;
+    if (categoryFilter !== "all" && m.category !== categoryFilter) return false;
+    if (statusFilter === "active" && !m.is_active) return false;
+    if (statusFilter === "inactive" && m.is_active) return false;
+    return true;
+  });
 
   return (
-    <div className="space-y-6 view-fade">
-      <Toast message={toast} />
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-800 pb-4">
+    <div className="space-y-6 pb-16 view-fade">
+      <Toast message={toast} onDismiss={() => setToast(null)} />
+
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold text-white uppercase tracking-wider">Station Team</h1>
-          <p className="text-xs text-slate-400 mt-0.5">Manage all active radio staff personnel.</p>
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
+            <Users className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
+            <span>Station Team & Personnel</span>
+          </h1>
+          <p className="text-xs md:text-sm text-slate-500 dark:text-zinc-400 mt-1">
+            Manage station leadership, on-air presenters, broadcast producers, and guest contributors.
+          </p>
         </div>
-        <div className="flex items-center space-x-3">
-          <input type="text" placeholder="🔍 Search team..." value={search} onChange={(e) => setSearch(e.target.value.toLowerCase())} className="bg-slate-900 border border-slate-800 text-white rounded-md px-3 py-1.5 text-xs outline-none focus:border-emerald-500 w-48" />
-          <button onClick={() => { if (showForm) clearForm(); else setShowForm(true); }} className="px-3 py-1.5 bg-emerald-500 text-slate-950 text-xs font-bold rounded-md cursor-pointer">{showForm ? "✕ Dismiss" : "＋ Add Member"}</button>
+        <div className="flex items-center gap-2.5">
+          <Button
+            onClick={() => (showForm ? clearForm() : setShowForm(true))}
+            className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs tracking-wide uppercase px-4 py-2 shadow-sm transition-all"
+          >
+            {showForm ? <X className="h-4 w-4 mr-1.5" /> : <Plus className="h-4 w-4 mr-1.5" />}
+            <span>{showForm ? "Close Form" : "Add Staff Member"}</span>
+          </Button>
         </div>
       </div>
 
+      {/* Editor Form */}
       {showForm && (
-        <form onSubmit={handleSave} className="bg-slate-900 border border-slate-800 rounded-xl p-5 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs form-slide">
-          <div className="space-y-3">
-            <div>
-              <label className="block text-slate-400 mb-1">Full Name *</label>
-              <input type="text" required value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. John Doe" className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-white outline-none" />
-            </div>
-            <div>
-              <label className="block text-slate-400 mb-1">Position / Role *</label>
-              <input type="text" required value={position} onChange={(e) => setPosition(e.target.value)} placeholder="e.g. Head of Production" className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-white outline-none" />
-            </div>
-            <div>
-              <label className="block text-slate-400 mb-1">Roster Category</label>
-              <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-white outline-none">
-                <option value="Leadership">Leadership</option>
-                <option value="Presenters">Presenters</option>
-                <option value="Producers">Producers</option>
-                <option value="Guest Contributors">Guest Contributors</option>
-              </select>
-            </div>
-          </div>
-          <div className="space-y-3 flex flex-col justify-between">
-            <div>
-              <SiteImageFields
-                currentUrl={editingMember?.image}
-                externalUrl={image}
-                file={selectedFile}
-                onExternalUrlChange={setImage}
-                onFileChange={setSelectedFile}
-              />
-            </div>
-            <div>
-              <label className="block text-slate-400 mb-1">Biography</label>
-              <textarea rows={2} value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Brief introduction notes..." className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-white outline-none resize-none" />
-            </div>
-            <div>
-              <label htmlFor="team-visibility" className="block text-slate-400 mb-1">Public visibility</label>
-              <select id="team-visibility" value={isActive ? "active" : "inactive"} onChange={(e) => setIsActive(e.target.value === "active")} disabled={submitting} aria-describedby="team-visibility-help" className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-white">
-                <option value="active">Active — show this team member publicly</option>
-                <option value="inactive">Inactive — keep this team member hidden</option>
-              </select>
-              <p id="team-visibility-help" className="mt-1 text-[10px] text-slate-500">Controls visibility on the Team page and homepage.</p>
-            </div>
-            <div className="flex justify-end space-x-2">
-              <button type="button" onClick={clearForm} className="px-4 py-2 rounded bg-slate-800 text-slate-300 font-bold">Cancel</button>
-              <button type="submit" disabled={submitting} aria-busy={submitting} className="px-6 py-2 bg-emerald-500 text-slate-950 font-bold rounded uppercase tracking-wider disabled:opacity-50">{submitting ? "Saving…" : editingMember ? "Update Profile" : "Commit Profile"}</button>
-            </div>
-            {formError && <p className="text-rose-400">{formError}</p>}
-          </div>
-        </form>
+        <Card className="border-emerald-500/30 bg-white shadow-xl dark:bg-zinc-950">
+          <CardHeader className="border-b border-slate-100 dark:border-zinc-800 pb-4">
+            <CardTitle className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              <span>{editingMember ? `Edit Profile: ${editingMember.name}` : "Add New Staff Member"}</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <form onSubmit={handleSave} className="space-y-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                {/* Column 1 */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                      Full Name <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="e.g. Pastor David Ssemwogerere"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white dark:placeholder:text-zinc-600"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                      Role / On-Air Position <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={position}
+                      onChange={(e) => setPosition(e.target.value)}
+                      placeholder="e.g. Station Presenter, Host, Creative Director, CTO"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white dark:placeholder:text-zinc-600"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                      Roster Category
+                    </label>
+                    <select
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white"
+                    >
+                      <option value="Leadership">Leadership</option>
+                      <option value="Presenters">Presenters / Hosts</option>
+                      <option value="Producers">Producers & Tech</option>
+                      <option value="Guest Contributors">Guest Contributors</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                      Public Visibility
+                    </label>
+                    <select
+                      value={isActive ? "active" : "inactive"}
+                      onChange={(e) => setIsActive(e.target.value === "active")}
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white"
+                    >
+                      <option value="active">Active — Publicly displayed on website</option>
+                      <option value="inactive">Hidden — Unlisted from public site</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Column 2 */}
+                <div className="space-y-4">
+                  <SiteImageFields
+                    currentUrl={editingMember?.image}
+                    externalUrl={image}
+                    file={selectedFile}
+                    onExternalUrlChange={setImage}
+                    onFileChange={setSelectedFile}
+                  />
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                      Staff Role Note & Biography (Optional)
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value)}
+                      placeholder="Optional role description or bio displayed under the role on their profile card..."
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white dark:placeholder:text-zinc-600"
+                    />
+                    <p className="mt-1 text-[11px] text-slate-400 dark:text-zinc-500">
+                      Displayed below the member&apos;s title on the public site profile card. Leave blank if not needed.
+                    </p>
+                  </div>
+
+                  {formError && (
+                    <p className="rounded-lg bg-rose-500/10 border border-rose-500/20 p-2.5 text-xs text-rose-500">
+                      {formError}
+                    </p>
+                  )}
+
+                  <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-zinc-800">
+                    <Button variant="outline" type="button" onClick={clearForm} size="sm">
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={submitting}
+                      size="sm"
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white"
+                    >
+                      {submitting
+                        ? "Saving…"
+                        : editingMember
+                        ? "Update Member"
+                        : "Save Member"}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
       )}
 
-      {filteredList.length === 0 ? (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-xs text-slate-500 font-mono tracking-wide animate-pulse">📡 No staff profiles match your query criteria.</div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {filteredList.map((m) => (
-            <div key={m.id} className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm flex flex-col sm:flex-row group hover:border-slate-700 transition">
-              <div className="relative w-full sm:w-32 h-36 bg-slate-950 border-b sm:border-b-0 sm:border-r border-slate-800 shrink-0">
-                <Image src={m.image || "https://unsplash.com"} alt={m.name} fill className="w-full h-full object-cover" />
-              </div>
-              <div className="p-4 flex-1 min-w-0 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="text-sm font-bold text-white uppercase tracking-wide truncate">{m.name}</h3>
-                    <StatusBadge status={m.is_active ? "active" : "inactive"} label={m.is_active ? "Active" : "Inactive"} />
-                    <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded font-sans shrink-0">{m.category}</span>
-                  </div>
-                  <p className="text-[11px] text-slate-400 font-semibold mt-0.5">{m.position}</p>
-                  <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed pt-1">{m.bio}</p>
-                </div>
-                <div className="flex items-center justify-end space-x-3 pt-2 border-t border-slate-800/60 font-bold text-xs">
-                  <button onClick={() => startEdit(m)} className="text-slate-400 hover:text-emerald-400 transition">Edit</button>
-                  <span className="text-slate-800">|</span>
-                  <button onClick={() => handleDelete(m.id, m.name)} className="text-rose-500 hover:text-rose-400 transition">Delete</button>
-                </div>
-              </div>
+      {/* Filter and View Mode Toolbar */}
+      <Card className="p-4">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-1 flex-wrap items-center gap-3">
+            {/* Search */}
+            <div className="relative flex-1 min-w-[200px] max-w-sm">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500" />
+              <input
+                type="text"
+                value={search}
+                placeholder="Search team by name or role..."
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full rounded-lg border border-slate-200 bg-white pl-9 pr-8 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-zinc-100 dark:placeholder:text-zinc-500"
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-white text-xs"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
             </div>
+
+            {/* Category Filter */}
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-700 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-zinc-300"
+            >
+              <option value="all">All Departments</option>
+              <option value="Leadership">Leadership</option>
+              <option value="Presenters">Presenters</option>
+              <option value="Producers">Producers</option>
+              <option value="Guest Contributors">Guest Contributors</option>
+            </select>
+
+            {/* Status Filter */}
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-700 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-zinc-300"
+            >
+              <option value="all">All Visibility</option>
+              <option value="active">Active Only</option>
+              <option value="inactive">Hidden Only</option>
+            </select>
+          </div>
+
+          {/* Hybrid View Mode Toggle */}
+          <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1 shrink-0 self-start lg:self-center dark:border-zinc-800 dark:bg-black">
+            <button
+              onClick={() => handleSetViewMode("grid")}
+              className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-semibold transition cursor-pointer ${
+                viewMode === "grid"
+                  ? "bg-white text-emerald-600 shadow-xs dark:bg-zinc-900 dark:text-emerald-400"
+                  : "text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white"
+              }`}
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              <span>Grid</span>
+            </button>
+            <button
+              onClick={() => handleSetViewMode("table")}
+              className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-semibold transition cursor-pointer ${
+                viewMode === "table"
+                  ? "bg-white text-emerald-600 shadow-xs dark:bg-zinc-900 dark:text-emerald-400"
+                  : "text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white"
+              }`}
+            >
+              <List className="h-3.5 w-3.5" />
+              <span>Table</span>
+            </button>
+          </div>
+        </div>
+      </Card>
+
+      {/* Team Content View */}
+      {loading ? (
+        <LoadingState label="Loading station team roster…" />
+      ) : filteredList.length === 0 ? (
+        <EmptyState
+          icon={<Users className="h-10 w-10 text-slate-400 dark:text-zinc-600" />}
+          title="No Team Profiles Found"
+          description={
+            search || categoryFilter !== "all" || statusFilter !== "all"
+              ? "No team members matched the selected filters."
+              : "Click 'Add Staff Member' to create the first profile."
+          }
+        />
+      ) : viewMode === "grid" ? (
+        /* Visual Portrait Staff Cards (Reduced Content) */
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredList.map((m) => (
+            <Card
+              key={m.id}
+              className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/80 bg-white transition-all duration-300 hover:-translate-y-1 hover:border-emerald-500/40 hover:shadow-xl dark:border-zinc-800/80 dark:bg-zinc-950 dark:hover:shadow-emerald-950/20"
+            >
+              <div>
+                {/* Portrait Photography Header */}
+                <div className="relative h-72 sm:h-80 w-full overflow-hidden bg-slate-100 dark:bg-black">
+                  {m.image ? (
+                    <Image
+                      src={m.image}
+                      alt={m.name}
+                      fill
+                      unoptimized
+                      className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-b from-slate-100 to-slate-200 text-slate-400 dark:from-zinc-900 dark:to-black dark:text-zinc-600">
+                      <User className="h-20 w-20 opacity-40" />
+                      <span className="mt-2 text-xs font-medium text-slate-400 dark:text-zinc-600">
+                        No Portrait Photo
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Gradient Scrim */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/20" />
+
+                  {/* Top Badges */}
+                  <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between">
+                    <span className="rounded-full bg-emerald-500/90 px-3 py-1 text-[11px] font-bold tracking-wider text-black uppercase shadow-md backdrop-blur-xs">
+                      {m.category || "Staff"}
+                    </span>
+                    <Badge
+                      variant={m.is_active ? "default" : "secondary"}
+                      className="flex items-center gap-1.5 shadow-md backdrop-blur-xs text-[11px]"
+                    >
+                      <span
+                        className={`h-2 w-2 rounded-full ${
+                          m.is_active ? "bg-emerald-400 animate-pulse" : "bg-slate-400"
+                        }`}
+                      />
+                      <span>{m.is_active ? "On Air" : "Hidden"}</span>
+                    </Badge>
+                  </div>
+
+                  {/* Overlay Title & Role at base of photo */}
+                  <div className="absolute bottom-4 left-5 right-5">
+                    <h3 className="text-lg sm:text-xl font-black text-white drop-shadow-sm tracking-tight line-clamp-1">
+                      {m.name}
+                    </h3>
+                    <div className="mt-1 flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-emerald-400">
+                      <Mic className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">{m.position}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Optional Clean 1-Line Bio (Reduced content) */}
+                {m.bio && m.bio !== "Station Staff Member." && (
+                  <div className="px-5 py-3">
+                    <p className="text-xs text-slate-500 dark:text-zinc-400 line-clamp-2 leading-relaxed">
+                      {m.bio}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Actions Footer */}
+              <div className="flex items-center gap-2 border-t border-slate-100 bg-slate-50/70 p-3.5 dark:border-zinc-800/80 dark:bg-black/40">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => startEdit(m)}
+                  className="flex-1 flex items-center justify-center gap-1.5 font-semibold text-xs h-8 border-slate-200 hover:border-emerald-500 hover:text-emerald-600 dark:border-zinc-800 dark:text-zinc-200 dark:hover:border-emerald-500/50 dark:hover:text-emerald-400"
+                >
+                  <Edit2 className="h-3 w-3" />
+                  <span>Edit Profile</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setDeleteTarget(m)}
+                  className="h-8 px-2.5 text-xs text-rose-600 border-rose-500/20 hover:bg-rose-50 hover:border-rose-500/40 dark:text-rose-400 dark:border-rose-500/30 dark:hover:bg-rose-500/10"
+                  title="Remove staff profile"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </Card>
           ))}
         </div>
+      ) : (
+        /* Dense Data Table View */
+        <Card className="overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-16">Photo</TableHead>
+                <TableHead>Staff Name</TableHead>
+                <TableHead>On-Air Position</TableHead>
+                <TableHead>Department</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredList.map((m) => (
+                <TableRow key={m.id}>
+                  <TableCell>
+                    <div className="relative h-10 w-10 overflow-hidden rounded-full border border-slate-200 bg-slate-100 dark:border-zinc-800 dark:bg-black">
+                      {m.image ? (
+                        <Image
+                          src={m.image}
+                          alt={m.name}
+                          fill
+                          unoptimized
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-slate-400 dark:text-zinc-600">
+                          <User className="h-5 w-5" />
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <p className="font-semibold text-sm text-slate-900 dark:text-white line-clamp-1">
+                      {m.name}
+                    </p>
+                    <p className="text-[11px] text-slate-400 dark:text-zinc-500 font-mono">
+                      ID: {m.id}
+                    </p>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-xs text-slate-700 dark:text-zinc-300 font-medium">
+                      {m.position}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="text-xs">
+                      {m.category || "Staff"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={m.is_active ? "default" : "secondary"}
+                      className="text-[10px]"
+                    >
+                      {m.is_active ? "Active" : "Hidden"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => startEdit(m)}
+                        className="h-8 w-8 p-0 text-slate-600 hover:text-emerald-600 dark:text-zinc-300 dark:hover:text-emerald-400"
+                        title="Edit profile"
+                      >
+                        <Edit2 className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setDeleteTarget(m)}
+                        className="h-8 w-8 p-0 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10"
+                        title="Delete profile"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
       )}
+
+      {/* Delete Confirmation */}
+      <ConfirmationDialog
+        open={!!deleteTarget}
+        title="Remove Team Member?"
+        description={
+          deleteTarget
+            ? `Are you sure you want to remove “${deleteTarget.name}” from the station directory?`
+            : ""
+        }
+        loading={deleting}
+        onConfirm={() => void confirmDelete()}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

@@ -8,11 +8,51 @@ import MobileDashboardNavigation from "./mobile-dashboard-navigation";
 import { DashboardThemeProvider } from "./theme-provider";
 
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
-  return <DashboardThemeProvider><AuthGuard>{(user) => <AuthenticatedShell user={user}>{children}</AuthenticatedShell>}</AuthGuard></DashboardThemeProvider>;
+  return (
+    <DashboardThemeProvider>
+      <AuthGuard>
+        {(user) => <AuthenticatedShell user={user}>{children}</AuthenticatedShell>}
+      </AuthGuard>
+    </DashboardThemeProvider>
+  );
 }
 
-function AuthenticatedShell({ user, children }: { user: import("../../lib/backend-auth").AdminUser; children: React.ReactNode }) {
+function AuthenticatedShell({
+  user,
+  children,
+}: {
+  user: import("../../lib/backend-auth").AdminUser;
+  children: React.ReactNode;
+}) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const menuTriggerRef = useRef<HTMLButtonElement>(null);
-  return <div className="dashboard-shell"><aside className="dashboard-desktop-sidebar"><DashboardSidebar /></aside><MobileDashboardNavigation open={mobileOpen} onClose={() => setMobileOpen(false)} triggerRef={menuTriggerRef} /><div className="dashboard-workspace"><DashboardHeader user={user} navigationOpen={mobileOpen} onOpenNavigation={() => setMobileOpen(true)} menuTriggerRef={menuTriggerRef} /><main className="dashboard-main"><div>{children}</div></main></div></div>;
+
+  return (
+    <div className="flex h-screen w-full overflow-hidden bg-slate-50 font-sans text-slate-900 transition-colors duration-150 dark:bg-black dark:text-zinc-100">
+      {/* Desktop Sidebar */}
+      <aside className="hidden w-64 shrink-0 overflow-y-auto border-r border-slate-200/90 bg-white dark:border-zinc-800/80 dark:bg-zinc-950/95 md:block">
+        <DashboardSidebar />
+      </aside>
+
+      {/* Mobile Navigation Drawer */}
+      <MobileDashboardNavigation
+        open={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        triggerRef={menuTriggerRef}
+      />
+
+      {/* Main Content Area */}
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <DashboardHeader
+          user={user}
+          navigationOpen={mobileOpen}
+          onOpenNavigation={() => setMobileOpen(true)}
+          menuTriggerRef={menuTriggerRef}
+        />
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+          <div className="mx-auto max-w-7xl">{children}</div>
+        </main>
+      </div>
+    </div>
+  );
 }
