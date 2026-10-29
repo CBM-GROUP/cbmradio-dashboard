@@ -54,7 +54,7 @@ async function mutate(request: Request, method: "POST" | "PATCH") {
     }
     if (method === "PATCH" && !id) return requestError("Program id is required.");
     const response = await fetch(
-      `${BACKEND_API_V1_URL}/programs/${id ? `${encodeURIComponent(id)}/` : ""}`,
+      `${BACKEND_API_V1_URL}/programs/${method === "PATCH" ? `${encodeURIComponent(id)}/` : ""}`,
       { method, headers, body },
     );
     return preserveBackendResponse(response, toProgram);

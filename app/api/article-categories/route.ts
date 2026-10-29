@@ -24,7 +24,7 @@ async function mutate(request: Request, method: "POST" | "PATCH") {
     const incoming = asRecord(await request.json());
     const slug = text(incoming.slug); delete incoming.slug;
     if (method === "PATCH" && !slug) return requestError("Category slug is required.");
-    return preserveBackendResponse(await fetch(`${BACKEND_API_V1_URL}/articles/categories/${slug ? `${encodeURIComponent(slug)}/` : ""}`, { method, headers, body: JSON.stringify(incoming) }), identity);
+    return preserveBackendResponse(await fetch(`${BACKEND_API_V1_URL}/articles/categories/${method === "PATCH" ? `${encodeURIComponent(slug)}/` : ""}`, { method, headers, body: JSON.stringify(incoming) }), identity);
   } catch { return requestError("Unable to reach the article category service.", 502); }
 }
 export async function POST(request: Request) { return mutate(request, "POST"); }

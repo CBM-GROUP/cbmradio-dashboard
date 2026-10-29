@@ -60,7 +60,7 @@ async function mutate(request: Request, method: "POST" | "PATCH") {
     if (method === "PATCH" && !id) return requestError("Team member id is required.");
     return preserveBackendResponse(
       await fetch(
-        `${BACKEND_API_V1_URL}/team/${id ? `${encodeURIComponent(id)}/` : ""}`,
+        `${BACKEND_API_V1_URL}/team/${method === "PATCH" ? `${encodeURIComponent(id)}/` : ""}`,
         { method, headers, body }
       ),
       toTeam
