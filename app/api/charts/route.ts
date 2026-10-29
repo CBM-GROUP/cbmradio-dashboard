@@ -1,5 +1,6 @@
 import { asRecord, bool, number, requestError, text } from "../../lib/backend-api";
 import {
+  isUploadedFile,
   preserveBackendResponse,
   requestIsMultipart,
 } from "../../lib/media-proxy";
@@ -66,7 +67,7 @@ export async function POST(request: Request) {
       if (typeof rawSlug === "string" && !rawSlug.trim()) {
         form.delete("slug");
       }
-      if (form.get("cover_image") instanceof File) {
+      if (isUploadedFile(form.get("cover_image"))) {
         form.set("uploaded_cover_image", form.get("cover_image")!);
         form.delete("cover_image");
       }
@@ -117,7 +118,7 @@ export async function PUT(request: Request) {
         const ct = form.get("chart_type") || form.get("chartType");
         form.set("chart_type", normalizeChartType(ct, "hot_100"));
       }
-      if (form.get("cover_image") instanceof File) {
+      if (isUploadedFile(form.get("cover_image"))) {
         form.set("uploaded_cover_image", form.get("cover_image")!);
         form.delete("cover_image");
       }

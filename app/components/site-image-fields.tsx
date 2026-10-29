@@ -70,12 +70,55 @@ export function SiteImageFields({
   );
 }
 
-export function extractApiError(data: unknown): string {
-  if (!data || typeof data !== "object") return "The request could not be completed.";
-  for (const value of Object.values(data as Record<string, unknown>)) {
-    if (typeof value === "string") return value;
-    if (Array.isArray(value) && typeof value[0] === "string") return value[0];
-    if (value && typeof value === "object") return extractApiError(value);
+function findStringError(data: unknown): string | null {
+  if (typeof data === "string" && data.trim() && !data.trim().startsWith("<")) {
+    return data.trim();
   }
-  return "The request could not be completed.";
+  if (Array.isArray(data)) {
+    for (const item of data) {
+      const found = findStringError(item);
+      if (found) return found;
+    }
+    return null;
+  }
+  if (data && typeof data === "object") {
+    const obj = data as Record<string, unknown>;
+    for (const key of ["error", "message", "detail", "non_field_errors"]) {
+      const found = findStringError(obj[key]);
+      if (found) return found;
+    }
+    for (const value of Object.values(obj)) {
+      const found = findStringError(value);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+export async function extractApiError(data: unknown): Promise<string> {
+  if (typeof Response !== "undefined" && data instanceof Response) {
+    if (data.status === 401) {
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("dashboard:session-expired"));
+      }
+      return "Your administrator session has expired. Please log in again.";
+    }
+    if (data.status === 403) {
+      return "You do not have administrator permissions to perform this action.";
+    }
+    try {
+      const json = await data.json();
+      const extracted = findStringError(json);
+      if (extracted) return extracted;
+    } catch {
+      // not JSON
+    }
+    if (data.status >= 500) {
+      return `The backend server encountered an error (HTTP ${data.status}).`;
+    }
+    return data.statusText || "The request could not be completed.";
+  }
+
+  const extracted = findStringError(data);
+  return extracted || "The request could not be completed.";
 }
