@@ -44,7 +44,7 @@ async function mutate(request: Request, method: "POST" | "PATCH") {
     }
     if (method === "PATCH" && !id) return requestError("Episode id is required.");
     return preserveBackendResponse(await fetch(
-      `${BACKEND_API_V1_URL}/episodes/${id ? `${encodeURIComponent(id)}/` : ""}`,
+      `${BACKEND_API_V1_URL}/episodes/${method === "PATCH" ? `${encodeURIComponent(id)}/` : ""}`,
       { method, headers, body },
     ), toEpisode);
   } catch { return requestError("Unable to reach the episodes service.", 502); }

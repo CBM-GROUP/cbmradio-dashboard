@@ -36,7 +36,7 @@ async function mutate(request: Request, method: "POST" | "PATCH") {
     }
     if (method === "PATCH" && !slug) return requestError("Article slug is required.");
     return preserveBackendResponse(await fetch(
-      `${BACKEND_API_V1_URL}/articles/${slug ? `${encodeURIComponent(slug)}/` : ""}`,
+      `${BACKEND_API_V1_URL}/articles/${method === "PATCH" ? `${encodeURIComponent(slug)}/` : ""}`,
       { method, headers, body },
     ), toArticle);
   } catch { return requestError("Unable to reach the articles service.", 502); }
