@@ -10,6 +10,13 @@ export function requestIsMultipart(request: Request) {
   );
 }
 
+export function isUploadedFile(val: unknown): boolean {
+  if (!val || typeof val !== "object") return false;
+  if (typeof File !== "undefined" && val instanceof File) return true;
+  if (typeof Blob !== "undefined" && val instanceof Blob && typeof (val as { name?: unknown }).name === "string") return true;
+  return "arrayBuffer" in val && typeof (val as { name?: unknown }).name === "string";
+}
+
 export async function preserveBackendResponse(
   response: Response,
   transform: Transformer,

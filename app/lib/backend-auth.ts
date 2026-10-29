@@ -35,13 +35,19 @@ export async function readJsonResponse(response: Response): Promise<Record<strin
     const data: unknown = JSON.parse(text);
     return data && typeof data === "object" ? (data as Record<string, unknown>) : {};
   } catch {
-    return { detail: text };
+    const clean = text.trim().startsWith("<") ? "The backend server encountered an error." : text.trim();
+    return { detail: clean };
   }
 }
 
 export function getApiError(data: Record<string, unknown>, fallback: string) {
-  const error = data.error ?? data.detail ?? data.message;
-  return typeof error === "string" && error ? error : fallback;
+  for (const key of ["error", "message", "detail"]) {
+    const val = data[key];
+    if (typeof val === "string" && val.trim() && !val.trim().startsWith("<")) {
+      return val.trim();
+    }
+  }
+  return fallback;
 }
 
 export function isAdminUser(value: unknown): value is AdminUser {

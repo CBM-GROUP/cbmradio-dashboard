@@ -1,5 +1,6 @@
 import { asRecord, number, requestError, text } from "../../../lib/backend-api";
 import {
+  isUploadedFile,
   preserveBackendResponse,
   requestIsMultipart,
 } from "../../../lib/media-proxy";
@@ -36,7 +37,7 @@ export async function POST(request: Request) {
       }
       form.delete("chart");
       form.delete("chart_slug");
-      if (form.get("cover_image") instanceof File) {
+      if (isUploadedFile(form.get("cover_image"))) {
         form.set("uploaded_cover_image", form.get("cover_image")!);
         form.delete("cover_image");
       }
@@ -95,7 +96,7 @@ export async function PUT(request: Request) {
       const form = await request.formData();
       if (!id) id = text(form.get("id"));
       form.delete("id");
-      if (form.get("cover_image") instanceof File) {
+      if (isUploadedFile(form.get("cover_image"))) {
         form.set("uploaded_cover_image", form.get("cover_image")!);
         form.delete("cover_image");
       }
