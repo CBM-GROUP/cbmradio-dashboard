@@ -471,13 +471,15 @@ export default function ChartsDashboardPage() {
     e.preventDefault();
     setChartSaving(true);
     try {
-      const targetSlug = isEditingChart
-        ? chartForm.slug
-        : chartForm.slug.trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-");
+      const cleanedSlug = chartForm.slug.trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "");
+      const targetSlug = isEditingChart ? chartForm.slug : cleanedSlug;
+      let finalSlug = targetSlug;
 
       if (chartFile) {
         const formData = new FormData();
-        formData.append("slug", targetSlug);
+        if (targetSlug) {
+          formData.append("slug", targetSlug);
+        }
         formData.append("title", chartForm.title.trim());
         formData.append("description", chartForm.description.trim());
         formData.append("edition_date", chartForm.edition_date);
@@ -489,18 +491,21 @@ export default function ChartsDashboardPage() {
           await apiClient.put("/api/charts", formData);
           setToast({ message: `Updated chart "${chartForm.title}"`, variant: "success" });
         } else {
-          await apiClient.post("/api/charts", formData);
+          const res = await apiClient.post<{ slug?: string }>("/api/charts", formData);
+          if (res?.slug) finalSlug = res.slug;
           setToast({ message: `Created new chart "${chartForm.title}"`, variant: "success" });
         }
       } else {
         const payload: Record<string, unknown> = {
-          slug: targetSlug,
           title: chartForm.title.trim(),
           description: chartForm.description.trim(),
           edition_date: chartForm.edition_date,
           chart_type: chartForm.chart_type,
           is_active: chartForm.is_active,
         };
+        if (targetSlug) {
+          payload.slug = targetSlug;
+        }
         if (chartForm.cover_image_url.trim()) {
           payload.cover_image = chartForm.cover_image_url.trim();
         }
@@ -509,14 +514,15 @@ export default function ChartsDashboardPage() {
           await apiClient.put("/api/charts", payload);
           setToast({ message: `Updated chart "${chartForm.title}"`, variant: "success" });
         } else {
-          await apiClient.post("/api/charts", payload);
+          const res = await apiClient.post<{ slug?: string }>("/api/charts", payload);
+          if (res?.slug) finalSlug = res.slug;
           setToast({ message: `Created new chart "${chartForm.title}"`, variant: "success" });
         }
       }
 
       setChartModalOpen(false);
-      void loadCharts(targetSlug);
-      void loadChartDetail(targetSlug);
+      void loadCharts(finalSlug);
+      void loadChartDetail(finalSlug);
     } catch (err) {
       if (isApiError(err)) {
         setToast({ message: err.message, variant: "error" });

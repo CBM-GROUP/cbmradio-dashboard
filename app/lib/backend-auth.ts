@@ -3,8 +3,13 @@ import { NextResponse } from "next/server";
 
 export const AUTH_COOKIE_NAME = "admin_jwt_token";
 
+const defaultAuthApiBaseUrl =
+  process.env.NODE_ENV === "production"
+    ? "https://apicbmradio.cbmgroupco.com"
+    : "http://localhost:8000";
+
 const configuredAuthApiBaseUrl =
-  process.env.BACKEND_API_URL || "http://localhost:8000";
+  process.env.BACKEND_API_URL || defaultAuthApiBaseUrl;
 
 export const AUTH_API_BASE_URL = configuredAuthApiBaseUrl.replace(/\/$/, "");
 

@@ -16,6 +16,11 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "passionategrace.org",
       },
+      {
+        protocol: "https",
+        hostname: "apicbmradio.cbmgroupco.com",
+        pathname: "/**",
+      },
       ...(mediaHostname
         ? [{ protocol: "https" as const, hostname: mediaHostname, pathname: "/**" }]
         : []),
