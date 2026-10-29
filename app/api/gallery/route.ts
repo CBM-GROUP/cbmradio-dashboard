@@ -1,9 +1,8 @@
-import { NextResponse } from "next/server";
 import { asRecord, requestError, text } from "../../lib/backend-api";
+import { preserveBackendResponse } from "../../lib/media-proxy";
 import {
   BACKEND_API_V1_URL,
   getBackendAuthHeaders,
-  readJsonResponse,
   unauthorizedResponse,
 } from "../../lib/backend-auth";
 
@@ -35,16 +34,7 @@ function toGallery(item: Record<string, unknown>) {
 }
 
 async function galleryResponse(response: Response) {
-  if (response.status === 204) return new NextResponse(null, { status: 204 });
-  const data = await readJsonResponse(response);
-  if (!response.ok) return NextResponse.json(data, { status: response.status });
-  if (Array.isArray(data.results)) {
-    return NextResponse.json(
-      { ...data, results: data.results.map((item) => toGallery(asRecord(item))) },
-      { status: response.status },
-    );
-  }
-  return NextResponse.json(toGallery(data), { status: response.status });
+  return preserveBackendResponse(response, toGallery);
 }
 
 async function requestPayload(request: Request) {
