@@ -3,11 +3,8 @@ import { NextResponse } from "next/server";
 
 export const AUTH_COOKIE_NAME = "admin_jwt_token";
 
-const configuredAuthApiBaseUrl = process.env.BACKEND_API_URL;
-
-if (!configuredAuthApiBaseUrl) {
-  throw new Error("Backend API URL is not configured.");
-}
+const configuredAuthApiBaseUrl =
+  process.env.BACKEND_API_URL || "http://localhost:8000";
 
 export const AUTH_API_BASE_URL = configuredAuthApiBaseUrl.replace(/\/$/, "");
 
