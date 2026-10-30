@@ -265,7 +265,7 @@ export default function ProgramsPage() {
           </CardHeader>
           <CardContent className="p-5 md:p-6">
             <form onSubmit={save} className="space-y-6">
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* Column 1 */}
                 <div className="space-y-4">
                   <div className="space-y-1.5">
@@ -404,10 +404,27 @@ export default function ProgramsPage() {
 
                   <div className="space-y-1.5">
                     <Label className="text-xs font-semibold">
-                      Short Description (Summary)
+                      Display Order (Position)
                     </Label>
                     <Input
-                      type="text"
+                      type="number"
+                      min={0}
+                      value={form.display_order}
+                      onChange={(e) =>
+                        setForm({ ...form, display_order: Number(e.target.value) })
+                      }
+                    />
+                  </div>
+                </div>
+
+                {/* Column 2: Descriptions & Media */}
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold">
+                      Short Description (Summary)
+                    </Label>
+                    <Textarea
+                      rows={2}
                       maxLength={300}
                       value={form.short_description}
                       placeholder="Short teaser shown on cards"
@@ -415,20 +432,6 @@ export default function ProgramsPage() {
                     />
                   </div>
 
-                  {/* Image Uploader */}
-                  <div className="pt-2">
-                    <SiteImageFields
-                      currentUrl={editing?.coverImage}
-                      externalUrl={form.cover_image}
-                      file={file}
-                      onExternalUrlChange={(v) => setForm({ ...form, cover_image: v })}
-                      onFileChange={setFile}
-                    />
-                  </div>
-                </div>
-
-                {/* Column 2 */}
-                <div className="space-y-4">
                   <div className="space-y-1.5">
                     <Label className="text-xs font-semibold">
                       Full Show Description
@@ -459,23 +462,26 @@ export default function ProgramsPage() {
                       </p>
                     )}
                   </div>
+                </div>
 
+                {/* Column 3: Artwork & Publishing (Landscape Sidebar) */}
+                <div className="space-y-4 lg:border-l lg:border-slate-100 dark:lg:border-zinc-800/80 lg:pl-6">
+                  {/* Image Uploader */}
                   <div className="space-y-1.5">
                     <Label className="text-xs font-semibold">
-                      Display Order (Position)
+                      Cover Artwork / Visual
                     </Label>
-                    <Input
-                      type="number"
-                      min={0}
-                      value={form.display_order}
-                      onChange={(e) =>
-                        setForm({ ...form, display_order: Number(e.target.value) })
-                      }
+                    <SiteImageFields
+                      currentUrl={editing?.coverImage}
+                      externalUrl={form.cover_image}
+                      file={file}
+                      onExternalUrlChange={(v) => setForm({ ...form, cover_image: v })}
+                      onFileChange={setFile}
                     />
                   </div>
 
                   {/* Toggles */}
-                  <div className="flex flex-col gap-3 pt-2">
+                  <div className="flex flex-col gap-3 rounded-xl border border-slate-100 bg-slate-50/50 p-3.5 dark:border-zinc-800 dark:bg-zinc-900/50">
                     <label className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-zinc-300 cursor-pointer">
                       <input
                         type="checkbox"
@@ -517,7 +523,7 @@ export default function ProgramsPage() {
                       type="submit"
                       disabled={saving}
                       size="sm"
-                      className="bg-emerald-600 hover:bg-emerald-500 text-white"
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold cursor-pointer"
                     >
                       {saving ? "Saving…" : editing ? "Update Program" : "Save Program"}
                     </Button>

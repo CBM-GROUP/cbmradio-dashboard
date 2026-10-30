@@ -219,8 +219,8 @@ export default function TeamPage() {
           </CardHeader>
           <CardContent className="p-6">
             <form onSubmit={handleSave} className="space-y-6">
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                {/* Column 1 */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* Column 1: Identity & Roles */}
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
@@ -281,30 +281,38 @@ export default function TeamPage() {
                   </div>
                 </div>
 
-                {/* Column 2 */}
+                {/* Column 2: Bio & Role Description */}
                 <div className="space-y-4">
-                  <SiteImageFields
-                    currentUrl={editingMember?.image}
-                    externalUrl={image}
-                    file={selectedFile}
-                    onExternalUrlChange={setImage}
-                    onFileChange={setSelectedFile}
-                  />
-
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
                       Staff Role Note & Biography (Optional)
                     </label>
                     <textarea
-                      rows={3}
+                      rows={6}
                       value={bio}
                       onChange={(e) => setBio(e.target.value)}
                       placeholder="Optional role description or bio displayed under the role on their profile card..."
                       className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white dark:placeholder:text-zinc-600"
                     />
-                    <p className="mt-1 text-[11px] text-slate-400 dark:text-zinc-500">
+                    <p className="mt-1.5 text-[11px] text-slate-400 dark:text-zinc-500">
                       Displayed below the member&apos;s title on the public site profile card. Leave blank if not needed.
                     </p>
+                  </div>
+                </div>
+
+                {/* Column 3: Profile Photo & Actions (Landscape Sidebar) */}
+                <div className="space-y-4 lg:border-l lg:border-slate-100 dark:lg:border-zinc-800/80 lg:pl-6">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                      Profile Photograph / Headshot
+                    </label>
+                    <SiteImageFields
+                      currentUrl={editingMember?.image}
+                      externalUrl={image}
+                      file={selectedFile}
+                      onExternalUrlChange={setImage}
+                      onFileChange={setSelectedFile}
+                    />
                   </div>
 
                   {formError && (
@@ -321,7 +329,7 @@ export default function TeamPage() {
                       type="submit"
                       disabled={submitting}
                       size="sm"
-                      className="bg-emerald-600 hover:bg-emerald-500 text-white"
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold cursor-pointer"
                     >
                       {submitting
                         ? "Saving…"
