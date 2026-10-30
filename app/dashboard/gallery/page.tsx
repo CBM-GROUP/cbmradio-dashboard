@@ -237,7 +237,8 @@ export default function GalleryPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            <form onSubmit={handleSave} className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <form onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Column 1: Metadata */}
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
@@ -252,6 +253,25 @@ export default function GalleryPage() {
                   />
                 </div>
 
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                    Gallery Category
+                  </label>
+                  <select
+                    value={category}
+                    onChange={(event) => setCategory(event.target.value as GalleryCategory)}
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white"
+                  >
+                    <option value="Photos">General Photos</option>
+                    <option value="Studio">Broadcast Studio</option>
+                    <option value="Community">Community Events</option>
+                    <option value="Team">Station Staff & Team</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Column 2: Image Selection */}
+              <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
                     Select Local Photo File
@@ -285,46 +305,40 @@ export default function GalleryPage() {
                 </div>
               </div>
 
-              <div className="flex flex-col justify-between space-y-4">
+              {/* Column 3: Preview & Actions (Landscape Sidebar) */}
+              <div className="flex flex-col justify-between space-y-4 lg:border-l lg:border-slate-100 dark:lg:border-zinc-800/80 lg:pl-6">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
-                    Gallery Category
+                    Selected Image Preview
                   </label>
-                  <select
-                    value={category}
-                    onChange={(event) => setCategory(event.target.value as GalleryCategory)}
-                    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white"
-                  >
-                    <option value="Photos">General Photos</option>
-                    <option value="Studio">Broadcast Studio</option>
-                    <option value="Community">Community Events</option>
-                    <option value="Team">Station Staff & Team</option>
-                  </select>
+                  {previewUrl ? (
+                    <div className="relative aspect-video overflow-hidden rounded-xl border border-slate-200 bg-slate-100 dark:border-zinc-800 dark:bg-black">
+                      <Image
+                        src={previewUrl}
+                        alt="Selected preview"
+                        fill
+                        unoptimized
+                        className="object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex aspect-video items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-xs text-slate-400 dark:border-zinc-800 dark:bg-zinc-900/40">
+                      No Image Selected
+                    </div>
+                  )}
+
+                  {editingItem && !selectedFile && (
+                    <p className="mt-2 text-[11px] text-slate-500 dark:text-zinc-400">
+                      The current image file is preserved unless you choose a replacement above.
+                    </p>
+                  )}
+
+                  {formError && (
+                    <p className="mt-2 rounded-lg bg-rose-500/10 border border-rose-500/20 p-2.5 text-xs text-rose-500">
+                      {formError}
+                    </p>
+                  )}
                 </div>
-
-                {previewUrl && (
-                  <div className="relative aspect-video overflow-hidden rounded-xl border border-slate-200 bg-slate-100 dark:border-zinc-800 dark:bg-black">
-                    <Image
-                      src={previewUrl}
-                      alt="Selected preview"
-                      fill
-                      unoptimized
-                      className="object-cover"
-                    />
-                  </div>
-                )}
-
-                {editingItem && !selectedFile && (
-                  <p className="text-[11px] text-slate-500 dark:text-zinc-400">
-                    The current image file is preserved unless you choose a replacement above.
-                  </p>
-                )}
-
-                {formError && (
-                  <p className="rounded-lg bg-rose-500/10 border border-rose-500/20 p-2.5 text-xs text-rose-500">
-                    {formError}
-                  </p>
-                )}
 
                 <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-zinc-800">
                   <Button variant="outline" type="button" onClick={resetForm} size="sm">
@@ -333,7 +347,7 @@ export default function GalleryPage() {
                   <Button
                     type="submit"
                     size="sm"
-                    className="bg-emerald-600 hover:bg-emerald-500 text-white"
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold cursor-pointer"
                   >
                     {editingItem ? "Update Image" : "Upload Asset"}
                   </Button>

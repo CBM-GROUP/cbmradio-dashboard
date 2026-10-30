@@ -185,73 +185,81 @@ export default function ArticleCategoriesPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            <form onSubmit={save} className="space-y-4 max-w-2xl">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
-                  Category Name <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={form.name}
-                  placeholder="e.g. Community News, Gospel Reflections, Sermons"
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white dark:placeholder:text-zinc-600"
-                />
-                {fieldErrors.name?.[0] && (
-                  <p className="mt-1 text-xs text-rose-500">{fieldErrors.name[0]}</p>
-                )}
+            <form onSubmit={save} className="space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Column 1: Identity & Display Order */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                      Category Name <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={form.name}
+                      placeholder="e.g. Community News, Gospel Reflections, Sermons"
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white dark:placeholder:text-zinc-600"
+                    />
+                    {fieldErrors.name?.[0] && (
+                      <p className="mt-1 text-xs text-rose-500">{fieldErrors.name[0]}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                      Display Order (Sort Position)
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={form.display_order}
+                      onChange={(e) => setForm({ ...form, display_order: Number(e.target.value) })}
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white"
+                    />
+                  </div>
+
+                  <div className="pt-1">
+                    <label className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-zinc-300 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={form.is_active}
+                        onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
+                        className="h-4 w-4 rounded border-slate-300 bg-white text-emerald-600 focus:ring-emerald-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-emerald-500"
+                      />
+                      <span>Active and available for article assignment</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Column 2: Description & Publishing Info */}
+                <div className="space-y-4 md:border-l md:border-slate-100 dark:md:border-zinc-800/80 md:pl-6">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                      Editorial Description
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={form.description}
+                      placeholder="Optional brief description of this editorial section..."
+                      onChange={(e) => setForm({ ...form, description: e.target.value })}
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white dark:placeholder:text-zinc-600"
+                    />
+                  </div>
+
+                  {editing && (
+                    <p className="text-[11px] text-slate-400 dark:text-zinc-500 font-mono">
+                      Slug identifier: {editing.slug}
+                    </p>
+                  )}
+
+                  {formError && (
+                    <p className="rounded-lg bg-rose-500/10 border border-rose-500/20 p-2.5 text-xs text-rose-500">
+                      {formError}
+                    </p>
+                  )}
+                </div>
               </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
-                  Description
-                </label>
-                <textarea
-                  rows={3}
-                  value={form.description}
-                  placeholder="Optional brief description of this editorial section..."
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white dark:placeholder:text-zinc-600"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
-                  Display Order
-                </label>
-                <input
-                  type="number"
-                  min={0}
-                  value={form.display_order}
-                  onChange={(e) => setForm({ ...form, display_order: Number(e.target.value) })}
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-black dark:text-white"
-                />
-              </div>
-
-              <div className="pt-1">
-                <label className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-zinc-300 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={form.is_active}
-                    onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
-                    className="h-4 w-4 rounded border-slate-300 bg-white text-emerald-600 focus:ring-emerald-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-emerald-500"
-                  />
-                  <span>Active and available for article assignment</span>
-                </label>
-              </div>
-
-              {editing && (
-                <p className="text-[11px] text-slate-400 dark:text-zinc-500 font-mono">
-                  Slug identifier: {editing.slug}
-                </p>
-              )}
-
-              {formError && (
-                <p className="rounded-lg bg-rose-500/10 border border-rose-500/20 p-2.5 text-xs text-rose-500">
-                  {formError}
-                </p>
-              )}
 
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-zinc-800">
                 <Button variant="outline" type="button" onClick={close} size="sm">
@@ -261,7 +269,7 @@ export default function ArticleCategoriesPage() {
                   type="submit"
                   disabled={saving}
                   size="sm"
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white"
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold cursor-pointer"
                 >
                   {saving ? "Saving…" : editing ? "Update Category" : "Create Category"}
                 </Button>

@@ -262,8 +262,8 @@ export default function EpisodesPage() {
           </CardHeader>
           <CardContent className="p-5 md:p-6">
             <form onSubmit={save} className="space-y-6">
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                {/* Column 1 */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* Column 1: Show Association & Broadcast Metadata */}
                 <div className="space-y-4">
                   <div className="space-y-1.5">
                     <Label className="text-xs font-semibold">
@@ -317,19 +317,20 @@ export default function EpisodesPage() {
                     )}
                   </div>
 
-                  {/* Thumbnail Image Fields */}
-                  <div className="pt-2">
-                    <SiteImageFields
-                      currentUrl={editing?.thumbnailImage}
-                      externalUrl={form.cover_image}
-                      file={file}
-                      onExternalUrlChange={(v) => setForm({ ...form, cover_image: v })}
-                      onFileChange={setFile}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold">
+                      Featured Placement Order
+                    </Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={form.featured_order}
+                      onChange={(e) => setForm({ ...form, featured_order: Number(e.target.value) })}
                     />
                   </div>
                 </div>
 
-                {/* Column 2 */}
+                {/* Column 2: Media & Notes */}
                 <div className="space-y-4">
                   <div className="space-y-1.5">
                     <Label className="text-xs font-semibold">
@@ -360,21 +361,26 @@ export default function EpisodesPage() {
                       onChange={(e) => setForm({ ...form, description: e.target.value })}
                     />
                   </div>
+                </div>
 
+                {/* Column 3: Artwork & Publishing (Landscape Sidebar) */}
+                <div className="space-y-4 lg:border-l lg:border-slate-100 dark:lg:border-zinc-800/80 lg:pl-6">
+                  {/* Thumbnail Image Fields */}
                   <div className="space-y-1.5">
                     <Label className="text-xs font-semibold">
-                      Featured Placement Order
+                      Episode Artwork / Thumbnail
                     </Label>
-                    <Input
-                      type="number"
-                      min={0}
-                      value={form.featured_order}
-                      onChange={(e) => setForm({ ...form, featured_order: Number(e.target.value) })}
+                    <SiteImageFields
+                      currentUrl={editing?.thumbnailImage}
+                      externalUrl={form.cover_image}
+                      file={file}
+                      onExternalUrlChange={(v) => setForm({ ...form, cover_image: v })}
+                      onFileChange={setFile}
                     />
                   </div>
 
                   {/* Toggles */}
-                  <div className="flex flex-col gap-3 pt-2">
+                  <div className="flex flex-col gap-3 rounded-xl border border-slate-100 bg-slate-50/50 p-3.5 dark:border-zinc-800 dark:bg-zinc-900/50">
                     <label className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-zinc-300 cursor-pointer">
                       <input
                         type="checkbox"
@@ -410,7 +416,7 @@ export default function EpisodesPage() {
                       type="submit"
                       disabled={saving}
                       size="sm"
-                      className="bg-emerald-600 hover:bg-emerald-500 text-white"
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold cursor-pointer"
                     >
                       {saving ? "Saving…" : editing ? "Update Episode" : "Save Episode"}
                     </Button>

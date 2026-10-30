@@ -19,6 +19,7 @@ import {
   Pencil,
   Play,
   Plus,
+  Radio,
   RefreshCw,
   Search,
   Sparkles,
@@ -35,6 +36,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
   TableBody,
@@ -1630,14 +1632,16 @@ export default function ChartsDashboardPage() {
         </>
       )}
 
-      {/* Add / Edit Track Modal */}
+      {/* Add / Edit Track Modal - Landscape & Responsive */}
       {entryModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-          <div className="relative w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-zinc-800 dark:bg-zinc-950">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-4 dark:border-zinc-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-3 sm:p-5 md:p-6 backdrop-blur-xs overflow-y-auto">
+          <div className="relative w-full max-w-5xl xl:max-w-6xl max-h-[94vh] flex flex-col rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-950 overflow-hidden my-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3.5 sm:px-6 sm:py-4 dark:border-zinc-800 bg-slate-50/70 dark:bg-zinc-900/60 backdrop-blur-md shrink-0">
               <div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-                  {entryForm.id ? "Edit Track Entry" : "Add Track to Countdown"}
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Music2 className="h-5 w-5 text-amber-500" />
+                  <span>{entryForm.id ? "Edit Track Entry" : "Add Track to Countdown"}</span>
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-zinc-400">
                   Target chart: <strong>{activeChart?.title}</strong>
@@ -1646,279 +1650,293 @@ export default function ChartsDashboardPage() {
               <button
                 type="button"
                 onClick={() => setEntryModalOpen(false)}
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200/60 hover:text-slate-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 transition cursor-pointer"
+                aria-label="Close modal"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveEntry} noValidate className="mt-5 space-y-5">
-              {/* Section 1: Track Details */}
-              <div className="space-y-3">
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500 flex items-center gap-1.5">
-                  <Music2 className="h-3.5 w-3.5 text-amber-500" />
-                  Song Information
-                </p>
+            {/* Scrollable Landscape Form Body */}
+            <form onSubmit={handleSaveEntry} noValidate className="flex flex-col flex-1 overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-5 sm:p-6">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                  {/* Left Column: Song Information & Streaming Media (lg:col-span-7) */}
+                  <div className="lg:col-span-7 space-y-5">
+                    {/* Song Information */}
+                    <div className="space-y-3">
+                      <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500 flex items-center gap-1.5">
+                        <Music2 className="h-3.5 w-3.5 text-amber-500" />
+                        Song Information
+                      </p>
 
-                <div>
-                  <Label htmlFor="entry-title" className="text-xs font-semibold">
-                    Song Title <span className="text-rose-500">*</span>
-                  </Label>
-                  <Input
-                    id="entry-title"
-                    type="text"
-                    required
-                    placeholder="e.g. Goodness of God"
-                    value={entryForm.title}
-                    onChange={(e) => setEntryForm({ ...entryForm, title: e.target.value })}
-                    className="mt-1 text-xs"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <Label htmlFor="entry-artist" className="text-xs font-semibold">
-                      Primary Artist <span className="text-rose-500">*</span>
-                    </Label>
-                    <Input
-                      id="entry-artist"
-                      type="text"
-                      required
-                      placeholder="e.g. CeCe Winans"
-                      value={entryForm.artist}
-                      onChange={(e) => setEntryForm({ ...entryForm, artist: e.target.value })}
-                      className="mt-1 text-xs"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="entry-featured" className="text-xs font-semibold">
-                      Featured Artists
-                    </Label>
-                    <Input
-                      id="entry-featured"
-                      type="text"
-                      placeholder="e.g. Elevation Worship"
-                      value={entryForm.featured_artists}
-                      onChange={(e) => setEntryForm({ ...entryForm, featured_artists: e.target.value })}
-                      className="mt-1 text-xs"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="entry-album" className="text-xs font-semibold">
-                    Album / Single Name
-                  </Label>
-                  <Input
-                    id="entry-album"
-                    type="text"
-                    placeholder="e.g. Believe For It (Live)"
-                    value={entryForm.album}
-                    onChange={(e) => setEntryForm({ ...entryForm, album: e.target.value })}
-                    className="mt-1 text-xs"
-                  />
-                </div>
-              </div>
-
-              {/* Section 2: Ranking & Performance */}
-              <div className="space-y-3 border-t border-slate-100 pt-4 dark:border-zinc-800">
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500 flex items-center gap-1.5">
-                  <Trophy className="h-3.5 w-3.5 text-amber-500" />
-                  Ranking & Movement
-                </p>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div>
-                    <Label htmlFor="entry-rank" className="text-xs font-semibold">
-                      Current Rank <span className="text-rose-500">*</span>
-                    </Label>
-                    <Input
-                      id="entry-rank"
-                      type="number"
-                      min={1}
-                      required
-                      value={entryForm.rank}
-                      onChange={(e) => setEntryForm({ ...entryForm, rank: Number(e.target.value) })}
-                      className="mt-1 text-xs font-bold"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="entry-prev-rank" className="text-xs font-semibold">
-                      Last Week Rank
-                    </Label>
-                    <Input
-                      id="entry-prev-rank"
-                      type="number"
-                      min={1}
-                      placeholder="Empty (New)"
-                      value={entryForm.previous_rank}
-                      onChange={(e) => setEntryForm({ ...entryForm, previous_rank: e.target.value })}
-                      className="mt-1 text-xs"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="entry-peak-rank" className="text-xs font-semibold">
-                      Peak Rank
-                    </Label>
-                    <Input
-                      id="entry-peak-rank"
-                      type="number"
-                      min={1}
-                      value={entryForm.peak_rank}
-                      onChange={(e) => setEntryForm({ ...entryForm, peak_rank: Number(e.target.value) })}
-                      className="mt-1 text-xs"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="entry-weeks" className="text-xs font-semibold">
-                      Weeks on Chart
-                    </Label>
-                    <Input
-                      id="entry-weeks"
-                      type="number"
-                      min={1}
-                      value={entryForm.weeks_on_chart}
-                      onChange={(e) => setEntryForm({ ...entryForm, weeks_on_chart: Number(e.target.value) })}
-                      className="mt-1 text-xs"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Section 3: Artwork & Streaming Media */}
-              <div className="space-y-3 border-t border-slate-100 pt-4 dark:border-zinc-800">
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500 flex items-center gap-1.5">
-                  <Disc3 className="h-3.5 w-3.5 text-amber-500" />
-                  Cover Artwork & Streaming Links
-                </p>
-
-                {/* Artwork Uploader */}
-                <div className="flex items-center gap-4 rounded-xl border border-slate-200 bg-slate-50/50 p-3 dark:border-zinc-800 dark:bg-zinc-900/50">
-                  <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white dark:border-zinc-700 dark:bg-zinc-800 shadow-2xs">
-                    {entryFilePreview || entryForm.cover_image_url ? (
-                      <Image
-                        src={entryFilePreview || entryForm.cover_image_url}
-                        alt="Preview"
-                        fill
-                        unoptimized
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-slate-400">
-                        <Disc3 className="h-6 w-6" />
+                      <div>
+                        <Label htmlFor="entry-title" className="text-xs font-semibold">
+                          Song Title <span className="text-rose-500">*</span>
+                        </Label>
+                        <Input
+                          id="entry-title"
+                          type="text"
+                          required
+                          placeholder="e.g. Goodness of God"
+                          value={entryForm.title}
+                          onChange={(e) => setEntryForm({ ...entryForm, title: e.target.value })}
+                          className="mt-1 text-xs"
+                        />
                       </div>
-                    )}
-                  </div>
-                  <div className="flex-1 space-y-1.5">
-                    <Label className="text-xs font-semibold">Track Artwork Image</Label>
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp,image/gif"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0] || null;
-                        setEntryFile(file);
-                        if (file) {
-                          setEntryFilePreview(URL.createObjectURL(file));
-                        } else {
-                          setEntryFilePreview("");
-                        }
-                      }}
-                      className="w-full text-xs file:mr-2 file:rounded-md file:border-0 file:bg-slate-200 file:px-2.5 file:py-1 file:text-xs file:font-semibold hover:file:bg-slate-300 dark:file:bg-zinc-800 dark:file:text-zinc-200"
-                    />
-                    <Input
-                      type="text"
-                      inputMode="url"
-                      placeholder="Or enter artwork URL (https://…)"
-                      value={entryForm.cover_image_url}
-                      onChange={(e) => {
-                        setEntryForm({ ...entryForm, cover_image_url: e.target.value });
-                        if (e.target.value && !entryFile) {
-                          setEntryFilePreview("");
-                        }
-                      }}
-                      className="h-7 text-[11px]"
-                    />
-                  </div>
-                </div>
 
-                {/* Streaming Inputs - Optional */}
-                <div className="pt-2">
-                  <div className="mb-2 flex items-center justify-between">
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
-                      Streaming & Media Links
-                    </p>
-                    <span className="text-[10px] font-normal text-slate-400 dark:text-zinc-500">
-                      All URLs are optional
-                    </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <Label htmlFor="entry-artist" className="text-xs font-semibold">
+                            Primary Artist <span className="text-rose-500">*</span>
+                          </Label>
+                          <Input
+                            id="entry-artist"
+                            type="text"
+                            required
+                            placeholder="e.g. CeCe Winans"
+                            value={entryForm.artist}
+                            onChange={(e) => setEntryForm({ ...entryForm, artist: e.target.value })}
+                            className="mt-1 text-xs"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="entry-featured" className="text-xs font-semibold">
+                            Featured Artists
+                          </Label>
+                          <Input
+                            id="entry-featured"
+                            type="text"
+                            placeholder="e.g. Elevation Worship"
+                            value={entryForm.featured_artists}
+                            onChange={(e) => setEntryForm({ ...entryForm, featured_artists: e.target.value })}
+                            className="mt-1 text-xs"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="entry-album" className="text-xs font-semibold">
+                          Album / Single Name
+                        </Label>
+                        <Input
+                          id="entry-album"
+                          type="text"
+                          placeholder="e.g. Believe For It (Live)"
+                          value={entryForm.album}
+                          onChange={(e) => setEntryForm({ ...entryForm, album: e.target.value })}
+                          className="mt-1 text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Streaming Inputs - Optional */}
+                    <div className="space-y-3 border-t border-slate-100 pt-4 dark:border-zinc-800/80">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500 flex items-center gap-1.5">
+                          <Radio className="h-3.5 w-3.5 text-emerald-500" />
+                          Streaming &amp; Media Links
+                        </p>
+                        <span className="text-[10px] font-normal text-slate-400 dark:text-zinc-500">
+                          All URLs optional
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <Label htmlFor="entry-youtube" className="text-[11px] font-semibold text-rose-500 flex items-center justify-between">
+                            <span>YouTube Video URL</span>
+                            <span className="text-[10px] font-normal text-slate-400 dark:text-zinc-500">Optional</span>
+                          </Label>
+                          <Input
+                            id="entry-youtube"
+                            type="text"
+                            inputMode="url"
+                            placeholder="https://youtube.com/watch?v=…"
+                            value={entryForm.youtube_url}
+                            onChange={(e) => setEntryForm({ ...entryForm, youtube_url: e.target.value })}
+                            className="mt-1 text-xs"
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="entry-audio" className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 flex items-center justify-between">
+                            <span>Direct Audio MP3 URL</span>
+                            <span className="text-[10px] font-normal text-slate-400 dark:text-zinc-500">Optional</span>
+                          </Label>
+                          <Input
+                            id="entry-audio"
+                            type="text"
+                            inputMode="url"
+                            placeholder="https://…/song.mp3"
+                            value={entryForm.audio_url}
+                            onChange={(e) => setEntryForm({ ...entryForm, audio_url: e.target.value })}
+                            className="mt-1 text-xs"
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="entry-spotify" className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center justify-between">
+                            <span>Spotify Track URL</span>
+                            <span className="text-[10px] font-normal text-slate-400 dark:text-zinc-500">Optional</span>
+                          </Label>
+                          <Input
+                            id="entry-spotify"
+                            type="text"
+                            inputMode="url"
+                            placeholder="https://open.spotify.com/track/…"
+                            value={entryForm.spotify_url}
+                            onChange={(e) => setEntryForm({ ...entryForm, spotify_url: e.target.value })}
+                            className="mt-1 text-xs"
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="entry-apple" className="text-[11px] font-semibold text-pink-600 dark:text-pink-400 flex items-center justify-between">
+                            <span>Apple Music URL</span>
+                            <span className="text-[10px] font-normal text-slate-400 dark:text-zinc-500">Optional</span>
+                          </Label>
+                          <Input
+                            id="entry-apple"
+                            type="text"
+                            inputMode="url"
+                            placeholder="https://music.apple.com/…"
+                            value={entryForm.apple_music_url}
+                            onChange={(e) => setEntryForm({ ...entryForm, apple_music_url: e.target.value })}
+                            className="mt-1 text-xs"
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <Label htmlFor="entry-spotify" className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center justify-between">
-                        <span>Spotify Track URL</span>
-                        <span className="text-[10px] font-normal text-slate-400 dark:text-zinc-500">Optional</span>
-                      </Label>
-                      <Input
-                        id="entry-spotify"
-                        type="text"
-                        inputMode="url"
-                        placeholder="https://open.spotify.com/track/…"
-                        value={entryForm.spotify_url}
-                        onChange={(e) => setEntryForm({ ...entryForm, spotify_url: e.target.value })}
-                        className="mt-1 text-xs"
-                      />
+                  {/* Right Column: Ranking, Artwork & Status (lg:col-span-5) */}
+                  <div className="lg:col-span-5 space-y-5 lg:border-l lg:border-slate-100 dark:lg:border-zinc-800/80 lg:pl-6">
+                    {/* Ranking & Movement */}
+                    <div className="space-y-3">
+                      <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500 flex items-center gap-1.5">
+                        <Trophy className="h-3.5 w-3.5 text-amber-500" />
+                        Ranking &amp; Movement
+                      </p>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-3">
+                        <div>
+                          <Label htmlFor="entry-rank" className="text-xs font-semibold">
+                            Current Rank <span className="text-rose-500">*</span>
+                          </Label>
+                          <Input
+                            id="entry-rank"
+                            type="number"
+                            min={1}
+                            required
+                            value={entryForm.rank}
+                            onChange={(e) => setEntryForm({ ...entryForm, rank: Number(e.target.value) })}
+                            className="mt-1 text-xs font-bold"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="entry-prev-rank" className="text-xs font-semibold">
+                            Last Week Rank
+                          </Label>
+                          <Input
+                            id="entry-prev-rank"
+                            type="number"
+                            min={1}
+                            placeholder="New"
+                            value={entryForm.previous_rank}
+                            onChange={(e) => setEntryForm({ ...entryForm, previous_rank: e.target.value })}
+                            className="mt-1 text-xs"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="entry-peak-rank" className="text-xs font-semibold">
+                            Peak Rank
+                          </Label>
+                          <Input
+                            id="entry-peak-rank"
+                            type="number"
+                            min={1}
+                            value={entryForm.peak_rank}
+                            onChange={(e) => setEntryForm({ ...entryForm, peak_rank: Number(e.target.value) })}
+                            className="mt-1 text-xs"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="entry-weeks" className="text-xs font-semibold">
+                            Weeks on Chart
+                          </Label>
+                          <Input
+                            id="entry-weeks"
+                            type="number"
+                            min={1}
+                            value={entryForm.weeks_on_chart}
+                            onChange={(e) => setEntryForm({ ...entryForm, weeks_on_chart: Number(e.target.value) })}
+                            className="mt-1 text-xs"
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <Label htmlFor="entry-apple" className="text-[11px] font-semibold text-pink-600 dark:text-pink-400 flex items-center justify-between">
-                        <span>Apple Music URL</span>
-                        <span className="text-[10px] font-normal text-slate-400 dark:text-zinc-500">Optional</span>
-                      </Label>
-                      <Input
-                        id="entry-apple"
-                        type="text"
-                        inputMode="url"
-                        placeholder="https://music.apple.com/…"
-                        value={entryForm.apple_music_url}
-                        onChange={(e) => setEntryForm({ ...entryForm, apple_music_url: e.target.value })}
-                        className="mt-1 text-xs"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="entry-youtube" className="text-[11px] font-semibold text-rose-500 flex items-center justify-between">
-                        <span>YouTube Video URL</span>
-                        <span className="text-[10px] font-normal text-slate-400 dark:text-zinc-500">Optional</span>
-                      </Label>
-                      <Input
-                        id="entry-youtube"
-                        type="text"
-                        inputMode="url"
-                        placeholder="https://youtube.com/watch?v=…"
-                        value={entryForm.youtube_url}
-                        onChange={(e) => setEntryForm({ ...entryForm, youtube_url: e.target.value })}
-                        className="mt-1 text-xs"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="entry-audio" className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 flex items-center justify-between">
-                        <span>Direct Audio MP3 URL</span>
-                        <span className="text-[10px] font-normal text-slate-400 dark:text-zinc-500">Optional</span>
-                      </Label>
-                      <Input
-                        id="entry-audio"
-                        type="text"
-                        inputMode="url"
-                        placeholder="https://…/song.mp3"
-                        value={entryForm.audio_url}
-                        onChange={(e) => setEntryForm({ ...entryForm, audio_url: e.target.value })}
-                        className="mt-1 text-xs"
-                      />
+
+                    {/* Artwork Uploader */}
+                    <div className="space-y-3 border-t border-slate-100 pt-4 dark:border-zinc-800/80">
+                      <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500 flex items-center gap-1.5">
+                        <Disc3 className="h-3.5 w-3.5 text-amber-500" />
+                        Track Artwork
+                      </p>
+
+                      <div className="flex items-center gap-3.5 rounded-xl border border-slate-200 bg-slate-50/50 p-3.5 dark:border-zinc-800 dark:bg-zinc-900/50">
+                        <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-zinc-700 dark:bg-zinc-800 shadow-xs">
+                          {entryFilePreview || entryForm.cover_image_url ? (
+                            <Image
+                              src={entryFilePreview || entryForm.cover_image_url}
+                              alt="Preview"
+                              fill
+                              unoptimized
+                              className="object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-slate-400">
+                              <Disc3 className="h-7 w-7" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 space-y-1.5 min-w-0">
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp,image/gif"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0] || null;
+                              setEntryFile(file);
+                              if (file) {
+                                setEntryFilePreview(URL.createObjectURL(file));
+                              } else {
+                                setEntryFilePreview("");
+                              }
+                            }}
+                            className="w-full text-xs file:mr-2 file:rounded-md file:border-0 file:bg-slate-200 file:px-2.5 file:py-1 file:text-xs file:font-semibold hover:file:bg-slate-300 dark:file:bg-zinc-800 dark:file:text-zinc-200"
+                          />
+                          <Input
+                            type="text"
+                            inputMode="url"
+                            placeholder="Or enter artwork URL (https://…)"
+                            value={entryForm.cover_image_url}
+                            onChange={(e) => {
+                              setEntryForm({ ...entryForm, cover_image_url: e.target.value });
+                              if (e.target.value && !entryFile) {
+                                setEntryFilePreview("");
+                              }
+                            }}
+                            className="h-7 text-[11px]"
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Modal Buttons */}
-              <div className="flex items-center justify-end gap-2.5 border-t border-slate-200 pt-4 dark:border-zinc-800">
+              {/* Sticky Footer */}
+              <div className="flex items-center justify-end gap-2.5 border-t border-slate-200 px-5 py-3 sm:px-6 sm:py-3.5 dark:border-zinc-800 shrink-0 bg-slate-50/80 dark:bg-zinc-900/60 backdrop-blur-md">
                 <Button
                   type="button"
                   variant="outline"
@@ -1932,7 +1950,7 @@ export default function ChartsDashboardPage() {
                   type="submit"
                   disabled={entrySaving}
                   size="sm"
-                  className="bg-amber-600 hover:bg-amber-500 text-white dark:bg-amber-500 dark:hover:bg-amber-400 font-semibold"
+                  className="bg-amber-600 hover:bg-amber-500 text-white dark:bg-amber-500 dark:hover:bg-amber-400 font-semibold cursor-pointer"
                 >
                   {entrySaving ? "Saving…" : entryForm.id ? "Save Changes" : `Add Track #${entryForm.rank}`}
                 </Button>
@@ -1942,14 +1960,16 @@ export default function ChartsDashboardPage() {
         </div>
       )}
 
-      {/* Create / Edit Chart Modal */}
+      {/* Create / Edit Chart Modal - Landscape & Responsive */}
       {chartModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-          <div className="relative w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-zinc-800 dark:bg-zinc-950">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-4 dark:border-zinc-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-3 sm:p-5 md:p-6 backdrop-blur-xs overflow-y-auto">
+          <div className="relative w-full max-w-4xl lg:max-w-5xl max-h-[94vh] flex flex-col rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-950 overflow-hidden my-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3.5 sm:px-6 sm:py-4 dark:border-zinc-800 bg-slate-50/70 dark:bg-zinc-900/60 backdrop-blur-md shrink-0">
               <div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-                  {isEditingChart ? "Edit Chart Details" : "Create New Music Chart"}
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-amber-500" />
+                  <span>{isEditingChart ? "Edit Chart Details" : "Create New Music Chart"}</span>
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-zinc-400">
                   Configure countdown type, publication date, and visibility
@@ -1958,176 +1978,189 @@ export default function ChartsDashboardPage() {
               <button
                 type="button"
                 onClick={() => setChartModalOpen(false)}
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200/60 hover:text-slate-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 transition cursor-pointer"
+                aria-label="Close modal"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveChart} noValidate className="mt-5 space-y-4">
-              <div>
-                <Label htmlFor="chart-title" className="text-xs font-semibold">
-                  Chart Title <span className="text-rose-500">*</span>
-                </Label>
-                <Input
-                  id="chart-title"
-                  type="text"
-                  required
-                  placeholder="e.g. CBM Gospel Hot 100"
-                  value={chartForm.title}
-                  onChange={(e) => {
-                    const title = e.target.value;
-                    const slug = !isEditingChart
-                      ? title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")
-                      : chartForm.slug;
-                    setChartForm({ ...chartForm, title, slug });
-                  }}
-                  className="mt-1 text-xs"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="chart-slug" className="text-xs font-semibold">
-                    Slug <span className="text-rose-500">*</span>
-                  </Label>
-                  <Input
-                    id="chart-slug"
-                    type="text"
-                    required
-                    disabled={isEditingChart}
-                    placeholder="hot-100"
-                    value={chartForm.slug}
-                    onChange={(e) => setChartForm({ ...chartForm, slug: e.target.value })}
-                    className="mt-1 text-xs font-mono"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="chart-type" className="text-xs font-semibold">
-                    Chart Type <span className="text-rose-500">*</span>
-                  </Label>
-                  <select
-                    id="chart-type"
-                    value={chartForm.chart_type}
-                    onChange={(e) => setChartForm({ ...chartForm, chart_type: e.target.value })}
-                    className="mt-1 flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-xs shadow-2xs transition-colors focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50"
-                  >
-                    {CHART_TYPE_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value} className="bg-white dark:bg-zinc-900">
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="chart-edition-date" className="text-xs font-semibold">
-                  Edition Date / Period <span className="text-rose-500">*</span>
-                </Label>
-                <Input
-                  id="chart-edition-date"
-                  type="date"
-                  required
-                  value={chartForm.edition_date}
-                  onChange={(e) => setChartForm({ ...chartForm, edition_date: e.target.value })}
-                  className="mt-1 text-xs"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="chart-desc" className="text-xs font-semibold">
-                  Description
-                </Label>
-                <Input
-                  id="chart-desc"
-                  type="text"
-                  placeholder="Weekly countdown of the most played gospel and worship songs."
-                  value={chartForm.description}
-                  onChange={(e) => setChartForm({ ...chartForm, description: e.target.value })}
-                  className="mt-1 text-xs"
-                />
-              </div>
-
-              {/* Dedicated Chart Hero Image */}
-              <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-3.5 dark:border-zinc-800 dark:bg-zinc-900/50">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs font-semibold flex items-center gap-1.5">
-                    <ImageIcon className="h-3.5 w-3.5 text-amber-500" />
-                    Dedicated Chart Hero Image
-                  </Label>
-                  <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-medium">
-                    16:9 or Banner format recommended
-                  </span>
-                </div>
-                
-                <div className="flex items-center gap-4">
-                  <div className="relative h-16 w-28 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-950 dark:border-zinc-700 shadow-2xs">
-                    {chartFilePreview || chartForm.cover_image_url ? (
-                      <Image
-                        src={chartFilePreview || chartForm.cover_image_url}
-                        alt="Hero Preview"
-                        fill
-                        unoptimized
-                        className="object-contain object-center"
+            {/* Scrollable Landscape Form Body */}
+            <form onSubmit={handleSaveChart} noValidate className="flex flex-col flex-1 overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-5 sm:p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Left Column: Basic Details */}
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="chart-title" className="text-xs font-semibold">
+                        Chart Title <span className="text-rose-500">*</span>
+                      </Label>
+                      <Input
+                        id="chart-title"
+                        type="text"
+                        required
+                        placeholder="e.g. CBM Gospel Hot 100"
+                        value={chartForm.title}
+                        onChange={(e) => {
+                          const title = e.target.value;
+                          const slug = !isEditingChart
+                            ? title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")
+                            : chartForm.slug;
+                          setChartForm({ ...chartForm, title, slug });
+                        }}
+                        className="mt-1 text-xs"
                       />
-                    ) : (
-                      <div className="flex h-full w-full flex-col items-center justify-center text-slate-400 dark:text-zinc-500">
-                        <ImageIcon className="h-5 w-5" />
-                        <span className="text-[9px] mt-0.5">No Hero</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor="chart-slug" className="text-xs font-semibold">
+                          Slug <span className="text-rose-500">*</span>
+                        </Label>
+                        <Input
+                          id="chart-slug"
+                          type="text"
+                          required
+                          disabled={isEditingChart}
+                          placeholder="hot-100"
+                          value={chartForm.slug}
+                          onChange={(e) => setChartForm({ ...chartForm, slug: e.target.value })}
+                          className="mt-1 text-xs font-mono"
+                        />
                       </div>
-                    )}
+                      <div>
+                        <Label htmlFor="chart-type" className="text-xs font-semibold">
+                          Chart Type <span className="text-rose-500">*</span>
+                        </Label>
+                        <select
+                          id="chart-type"
+                          value={chartForm.chart_type}
+                          onChange={(e) => setChartForm({ ...chartForm, chart_type: e.target.value })}
+                          className="mt-1 flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-xs shadow-2xs transition-colors focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50"
+                        >
+                          {CHART_TYPE_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value} className="bg-white dark:bg-zinc-900">
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="chart-edition-date" className="text-xs font-semibold">
+                        Edition Date / Period <span className="text-rose-500">*</span>
+                      </Label>
+                      <Input
+                        id="chart-edition-date"
+                        type="date"
+                        required
+                        value={chartForm.edition_date}
+                        onChange={(e) => setChartForm({ ...chartForm, edition_date: e.target.value })}
+                        className="mt-1 text-xs"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="chart-desc" className="text-xs font-semibold">
+                        Description
+                      </Label>
+                      <Textarea
+                        id="chart-desc"
+                        rows={3}
+                        placeholder="Weekly countdown of the most played gospel and worship songs across East Africa."
+                        value={chartForm.description}
+                        onChange={(e) => setChartForm({ ...chartForm, description: e.target.value })}
+                        className="mt-1 text-xs"
+                      />
+                    </div>
                   </div>
 
-                  <div className="flex-1 space-y-1.5">
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp,image/gif"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0] || null;
-                        setChartFile(file);
-                        if (file) {
-                          setChartFilePreview(URL.createObjectURL(file));
-                        } else {
-                          setChartFilePreview("");
-                        }
-                      }}
-                      className="w-full text-xs file:mr-2 file:rounded-md file:border-0 file:bg-slate-200 file:px-2.5 file:py-1 file:text-xs file:font-semibold hover:file:bg-slate-300 dark:file:bg-zinc-800 dark:file:text-zinc-200"
-                    />
-                    <Input
-                      type="text"
-                      inputMode="url"
-                      placeholder="Or enter image URL (https://…)"
-                      value={chartForm.cover_image_url}
-                      onChange={(e) => {
-                        setChartForm({ ...chartForm, cover_image_url: e.target.value });
-                        if (e.target.value && !chartFile) {
-                          setChartFilePreview("");
-                        }
-                      }}
-                      className="h-7 text-[11px]"
-                    />
+                  {/* Right Column: Hero Artwork & Visibility */}
+                  <div className="space-y-4 md:border-l md:border-slate-100 dark:md:border-zinc-800/80 md:pl-6">
+                    {/* Dedicated Chart Hero Image */}
+                    <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-3.5 dark:border-zinc-800 dark:bg-zinc-900/50">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs font-semibold flex items-center gap-1.5">
+                          <ImageIcon className="h-3.5 w-3.5 text-amber-500" />
+                          Dedicated Chart Hero Image
+                        </Label>
+                        <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-medium">
+                          16:9 Banner
+                        </span>
+                      </div>
+                      
+                      <div className="flex flex-col sm:flex-row items-center gap-3.5">
+                        <div className="relative h-20 w-36 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-950 dark:border-zinc-700 shadow-2xs">
+                          {chartFilePreview || chartForm.cover_image_url ? (
+                            <Image
+                              src={chartFilePreview || chartForm.cover_image_url}
+                              alt="Hero Preview"
+                              fill
+                              unoptimized
+                              className="object-contain object-center"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full flex-col items-center justify-center text-slate-400 dark:text-zinc-500">
+                              <ImageIcon className="h-5 w-5" />
+                              <span className="text-[9px] mt-0.5">No Hero</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex-1 space-y-1.5 w-full">
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp,image/gif"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0] || null;
+                              setChartFile(file);
+                              if (file) {
+                                setChartFilePreview(URL.createObjectURL(file));
+                              } else {
+                                setChartFilePreview("");
+                              }
+                            }}
+                            className="w-full text-xs file:mr-2 file:rounded-md file:border-0 file:bg-slate-200 file:px-2.5 file:py-1 file:text-xs file:font-semibold hover:file:bg-slate-300 dark:file:bg-zinc-800 dark:file:text-zinc-200"
+                          />
+                          <Input
+                            type="text"
+                            inputMode="url"
+                            placeholder="Or enter image URL (https://…)"
+                            value={chartForm.cover_image_url}
+                            onChange={(e) => {
+                              setChartForm({ ...chartForm, cover_image_url: e.target.value });
+                              if (e.target.value && !chartFile) {
+                                setChartFilePreview("");
+                              }
+                            }}
+                            className="h-7 text-[11px]"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/50 p-3.5 dark:border-zinc-800 dark:bg-zinc-900/50">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="chart-active" className="text-xs font-semibold">
+                          Public Active Status
+                        </Label>
+                        <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                          Visible immediately on public website /charts page
+                        </p>
+                      </div>
+                      <Switch
+                        id="chart-active"
+                        checked={chartForm.is_active}
+                        onCheckedChange={(checked) => setChartForm({ ...chartForm, is_active: checked })}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/50 p-3.5 dark:border-zinc-800 dark:bg-zinc-900/50">
-                <div className="space-y-0.5">
-                  <Label htmlFor="chart-active" className="text-xs font-semibold">
-                    Public Active Status
-                  </Label>
-                  <p className="text-[11px] text-slate-500 dark:text-zinc-400">
-                    Visible immediately on public website /charts page
-                  </p>
-                </div>
-                <Switch
-                  id="chart-active"
-                  checked={chartForm.is_active}
-                  onCheckedChange={(checked) => setChartForm({ ...chartForm, is_active: checked })}
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-2.5 border-t border-slate-200 pt-4 dark:border-zinc-800">
+              {/* Sticky Footer */}
+              <div className="flex items-center justify-end gap-2.5 border-t border-slate-200 px-5 py-3 sm:px-6 sm:py-3.5 dark:border-zinc-800 shrink-0 bg-slate-50/80 dark:bg-zinc-900/60 backdrop-blur-md">
                 <Button
                   type="button"
                   variant="outline"
@@ -2141,7 +2174,7 @@ export default function ChartsDashboardPage() {
                   type="submit"
                   disabled={chartSaving}
                   size="sm"
-                  className="bg-amber-600 hover:bg-amber-500 text-white font-semibold"
+                  className="bg-amber-600 hover:bg-amber-500 text-white font-semibold cursor-pointer"
                 >
                   {chartSaving ? "Saving…" : isEditingChart ? "Save Changes" : "Create Chart"}
                 </Button>
