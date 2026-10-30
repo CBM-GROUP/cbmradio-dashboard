@@ -35,8 +35,14 @@ export async function readJsonResponse(response: Response): Promise<Record<strin
     const data: unknown = JSON.parse(text);
     return data && typeof data === "object" ? (data as Record<string, unknown>) : {};
   } catch {
-    const clean = text.trim().startsWith("<") ? "The backend server encountered an error." : text.trim();
-    return { detail: clean };
+    const trimmed = text.trim();
+    let clean = trimmed;
+    if (trimmed.startsWith("<")) {
+      const titleMatch = trimmed.match(/<title>([^<]+)<\/title>/i);
+      const h1Match = trimmed.match(/<h1>([^<]+)<\/h1>/i);
+      clean = titleMatch?.[1]?.trim() || h1Match?.[1]?.trim() || "The backend server encountered an error.";
+    }
+    return { detail: clean, error: clean };
   }
 }
 
@@ -45,6 +51,15 @@ export function getApiError(data: Record<string, unknown>, fallback: string) {
     const val = data[key];
     if (typeof val === "string" && val.trim() && !val.trim().startsWith("<")) {
       return val.trim();
+    }
+  }
+  for (const [key, val] of Object.entries(data)) {
+    if (["status", "code", "results", "count"].includes(key)) continue;
+    if (Array.isArray(val) && val.length > 0 && typeof val[0] === "string") {
+      return `${key}: ${val[0]}`;
+    }
+    if (typeof val === "string" && val.trim() && !val.trim().startsWith("<")) {
+      return `${key}: ${val.trim()}`;
     }
   }
   return fallback;

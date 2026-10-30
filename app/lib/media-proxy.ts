@@ -30,11 +30,11 @@ export async function preserveBackendResponse(
     const errorMsg = getApiError(
       data,
       response.status >= 500
-        ? "The backend server encountered an error."
+        ? `The backend server encountered an error (HTTP ${response.status}).`
         : "The backend rejected this request.",
     );
     return NextResponse.json(
-      { ...data, error: errorMsg },
+      { ...data, error: errorMsg, detail: typeof data.detail === "string" ? data.detail : errorMsg },
       { status: response.status },
     );
   }
