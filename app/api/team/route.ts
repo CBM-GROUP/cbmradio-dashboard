@@ -1,5 +1,5 @@
 import { asRecord, requestError, text } from "../../lib/backend-api";
-import { preserveBackendResponse, requestIsMultipart } from "../../lib/media-proxy";
+import { isUploadedFile, preserveBackendResponse, requestIsMultipart } from "../../lib/media-proxy";
 import { BACKEND_API_V1_URL, getBackendAuthHeaders, unauthorizedResponse } from "../../lib/backend-auth";
 
 function toTeam(item: Record<string, unknown>) {
@@ -51,6 +51,10 @@ async function mutate(request: Request, method: "POST" | "PATCH") {
       form.set("category", categoryVal);
       if (method === "POST" && !form.has("is_active")) form.set("is_active", "true");
       form.delete("position");
+      if (isUploadedFile(form.get("photo"))) {
+        form.set("uploaded_photo", form.get("photo")!);
+        form.delete("photo");
+      }
       body = form;
     } else {
       const incoming = asRecord(await request.json());
