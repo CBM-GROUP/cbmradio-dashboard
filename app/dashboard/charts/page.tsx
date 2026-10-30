@@ -618,7 +618,7 @@ export default function ChartsDashboardPage() {
                 Music Charts
               </h1>
               <p className="text-xs text-slate-500 dark:text-zinc-400">
-                Official gospel countdowns, weekly positions, and streaming catalog
+                Official music countdowns, weekly positions, and catalog tracking
               </p>
             </div>
           </div>
@@ -653,7 +653,7 @@ export default function ChartsDashboardPage() {
       ) : charts.length === 0 ? (
         <EmptyState
           title="No Music Charts Found"
-          description="Create your first gospel countdown (e.g. CBM Gospel Hot 100) to start managing track rankings."
+          description="Create your first music countdown (e.g. CBM Top 20) to start managing track rankings."
           action={
             <Button onClick={openNewChartModal} className="mt-4 bg-amber-600 hover:bg-amber-500 text-white">
               Create First Chart
@@ -922,7 +922,7 @@ export default function ChartsDashboardPage() {
                     {activeChart.title}
                   </h2>
                   <p className="text-xs sm:text-sm text-slate-300 line-clamp-2">
-                    {activeChart.description || "Official weekly countdown and gospel music ranking."}
+                    {activeChart.description || "Official weekly countdown and music ranking."}
                   </p>
                 </div>
 
@@ -1205,7 +1205,7 @@ export default function ChartsDashboardPage() {
                 <p className="mt-1 text-xs text-slate-500 dark:text-zinc-400 max-w-sm">
                   {searchQuery || filterTab !== "all"
                     ? "Clear your search or select 'All Tracks' to view all entries."
-                    : "Start curating this countdown by adding the #1 gospel song."}
+                    : "Start curating this countdown by adding the #1 song."}
                 </p>
                 <div className="mt-4 flex items-center gap-2">
                   {(searchQuery || filterTab !== "all") && (
@@ -2000,7 +2000,7 @@ export default function ChartsDashboardPage() {
                         id="chart-title"
                         type="text"
                         required
-                        placeholder="e.g. CBM Gospel Hot 100"
+                        placeholder="e.g. CBM Top 20 Countdown"
                         value={chartForm.title}
                         onChange={(e) => {
                           const title = e.target.value;
@@ -2069,7 +2069,7 @@ export default function ChartsDashboardPage() {
                       <Textarea
                         id="chart-desc"
                         rows={3}
-                        placeholder="Weekly countdown of the most played gospel and worship songs across East Africa."
+                        placeholder="Weekly countdown of the most played and requested songs across East Africa."
                         value={chartForm.description}
                         onChange={(e) => setChartForm({ ...chartForm, description: e.target.value })}
                         className="mt-1 text-xs"
