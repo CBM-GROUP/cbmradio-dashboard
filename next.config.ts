@@ -7,6 +7,7 @@ const mediaHostname = process.env.MEDIA_HOSTNAME?.trim()
 const nextConfig: NextConfig = {
   output: "standalone",
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",

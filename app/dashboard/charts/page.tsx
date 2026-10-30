@@ -884,6 +884,7 @@ export default function ChartsDashboardPage() {
                     src={activeChart.cover_image_url || activeChart.cover_image || activeChart.coverImage || ""}
                     alt={`${activeChart.title} Hero Banner`}
                     fill
+                    unoptimized
                     className="object-cover object-center opacity-35 transition-transform duration-700 hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/85 to-transparent" />
