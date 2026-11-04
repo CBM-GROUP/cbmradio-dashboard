@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   AlignCenter,
   AlignLeft,
@@ -816,14 +816,40 @@ export default function PageHeroesPage() {
 }
 
 function HeroPreview({ form, hero }: { form: HeroForm; hero?: PageHero }) {
+  const [selectedSlideIndex, setSelectedSlideIndex] = useState(0);
+
+  const activeSlides: HeroSlide[] = useMemo(() => {
+    return (hero?.slides || [])
+      .filter((s: HeroSlide) => s.is_active)
+      .sort((a: HeroSlide, b: HeroSlide) => a.display_order - b.display_order || a.id - b.id);
+  }, [hero?.slides]);
+
+  const activeSlide =
+    form.media_type === "slides" && activeSlides.length > 0
+      ? activeSlides[Math.min(selectedSlideIndex, activeSlides.length - 1)]
+      : null;
+
   const image =
     form.media_type === "image"
       ? form.image_source === "external"
         ? form.external_image_url
         : hero?.resolved_image_url
-      : form.media_type === "slides"
-      ? hero?.slides?.find((v) => v.is_active)?.resolved_image_url
+      : activeSlide?.media_type === "image"
+      ? activeSlide.resolved_image_url
       : "";
+
+  const isVideo =
+    form.media_type === "video" ||
+    (form.media_type === "slides" && activeSlide?.media_type === "video");
+
+  const previewTitle =
+    activeSlide?.title || form.title || "Untitled Banner";
+  const previewSubtitle =
+    activeSlide?.subtitle || form.subtitle;
+  const previewDescription =
+    activeSlide?.description || form.description;
+  const previewCta =
+    activeSlide?.cta_label || form.cta_label;
 
   const alignmentClass =
     form.overlay_position === "left"
@@ -833,58 +859,92 @@ function HeroPreview({ form, hero }: { form: HeroForm; hero?: PageHero }) {
       : "text-center items-center mx-auto";
 
   return (
-    <section className="relative min-h-[260px] md:min-h-[320px] rounded-xl overflow-hidden flex items-center p-6 sm:p-10 bg-slate-900 border border-zinc-800">
-      {image ? (
-        <Image
-          src={image}
-          alt=""
-          fill
-          unoptimized
-          className="object-cover transition-opacity duration-300"
+    <div className="space-y-3">
+      <section className="relative min-h-[260px] md:min-h-[320px] rounded-xl overflow-hidden flex items-center p-6 sm:p-10 bg-slate-900 border border-zinc-800">
+        {image ? (
+          <Image
+            src={image}
+            alt=""
+            fill
+            unoptimized
+            className="object-cover transition-opacity duration-300"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-slate-900 to-emerald-950/40" />
+        )}
+
+        {/* Dynamic Overlay */}
+        <div
+          className="absolute inset-0 bg-black transition-opacity duration-200"
+          style={{ opacity: form.overlay_strength / 100 }}
         />
-      ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-slate-900 to-emerald-950/40" />
-      )}
 
-      {/* Dynamic Overlay */}
-      <div
-        className="absolute inset-0 bg-black transition-opacity duration-200"
-        style={{ opacity: form.overlay_strength / 100 }}
-      />
+        {/* Decorative emerald ambient glow */}
+        <div className="absolute -top-24 -left-24 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Decorative emerald ambient glow */}
-      <div className="absolute -top-24 -left-24 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-
-      {/* Overlay Content */}
-      <div className={`relative z-10 max-w-2xl flex flex-col gap-2.5 ${alignmentClass}`}>
-        {form.subtitle && (
-          <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-emerald-400">
-            {form.subtitle}
-          </span>
-        )}
-        <h2 className="text-2xl md:text-4xl font-black tracking-tight text-white leading-tight">
-          {form.title || "Untitled Banner"}
-        </h2>
-        {form.description && (
-          <p className="text-xs md:text-sm text-zinc-300 line-clamp-3 leading-relaxed">
-            {form.description}
-          </p>
-        )}
-        {form.cta_label && (
-          <div className="pt-2">
-            <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-500 text-slate-950 font-bold text-xs shadow-md shadow-emerald-500/20">
-              {form.cta_label}
-              <ExternalLink className="h-3 w-3" />
-            </span>
+        {/* Overlay Content */}
+        <div className={`relative z-10 max-w-2xl flex flex-col gap-2.5 ${alignmentClass}`}>
+          <div className="flex items-center gap-2">
+            {previewSubtitle && (
+              <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-emerald-400">
+                {previewSubtitle}
+              </span>
+            )}
+            {activeSlide && (
+              <Badge variant="outline" className="text-[9px] px-1.5 py-0 border-emerald-500/50 text-emerald-300 bg-black/40">
+                {activeSlide.media_type.toUpperCase()} SLIDE
+              </Badge>
+            )}
           </div>
-        )}
-        {form.media_type === "video" && (
-          <p className="text-[11px] text-zinc-400 italic pt-1">
-            * Video player streams on the public site when clicked.
-          </p>
-        )}
-      </div>
-    </section>
+          <h2 className="text-2xl md:text-4xl font-black tracking-tight text-white leading-tight">
+            {previewTitle}
+          </h2>
+          {previewDescription && (
+            <p className="text-xs md:text-sm text-zinc-300 line-clamp-3 leading-relaxed">
+              {previewDescription}
+            </p>
+          )}
+          {previewCta && (
+            <div className="pt-2">
+              <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-500 text-slate-950 font-bold text-xs shadow-md shadow-emerald-500/20">
+                {previewCta}
+                <ExternalLink className="h-3 w-3" />
+              </span>
+            </div>
+          )}
+          {isVideo && (
+            <p className="text-[11px] text-zinc-400 italic pt-1">
+              * Video stream ({activeSlide?.video_url || form.video_url || "Configured URL"}) plays interactively on the public site.
+            </p>
+          )}
+        </div>
+      </section>
+
+      {/* Multi-slide preview stepper */}
+      {form.media_type === "slides" && activeSlides.length > 1 && (
+        <div className="flex items-center justify-between px-2 text-xs">
+          <span className="text-slate-500 dark:text-zinc-400 font-medium">
+            Previewing Slide {selectedSlideIndex + 1} of {activeSlides.length}:
+          </span>
+          <div className="flex items-center gap-1.5">
+            {activeSlides.map((slide, idx) => (
+              <button
+                key={slide.id}
+                type="button"
+                onClick={() => setSelectedSlideIndex(idx)}
+                className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all ${
+                  idx === selectedSlideIndex
+                    ? "bg-emerald-500 text-slate-950 shadow-xs"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-300"
+                }`}
+              >
+                {slide.media_type === "video" ? "🎬" : "🖼️"} #{idx + 1}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
