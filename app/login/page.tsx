@@ -37,9 +37,10 @@ export default function AdminLoginPage() {
 
       if (res.ok && data.user) {
         setToast("⚡ Authorization Verified! Unlocking Control Tower Room...");
+        router.refresh();
         setTimeout(() => {
-          router.replace("/dashboard");
-        }, 1500);
+          window.location.href = "/dashboard";
+        }, 800);
       } else {
         setToast(data.error || "❌ Access Denied: Invalid Administrator Credentials.");
       }
