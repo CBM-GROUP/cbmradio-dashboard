@@ -365,30 +365,41 @@ export default function PageSectionsPage() {
         </div>
       )}
 
-      {/* Form Drawer */}
+      {/* Section Creation/Edit Popup Modal */}
       {showingForm && (
-        <Card className="border-emerald-500/30 bg-white dark:border-emerald-500/20 dark:bg-zinc-950 shadow-md">
-          <CardHeader className="p-5 border-b border-slate-100 dark:border-zinc-800">
-            <div className="flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-3 sm:p-5 md:p-6 backdrop-blur-xs overflow-y-auto">
+          <div className="relative w-full max-w-4xl max-h-[92vh] flex flex-col rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-950 overflow-hidden my-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3.5 sm:px-6 sm:py-4 dark:border-zinc-800 bg-slate-50/70 dark:bg-zinc-900/60 backdrop-blur-md shrink-0">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                <Sparkles className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                 <div>
-                  <CardTitle className="text-base font-bold text-slate-900 dark:text-white">
+                  <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
                     {creating ? "Create New Page Section" : `Edit Section: ${form.title || form.section_key}`}
-                  </CardTitle>
-                  <CardDescription className="text-xs text-slate-500 dark:text-zinc-400">
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-zinc-400">
                     Choose which public page and position this section should be established on.
-                  </CardDescription>
+                  </p>
                 </div>
               </div>
-              <Badge variant="outline" className={getPageBadgeStyle(form.page)}>
-                {availablePages.find((p) => p.value === form.page)?.label || form.page}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className={getPageBadgeStyle(form.page)}>
+                  {availablePages.find((p) => p.value === form.page)?.label || form.page}
+                </Badge>
+                <button
+                  type="button"
+                  onClick={closeForm}
+                  className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200/60 hover:text-slate-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 transition cursor-pointer ml-1"
+                  aria-label="Close modal"
+                >
+                  <CloseIcon className="h-5 w-5" />
+                </button>
+              </div>
             </div>
-          </CardHeader>
 
-          <CardContent className="p-5">
-            <form onSubmit={submit} className="space-y-5">
+            {/* Scrollable Form Body */}
+            <form onSubmit={submit} className="flex flex-col flex-1 overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-5">
               {/* Placement & Target Page Selection */}
               <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 space-y-4">
                 <div className="flex items-center gap-2 text-xs font-bold text-emerald-700 dark:text-emerald-400">
@@ -550,17 +561,20 @@ export default function PageSectionsPage() {
                 </div>
               )}
 
-              <div className="flex justify-end gap-2.5 pt-2 border-t border-slate-100 dark:border-zinc-800">
-                <Button type="button" variant="outline" onClick={closeForm}>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="flex items-center justify-end gap-2.5 border-t border-slate-200 px-5 py-3.5 sm:px-6 dark:border-zinc-800 bg-slate-50/70 dark:bg-zinc-900/60 shrink-0">
+                <Button type="button" variant="outline" size="sm" onClick={closeForm}>
                   Cancel
                 </Button>
-                <Button type="submit" loading={saving}>
+                <Button type="submit" size="sm" loading={saving}>
                   {creating ? "Establish Section" : "Save Changes"}
                 </Button>
               </div>
             </form>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {/* Sections List */}
