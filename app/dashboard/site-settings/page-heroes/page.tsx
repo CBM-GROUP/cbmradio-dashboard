@@ -10,6 +10,7 @@ import {
   ExternalLink,
   Eye,
   Film,
+  Home,
   Image as ImageIcon,
   Images,
   Info,
@@ -116,6 +117,8 @@ const blankSlide: SlideForm = {
 
 function getPageIcon(key: PageKey) {
   switch (key) {
+    case "home":
+      return <Home className="h-4 w-4" />;
     case "programs":
       return <Radio className="h-4 w-4" />;
     case "episodes":
@@ -315,7 +318,7 @@ export default function PageHeroesPage() {
       {error && !form && <ErrorState message={error} onRetry={() => void load()} />}
 
       {/* Page Tabs / Selector Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-3">
         {availableKeys.map((key) => {
           const hero = heroes.find((v) => v.page_key === key);
           const isSelected = selectedKey === key;
