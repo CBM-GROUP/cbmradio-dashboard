@@ -7,6 +7,7 @@ import {
   AlignLeft,
   AlignRight,
   BarChart3,
+  Edit2,
   ExternalLink,
   Eye,
   Film,
@@ -148,6 +149,7 @@ export default function PageHeroesPage() {
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [heroModalOpen, setHeroModalOpen] = useState(false);
 
   const [slideForm, setSlideForm] = useState<SlideForm | null>(null);
   const [slideFile, setSlideFile] = useState<File | null>(null);
@@ -190,6 +192,8 @@ export default function PageHeroesPage() {
     setForm(heroForm(key, hero));
     setFile(null);
     setSlideForm(null);
+    setEditingSlide(null);
+    setHeroModalOpen(false);
   };
 
   const saveHero = async (e: React.FormEvent) => {
@@ -228,6 +232,7 @@ export default function PageHeroesPage() {
       setHeroes((values) => [...values.filter((v) => v.page_key !== saved.page_key), saved]);
       setForm(heroForm(saved.page_key, saved));
       setFile(null);
+      setHeroModalOpen(false);
     } catch (v) {
       setError(isApiError(v) ? v.message : "Unable to save Page Hero.");
     } finally {
@@ -367,336 +372,77 @@ export default function PageHeroesPage() {
       </div>
 
       {form && (
-        <form onSubmit={saveHero} className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left Column: Content Details */}
-            <div className="lg:col-span-7 space-y-6">
-              <Card className="border-slate-200/80 bg-white dark:border-zinc-800/80 dark:bg-zinc-950 shadow-xs">
-                <CardHeader className="p-5 border-b border-slate-100 dark:border-zinc-800/80">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                    <div>
-                      <CardTitle className="text-base font-bold text-slate-900 dark:text-white capitalize">
-                        {form.page_key} Header Copy & Call-To-Action
-                      </CardTitle>
-                      <CardDescription className="text-xs text-slate-500 dark:text-zinc-400">
-                        Craft clear headline copy and actionable navigation links for this page.
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-
-                <CardContent className="p-5 space-y-4">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="title">Hero Title *</Label>
-                    <Input
-                      id="title"
-                      required
-                      value={form.title}
-                      onChange={(e) => setForm({ ...form, title: e.target.value })}
-                      placeholder="e.g. Broadcast Schedule & Live Shows"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="subtitle">Subtitle / Eyebrow</Label>
-                    <Input
-                      id="subtitle"
-                      value={form.subtitle}
-                      onChange={(e) => setForm({ ...form, subtitle: e.target.value })}
-                      placeholder="e.g. LIVE 24/7 FROM KAMPALA"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="description">Introductory Narrative</Label>
-                    <Textarea
-                      id="description"
-                      rows={3}
-                      value={form.description}
-                      onChange={(e) => setForm({ ...form, description: e.target.value })}
-                      placeholder="Brief overview explaining what listeners will discover on this page..."
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="cta_label">Button Label</Label>
-                      <Input
-                        id="cta_label"
-                        value={form.cta_label}
-                        onChange={(e) => setForm({ ...form, cta_label: e.target.value })}
-                        placeholder="e.g. Listen Live Now"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="cta_url">Button Destination URL</Label>
-                      <Input
-                        id="cta_url"
-                        value={form.cta_url}
-                        onChange={(e) => setForm({ ...form, cta_url: e.target.value })}
-                        placeholder="e.g. /episodes or https://..."
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between rounded-lg border border-slate-200/80 p-3.5 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/40 mt-2">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="hero_is_active" className="cursor-pointer font-semibold text-xs">
-                        Enable Page Hero
-                      </Label>
-                      <p className="text-[11px] text-slate-400 dark:text-zinc-500">
-                        When disabled, a compact minimalist breadcrumb is shown instead.
-                      </p>
-                    </div>
-                    <Switch
-                      id="hero_is_active"
-                      checked={form.is_active}
-                      onCheckedChange={(checked) => setForm({ ...form, is_active: checked })}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
+        <Card className="overflow-hidden border-slate-200/80 bg-white dark:border-zinc-800/80 dark:bg-zinc-950 shadow-xs">
+          <CardHeader className="p-4 sm:p-5 border-b border-slate-100 dark:border-zinc-800/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                {getPageIcon(form.page_key)}
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <CardTitle className="text-base sm:text-lg font-bold text-slate-900 dark:text-white capitalize">
+                    {form.page_key} Hero Banner
+                  </CardTitle>
+                  <Badge
+                    variant={current ? (form.is_active ? "default" : "secondary") : "outline"}
+                    className="text-[10px] px-2 py-0.5"
+                  >
+                    {current ? (form.is_active ? "Live on Site" : "Inactive") : "Unconfigured"}
+                  </Badge>
+                  <Badge variant="outline" className="text-[10px] px-2 py-0.5 capitalize">
+                    {form.media_type === "slides"
+                      ? `Multi-Slide (${current?.slides?.length || 0} slides)`
+                      : `${form.media_type} format`}
+                  </Badge>
+                </div>
+                <CardDescription className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
+                  Alignment: <strong className="capitalize">{form.overlay_position}</strong> · Dark Tint: <strong>{form.overlay_strength}%</strong> · Destination: <strong>{form.cta_url || "None"}</strong>
+                </CardDescription>
+              </div>
             </div>
 
-            {/* Right Column: Visuals & Layout Parameters */}
-            <div className="lg:col-span-5 space-y-6">
-              <Card className="border-slate-200/80 bg-white dark:border-zinc-800/80 dark:bg-zinc-950 shadow-xs">
-                <CardHeader className="p-5 border-b border-slate-100 dark:border-zinc-800/80">
-                  <div className="flex items-center gap-2">
-                    <Sliders className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                    <div>
-                      <CardTitle className="text-base font-bold text-slate-900 dark:text-white">
-                        Media & Visual Style
-                      </CardTitle>
-                      <CardDescription className="text-xs text-slate-500 dark:text-zinc-400">
-                        Background media type, positioning, and dark overlay filters.
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
+            <Button
+              onClick={() => setHeroModalOpen(true)}
+              className="gap-2 text-xs sm:text-sm font-semibold shadow-xs"
+            >
+              <Edit2 className="h-3.5 w-3.5" />
+              <span>{current ? "Edit Hero" : "Configure Hero"}</span>
+            </Button>
+          </CardHeader>
 
-                <CardContent className="p-5 space-y-4">
-                  {/* Media Type */}
-                  <div className="space-y-1.5">
-                    <Label htmlFor="media_type">Hero Banner Type</Label>
-                    <select
-                      id="media_type"
-                      value={form.media_type}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          media_type: e.target.value as HeroMediaType,
-                          image_source:
-                            e.target.value === "image" ? form.image_source || "external" : "",
-                        })
-                      }
-                      className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-100"
-                    >
-                      <option value="none">Text Only (Solid Dark Theme)</option>
-                      <option value="image">Static High-Res Image</option>
-                      <option value="video">Background Video Stream</option>
-                      <option value="slides">Multi-Slide Carousel</option>
-                    </select>
-                  </div>
-
-                  {/* If Image Selected */}
-                  {form.media_type === "image" && (
-                    <div className="space-y-3 rounded-lg border border-slate-200/80 p-3.5 bg-slate-50/50 dark:border-zinc-800 dark:bg-zinc-900/30">
-                      <div className="flex items-center gap-2 pb-1 border-b border-slate-200 dark:border-zinc-800">
-                        <ImageIcon className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                        <span className="text-xs font-semibold text-slate-900 dark:text-white">
-                          Image Source
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2">
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant={form.image_source === "external" ? "default" : "outline"}
-                          onClick={() => setForm({ ...form, image_source: "external" })}
-                          className="text-xs h-8"
-                        >
-                          External Link
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant={form.image_source === "upload" ? "default" : "outline"}
-                          onClick={() => setForm({ ...form, image_source: "upload" })}
-                          className="text-xs h-8"
-                        >
-                          Upload File
-                        </Button>
-                      </div>
-
-                      {form.image_source === "external" ? (
-                        <div className="space-y-1.5 pt-1">
-                          <Label htmlFor="external_image_url" className="text-xs">
-                            Direct Image URL
-                          </Label>
-                          <Input
-                            id="external_image_url"
-                            type="url"
-                            value={form.external_image_url}
-                            onChange={(e) => setForm({ ...form, external_image_url: e.target.value })}
-                            placeholder="https://images.unsplash.com/..."
-                            className="font-mono text-xs"
-                          />
-                        </div>
-                      ) : (
-                        <div className="space-y-1.5 pt-1">
-                          <Label htmlFor="image_file" className="text-xs">
-                            Upload Banner Asset
-                          </Label>
-                          <Input
-                            id="image_file"
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => setFile(e.target.files?.[0] || null)}
-                            className="text-xs cursor-pointer file:cursor-pointer"
-                          />
-                        </div>
-                      )}
-
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setForm({
-                            ...form,
-                            media_type: "none",
-                            image_source: "",
-                            external_image_url: "",
-                            video_url: "",
-                          });
-                          setFile(null);
-                        }}
-                        className="text-[11px] text-slate-500 hover:text-rose-600 w-full"
-                      >
-                        Reset Media to Text Only
-                      </Button>
-                    </div>
-                  )}
-
-                  {/* If Video Selected */}
-                  {form.media_type === "video" && (
-                    <div className="space-y-2 rounded-lg border border-slate-200/80 p-3.5 bg-slate-50/50 dark:border-zinc-800 dark:bg-zinc-900/30">
-                      <div className="flex items-center gap-2 pb-1 border-b border-slate-200 dark:border-zinc-800">
-                        <Video className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                        <span className="text-xs font-semibold text-slate-900 dark:text-white">
-                          Video Stream URL
-                        </span>
-                      </div>
-                      <Input
-                        id="video_url"
-                        type="url"
-                        value={form.video_url}
-                        onChange={(e) => setForm({ ...form, video_url: e.target.value })}
-                        placeholder="https://www.youtube.com/watch?v=..."
-                        className="font-mono text-xs"
-                      />
-                      <p className="text-[11px] text-slate-400 dark:text-zinc-500">
-                        Streamed safely through the CBM Radio verified media player.
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Content Alignment */}
-                  <div className="space-y-1.5">
-                    <Label>Typography Alignment</Label>
-                    <div className="grid grid-cols-3 gap-2">
-                      <Button
-                        type="button"
-                        variant={form.overlay_position === "left" ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setForm({ ...form, overlay_position: "left" })}
-                        className="gap-1.5 text-xs h-9"
-                      >
-                        <AlignLeft className="h-3.5 w-3.5" />
-                        <span>Left</span>
-                      </Button>
-                      <Button
-                        type="button"
-                        variant={form.overlay_position === "center" ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setForm({ ...form, overlay_position: "center" })}
-                        className="gap-1.5 text-xs h-9"
-                      >
-                        <AlignCenter className="h-3.5 w-3.5" />
-                        <span>Center</span>
-                      </Button>
-                      <Button
-                        type="button"
-                        variant={form.overlay_position === "right" ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setForm({ ...form, overlay_position: "right" })}
-                        className="gap-1.5 text-xs h-9"
-                      >
-                        <AlignRight className="h-3.5 w-3.5" />
-                        <span>Right</span>
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Overlay Strength Slider */}
-                  <div className="space-y-2 pt-1">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="overlay_strength">Dark Tint Contrast</Label>
-                      <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                        {form.overlay_strength}%
-                      </span>
-                    </div>
-                    <input
-                      id="overlay_strength"
-                      type="range"
-                      min={0}
-                      max={100}
-                      value={form.overlay_strength}
-                      onChange={(e) =>
-                        setForm({ ...form, overlay_strength: Number(e.target.value) })
-                      }
-                      className="w-full accent-emerald-500 cursor-pointer"
-                    />
-                    <p className="text-[11px] text-slate-400 dark:text-zinc-500">
-                      Higher opacity ensures white hero text remains legible over bright backgrounds.
-                    </p>
-                  </div>
-
-                  {error && (
-                    <div className="rounded-md bg-rose-500/10 p-3 border border-rose-500/20 text-xs text-rose-600 dark:text-rose-400">
-                      {error}
-                    </div>
-                  )}
-
-                  <Button type="submit" loading={saving} className="w-full mt-4">
-                    {current ? `Update ${form.page_key} Hero` : `Publish ${form.page_key} Hero`}
-                  </Button>
-                </CardContent>
-              </Card>
+          {/* Current Details Summary */}
+          <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-zinc-800/80 grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50/50 dark:bg-zinc-900/30 text-xs">
+            <div>
+              <span className="block font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider text-[10px]">
+                Headline Title
+              </span>
+              <p className="font-bold text-slate-900 dark:text-white mt-1 text-sm">
+                {form.title || "Untitled"}
+              </p>
+            </div>
+            <div>
+              <span className="block font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider text-[10px]">
+                Subtitle / Eyebrow
+              </span>
+              <p className="font-semibold text-slate-700 dark:text-zinc-300 mt-1">
+                {form.subtitle || "None"}
+              </p>
+            </div>
+            <div>
+              <span className="block font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider text-[10px]">
+                Action Button
+              </span>
+              <p className="font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
+                {form.cta_label ? `${form.cta_label} → ${form.cta_url}` : "No button configured"}
+              </p>
             </div>
           </div>
 
-          {/* Live Preview Card */}
-          <Card className="overflow-hidden border-slate-200/80 bg-white dark:border-zinc-800/80 dark:bg-zinc-950">
-            <CardHeader className="p-4 border-b border-slate-100 dark:border-zinc-800/80 flex flex-row items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Eye className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                <CardTitle className="text-sm font-bold text-slate-900 dark:text-white">
-                  Real-Time Public Presentation Preview
-                </CardTitle>
-              </div>
-              <Badge variant="outline" className="text-[10px]">
-                {form.overlay_position.toUpperCase()} ALIGNMENT · {form.overlay_strength}% SHADOW
-              </Badge>
-            </CardHeader>
-            <div className="p-4 sm:p-6 bg-slate-950">
-              <HeroPreview form={form} hero={current} />
-            </div>
-          </Card>
-        </form>
+          {/* Real-Time Live Preview */}
+          <div className="p-4 sm:p-6 bg-slate-950">
+            <HeroPreview form={form} hero={current} />
+          </div>
+        </Card>
       )}
 
       {/* Multi-Slide Carousel Management */}
@@ -726,22 +472,6 @@ export default function PageHeroesPage() {
           </CardHeader>
 
           <CardContent className="p-5 space-y-4">
-            {slideForm && (
-              <SlideEditor
-                form={slideForm}
-                setForm={setSlideForm}
-                file={slideFile}
-                setFile={setSlideFile}
-                error={slideError}
-                saving={saving}
-                onSubmit={saveSlide}
-                onCancel={() => {
-                  setSlideForm(null);
-                  setEditingSlide(null);
-                }}
-              />
-            )}
-
             <div className="space-y-2">
               {[...(current.slides || [])]
                 .sort((a, b) => a.display_order - b.display_order || a.id - b.id)
@@ -780,9 +510,10 @@ export default function PageHeroesPage() {
                           setEditingSlide(slide);
                           setSlideForm({ ...slide });
                         }}
-                        className="h-8 px-2.5 text-xs text-slate-600 dark:text-zinc-400 hover:text-emerald-600"
+                        className="h-8 px-2.5 text-xs text-slate-600 dark:text-zinc-400 hover:text-emerald-600 gap-1"
                       >
-                        Edit
+                        <Edit2 className="h-3 w-3" />
+                        <span>Edit</span>
                       </Button>
                       <Button
                         size="sm"
@@ -804,6 +535,43 @@ export default function PageHeroesPage() {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Hero Edit Popup Modal */}
+      {heroModalOpen && form && (
+        <HeroEditorModal
+          form={form}
+          setForm={setForm}
+          file={file}
+          setFile={setFile}
+          error={error}
+          saving={saving}
+          isConfigured={!!current}
+          onSubmit={saveHero}
+          onCancel={() => {
+            setHeroModalOpen(false);
+            setError("");
+          }}
+        />
+      )}
+
+      {/* Slide Edit Popup Modal */}
+      {slideForm && (
+        <SlideEditor
+          isEditing={!!editingSlide}
+          form={slideForm}
+          setForm={setSlideForm}
+          file={slideFile}
+          setFile={setSlideFile}
+          error={slideError}
+          saving={saving}
+          onSubmit={saveSlide}
+          onCancel={() => {
+            setSlideForm(null);
+            setEditingSlide(null);
+            setSlideError("");
+          }}
+        />
       )}
 
       {/* Slide Delete Confirmation */}
@@ -952,6 +720,7 @@ function HeroPreview({ form, hero }: { form: HeroForm; hero?: PageHero }) {
 }
 
 function SlideEditor({
+  isEditing,
   form,
   setForm,
   file,
@@ -961,6 +730,7 @@ function SlideEditor({
   onSubmit,
   onCancel,
 }: {
+  isEditing: boolean;
   form: SlideForm;
   setForm: (v: SlideForm) => void;
   file: File | null;
@@ -971,193 +741,516 @@ function SlideEditor({
   onCancel: () => void;
 }) {
   return (
-    <Card className="border-emerald-500/30 bg-white/95 dark:border-emerald-500/20 dark:bg-zinc-950 p-5 space-y-4">
-      <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-800">
-        <h4 className="font-bold text-sm text-slate-900 dark:text-white">
-          {form.title ? `Edit Slide: ${form.title}` : "Configure New Slide"}
-        </h4>
-        <Button size="sm" variant="ghost" onClick={onCancel}>
-          <CloseIcon className="h-4 w-4" />
-        </Button>
-      </div>
-
-      <form onSubmit={onSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="slide_title">Slide Headline</Label>
-            <Input
-              id="slide_title"
-              value={form.title}
-              onChange={(e) => setForm({ ...form, title: e.target.value })}
-              placeholder="e.g. Special Gospel Broadcast"
-            />
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-3 sm:p-5 md:p-6 backdrop-blur-xs overflow-y-auto">
+      <div className="relative w-full max-w-3xl max-h-[92vh] flex flex-col rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-950 overflow-hidden my-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3.5 sm:px-6 sm:py-4 dark:border-zinc-800 bg-slate-50/70 dark:bg-zinc-900/60 backdrop-blur-md shrink-0">
+          <div>
+            <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Layers className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              <span>{isEditing ? `Edit Slide: ${form.title || `#${form.display_order}`}` : "Add Carousel Slide"}</span>
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-zinc-400">
+              Configure headline, media asset, and call-to-action for this slide.
+            </p>
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="slide_subtitle">Eyebrow / Subtitle</Label>
-            <Input
-              id="slide_subtitle"
-              value={form.subtitle}
-              onChange={(e) => setForm({ ...form, subtitle: e.target.value })}
-              placeholder="e.g. This Sunday 8:00 PM"
-            />
-          </div>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200/60 hover:text-slate-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 transition cursor-pointer"
+            aria-label="Close modal"
+          >
+            <CloseIcon className="h-5 w-5" />
+          </button>
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="slide_desc">Narrative Summary</Label>
-          <Textarea
-            id="slide_desc"
-            rows={2}
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-            placeholder="Slide description..."
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="slide_media_type">Media Format</Label>
-            <select
-              id="slide_media_type"
-              value={form.media_type}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  media_type: e.target.value as "image" | "video",
-                  image_source: e.target.value === "image" ? "external" : "",
-                })
-              }
-              className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-100"
-            >
-              <option value="image">Image</option>
-              <option value="video">Video</option>
-            </select>
-          </div>
-
-          {form.media_type === "image" ? (
-            <div className="space-y-1.5 md:col-span-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="slide_image_input">
-                  {form.image_source === "upload" ? "Upload Image File" : "Image Source URL"}
-                </Label>
-                <div className="flex items-center gap-1">
-                  <Button
-                    type="button"
-                    variant={form.image_source !== "upload" ? "secondary" : "ghost"}
-                    size="sm"
-                    className="h-6 px-2 text-[10px]"
-                    onClick={() => {
-                      setForm({ ...form, image_source: "external" });
-                      setFile(null);
-                    }}
-                  >
-                    URL
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={form.image_source === "upload" ? "secondary" : "ghost"}
-                    size="sm"
-                    className="h-6 px-2 text-[10px]"
-                    onClick={() => setForm({ ...form, image_source: "upload" })}
-                  >
-                    Upload
-                  </Button>
-                </div>
+        {/* Scrollable Form Body */}
+        <form onSubmit={onSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="slide_title">Slide Headline</Label>
+                <Input
+                  id="slide_title"
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  placeholder="e.g. Special Gospel Broadcast"
+                />
               </div>
-              {form.image_source === "upload" ? (
-                <div className="space-y-1">
-                  <Input
-                    id="slide_image_input"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setFile(e.target.files?.[0] || null)}
-                    className="text-xs cursor-pointer"
-                  />
-                  {file && (
-                    <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono truncate">
-                      Ready to upload: {file.name}
-                    </p>
+              <div className="space-y-1.5">
+                <Label htmlFor="slide_subtitle">Eyebrow / Subtitle</Label>
+                <Input
+                  id="slide_subtitle"
+                  value={form.subtitle}
+                  onChange={(e) => setForm({ ...form, subtitle: e.target.value })}
+                  placeholder="e.g. This Sunday 8:00 PM"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="slide_desc">Narrative Summary</Label>
+              <Textarea
+                id="slide_desc"
+                rows={2}
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                placeholder="Slide description..."
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="slide_media_type">Media Format</Label>
+                <select
+                  id="slide_media_type"
+                  value={form.media_type}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      media_type: e.target.value as "image" | "video",
+                      image_source: e.target.value === "image" ? "external" : "",
+                    })
+                  }
+                  className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-100"
+                >
+                  <option value="image">Image</option>
+                  <option value="video">Video</option>
+                </select>
+              </div>
+
+              {form.media_type === "image" ? (
+                <div className="space-y-1.5 md:col-span-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="slide_image_input">
+                      {form.image_source === "upload" ? "Upload Image File" : "Image Source URL"}
+                    </Label>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        type="button"
+                        variant={form.image_source !== "upload" ? "secondary" : "ghost"}
+                        size="sm"
+                        className="h-6 px-2 text-[10px]"
+                        onClick={() => {
+                          setForm({ ...form, image_source: "external" });
+                          setFile(null);
+                        }}
+                      >
+                        URL
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={form.image_source === "upload" ? "secondary" : "ghost"}
+                        size="sm"
+                        className="h-6 px-2 text-[10px]"
+                        onClick={() => setForm({ ...form, image_source: "upload" })}
+                      >
+                        Upload
+                      </Button>
+                    </div>
+                  </div>
+                  {form.image_source === "upload" ? (
+                    <div className="space-y-1">
+                      <Input
+                        id="slide_image_input"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setFile(e.target.files?.[0] || null)}
+                        className="text-xs cursor-pointer"
+                      />
+                      {file && (
+                        <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono truncate">
+                          Ready to upload: {file.name}
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <Input
+                      id="slide_image_input"
+                      value={form.external_image_url}
+                      onChange={(e) => setForm({ ...form, external_image_url: e.target.value })}
+                      placeholder="https://..."
+                    />
                   )}
                 </div>
               ) : (
-                <Input
-                  id="slide_image_input"
-                  value={form.external_image_url}
-                  onChange={(e) => setForm({ ...form, external_image_url: e.target.value })}
-                  placeholder="https://..."
-                />
+                <div className="space-y-1.5 md:col-span-2">
+                  <Label htmlFor="slide_video_url">Video URL</Label>
+                  <Input
+                    id="slide_video_url"
+                    value={form.video_url}
+                    onChange={(e) => setForm({ ...form, video_url: e.target.value })}
+                    placeholder="https://..."
+                  />
+                </div>
               )}
             </div>
-          ) : (
-            <div className="space-y-1.5 md:col-span-2">
-              <Label htmlFor="slide_video_url">Video URL</Label>
-              <Input
-                id="slide_video_url"
-                value={form.video_url}
-                onChange={(e) => setForm({ ...form, video_url: e.target.value })}
-                placeholder="https://..."
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+              <div className="space-y-1.5">
+                <Label htmlFor="slide_cta_label">CTA Label</Label>
+                <Input
+                  id="slide_cta_label"
+                  value={form.cta_label}
+                  onChange={(e) => setForm({ ...form, cta_label: e.target.value })}
+                  placeholder="Learn More"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="slide_cta_url">CTA Destination</Label>
+                <Input
+                  id="slide_cta_url"
+                  value={form.cta_url}
+                  onChange={(e) => setForm({ ...form, cta_url: e.target.value })}
+                  placeholder="/programs"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="slide_order">Order Priority</Label>
+                <Input
+                  id="slide_order"
+                  type="number"
+                  min={0}
+                  value={form.display_order}
+                  onChange={(e) => setForm({ ...form, display_order: Number(e.target.value) })}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between rounded-lg border border-slate-200/80 p-3 bg-slate-50/50 dark:border-zinc-800 dark:bg-zinc-900/40">
+              <Label htmlFor="slide_is_active" className="cursor-pointer font-semibold text-xs">
+                Slide Published & Active
+              </Label>
+              <Switch
+                id="slide_is_active"
+                checked={form.is_active}
+                onCheckedChange={(checked) => setForm({ ...form, is_active: checked })}
               />
             </div>
-          )}
+
+            {error && (
+              <div className="rounded-md bg-rose-500/10 p-3 border border-rose-500/20 text-xs text-rose-600 dark:text-rose-400">
+                {error}
+              </div>
+            )}
+          </div>
+
+          {/* Modal Footer */}
+          <div className="flex items-center justify-end gap-2 border-t border-slate-200 px-5 py-3 sm:px-6 dark:border-zinc-800 bg-slate-50/70 dark:bg-zinc-900/60 shrink-0">
+            <Button type="button" variant="outline" size="sm" onClick={onCancel}>
+              Cancel
+            </Button>
+            <Button type="submit" size="sm" loading={saving}>
+              {isEditing ? "Save Changes" : "Create Slide"}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function HeroEditorModal({
+  form,
+  setForm,
+  file,
+  setFile,
+  error,
+  saving,
+  isConfigured,
+  onSubmit,
+  onCancel,
+}: {
+  form: HeroForm;
+  setForm: (v: HeroForm) => void;
+  file: File | null;
+  setFile: (v: File | null) => void;
+  error: string;
+  saving: boolean;
+  isConfigured: boolean;
+  onSubmit: (e: React.FormEvent) => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-3 sm:p-5 md:p-6 backdrop-blur-xs overflow-y-auto">
+      <div className="relative w-full max-w-5xl xl:max-w-6xl max-h-[92vh] flex flex-col rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-950 overflow-hidden my-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3.5 sm:px-6 sm:py-4 dark:border-zinc-800 bg-slate-50/70 dark:bg-zinc-900/60 backdrop-blur-md shrink-0">
+          <div>
+            <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white capitalize flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              <span>{isConfigured ? `Edit ${form.page_key} Hero` : `Configure ${form.page_key} Hero`}</span>
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-zinc-400">
+              Customize typography copy, media asset, overlay darkness, and call-to-action buttons.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200/60 hover:text-slate-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 transition cursor-pointer"
+            aria-label="Close modal"
+          >
+            <CloseIcon className="h-5 w-5" />
+          </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-          <div className="space-y-1.5">
-            <Label htmlFor="slide_cta_label">CTA Label</Label>
-            <Input
-              id="slide_cta_label"
-              value={form.cta_label}
-              onChange={(e) => setForm({ ...form, cta_label: e.target.value })}
-              placeholder="Learn More"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="slide_cta_url">CTA Destination</Label>
-            <Input
-              id="slide_cta_url"
-              value={form.cta_url}
-              onChange={(e) => setForm({ ...form, cta_url: e.target.value })}
-              placeholder="/programs"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="slide_order">Order Priority</Label>
-            <Input
-              id="slide_order"
-              type="number"
-              min={0}
-              value={form.display_order}
-              onChange={(e) => setForm({ ...form, display_order: Number(e.target.value) })}
-            />
-          </div>
-        </div>
+        {/* Scrollable Form Body */}
+        <form onSubmit={onSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="flex-1 overflow-y-auto p-5 sm:p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Left Column: Content Details */}
+              <div className="lg:col-span-7 space-y-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="modal_title">Hero Title *</Label>
+                  <Input
+                    id="modal_title"
+                    required
+                    value={form.title}
+                    onChange={(e) => setForm({ ...form, title: e.target.value })}
+                    placeholder="e.g. Broadcast Schedule & Live Shows"
+                  />
+                </div>
 
-        <div className="flex items-center justify-between rounded-lg border border-slate-200/80 p-3 bg-slate-50/50 dark:border-zinc-800 dark:bg-zinc-900/40">
-          <Label htmlFor="slide_is_active" className="cursor-pointer font-semibold text-xs">
-            Slide Published & Active
-          </Label>
-          <Switch
-            id="slide_is_active"
-            checked={form.is_active}
-            onCheckedChange={(checked) => setForm({ ...form, is_active: checked })}
-          />
-        </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="modal_subtitle">Subtitle / Eyebrow</Label>
+                  <Input
+                    id="modal_subtitle"
+                    value={form.subtitle}
+                    onChange={(e) => setForm({ ...form, subtitle: e.target.value })}
+                    placeholder="e.g. LIVE 24/7 FROM KAMPALA"
+                  />
+                </div>
 
-        {error && (
-          <div className="rounded-md bg-rose-500/10 p-3 border border-rose-500/20 text-xs text-rose-600 dark:text-rose-400">
-            {error}
+                <div className="space-y-1.5">
+                  <Label htmlFor="modal_description">Introductory Narrative</Label>
+                  <Textarea
+                    id="modal_description"
+                    rows={3}
+                    value={form.description}
+                    onChange={(e) => setForm({ ...form, description: e.target.value })}
+                    placeholder="Brief overview explaining what listeners will discover on this page..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="modal_cta_label">Button Label</Label>
+                    <Input
+                      id="modal_cta_label"
+                      value={form.cta_label}
+                      onChange={(e) => setForm({ ...form, cta_label: e.target.value })}
+                      placeholder="e.g. Listen Live Now"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="modal_cta_url">Button Destination URL</Label>
+                    <Input
+                      id="modal_cta_url"
+                      value={form.cta_url}
+                      onChange={(e) => setForm({ ...form, cta_url: e.target.value })}
+                      placeholder="e.g. /episodes or https://..."
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between rounded-lg border border-slate-200/80 p-3.5 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/40">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="modal_hero_is_active" className="cursor-pointer font-semibold text-xs">
+                      Enable Page Hero
+                    </Label>
+                    <p className="text-[11px] text-slate-400 dark:text-zinc-500">
+                      When disabled, a compact minimalist breadcrumb is shown instead.
+                    </p>
+                  </div>
+                  <Switch
+                    id="modal_hero_is_active"
+                    checked={form.is_active}
+                    onCheckedChange={(checked) => setForm({ ...form, is_active: checked })}
+                  />
+                </div>
+              </div>
+
+              {/* Right Column: Visuals & Media Parameters */}
+              <div className="lg:col-span-5 space-y-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="modal_media_type">Hero Banner Type</Label>
+                  <select
+                    id="modal_media_type"
+                    value={form.media_type}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        media_type: e.target.value as HeroMediaType,
+                        image_source:
+                          e.target.value === "image" ? form.image_source || "external" : "",
+                      })
+                    }
+                    className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-100"
+                  >
+                    <option value="none">Text Only (Solid Dark Theme)</option>
+                    <option value="image">Static High-Res Image</option>
+                    <option value="video">Background Video Stream</option>
+                    <option value="slides">Multi-Slide Carousel</option>
+                  </select>
+                </div>
+
+                {form.media_type === "image" && (
+                  <div className="space-y-3 rounded-lg border border-slate-200/80 p-3.5 bg-slate-50/50 dark:border-zinc-800 dark:bg-zinc-900/30">
+                    <div className="flex items-center gap-2 pb-1 border-b border-slate-200 dark:border-zinc-800">
+                      <ImageIcon className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <span className="text-xs font-semibold text-slate-900 dark:text-white">
+                        Image Source
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={form.image_source === "external" ? "default" : "outline"}
+                        onClick={() => setForm({ ...form, image_source: "external" })}
+                        className="text-xs h-8"
+                      >
+                        External Link
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={form.image_source === "upload" ? "default" : "outline"}
+                        onClick={() => setForm({ ...form, image_source: "upload" })}
+                        className="text-xs h-8"
+                      >
+                        Upload File
+                      </Button>
+                    </div>
+
+                    {form.image_source === "external" ? (
+                      <div className="space-y-1.5 pt-1">
+                        <Label htmlFor="modal_external_image_url" className="text-xs">
+                          Direct Image URL
+                        </Label>
+                        <Input
+                          id="modal_external_image_url"
+                          type="url"
+                          value={form.external_image_url}
+                          onChange={(e) => setForm({ ...form, external_image_url: e.target.value })}
+                          placeholder="https://images.unsplash.com/..."
+                          className="font-mono text-xs"
+                        />
+                      </div>
+                    ) : (
+                      <div className="space-y-1.5 pt-1">
+                        <Label htmlFor="modal_image_file" className="text-xs">
+                          Upload Banner Asset
+                        </Label>
+                        <Input
+                          id="modal_image_file"
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => setFile(e.target.files?.[0] || null)}
+                          className="text-xs cursor-pointer file:cursor-pointer"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {form.media_type === "video" && (
+                  <div className="space-y-2 rounded-lg border border-slate-200/80 p-3.5 bg-slate-50/50 dark:border-zinc-800 dark:bg-zinc-900/30">
+                    <div className="flex items-center gap-2 pb-1 border-b border-slate-200 dark:border-zinc-800">
+                      <Video className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <span className="text-xs font-semibold text-slate-900 dark:text-white">
+                        Video Stream URL
+                      </span>
+                    </div>
+                    <Input
+                      id="modal_video_url"
+                      type="url"
+                      value={form.video_url}
+                      onChange={(e) => setForm({ ...form, video_url: e.target.value })}
+                      placeholder="https://www.youtube.com/watch?v=..."
+                      className="font-mono text-xs"
+                    />
+                  </div>
+                )}
+
+                <div className="space-y-1.5">
+                  <Label>Typography Alignment</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Button
+                      type="button"
+                      variant={form.overlay_position === "left" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setForm({ ...form, overlay_position: "left" })}
+                      className="gap-1.5 text-xs h-9"
+                    >
+                      <AlignLeft className="h-3.5 w-3.5" />
+                      <span>Left</span>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={form.overlay_position === "center" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setForm({ ...form, overlay_position: "center" })}
+                      className="gap-1.5 text-xs h-9"
+                    >
+                      <AlignCenter className="h-3.5 w-3.5" />
+                      <span>Center</span>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={form.overlay_position === "right" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setForm({ ...form, overlay_position: "right" })}
+                      className="gap-1.5 text-xs h-9"
+                    >
+                      <AlignRight className="h-3.5 w-3.5" />
+                      <span>Right</span>
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-2 pt-1">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="modal_overlay_strength">Dark Tint Contrast</Label>
+                    <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                      {form.overlay_strength}%
+                    </span>
+                  </div>
+                  <input
+                    id="modal_overlay_strength"
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={form.overlay_strength}
+                    onChange={(e) =>
+                      setForm({ ...form, overlay_strength: Number(e.target.value) })
+                    }
+                    className="w-full accent-emerald-500 cursor-pointer"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {error && (
+              <div className="mt-4 rounded-md bg-rose-500/10 p-3 border border-rose-500/20 text-xs text-rose-600 dark:text-rose-400">
+                {error}
+              </div>
+            )}
           </div>
-        )}
 
-        <div className="flex justify-end gap-2 pt-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button type="submit" loading={saving}>
-            Save Slide
-          </Button>
-        </div>
-      </form>
-    </Card>
+          {/* Footer */}
+          <div className="flex items-center justify-end gap-2 border-t border-slate-200 px-5 py-3.5 sm:px-6 dark:border-zinc-800 bg-slate-50/70 dark:bg-zinc-900/60 shrink-0">
+            <Button type="button" variant="outline" size="sm" onClick={onCancel}>
+              Cancel
+            </Button>
+            <Button type="submit" size="sm" loading={saving}>
+              {isConfigured ? `Update ${form.page_key} Hero` : `Publish ${form.page_key} Hero`}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }
