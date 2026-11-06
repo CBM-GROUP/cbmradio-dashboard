@@ -329,10 +329,15 @@ export default function PageHeroesPage() {
   };
 
   const ensureSlidesHero = async (): Promise<PageHero> => {
-    if (current && current.media_type === "slides") {
+    const baseForm = form || heroForm(selectedKey || "programs", current);
+    if (
+      current &&
+      current.media_type === "slides" &&
+      current.overlay_position === baseForm.overlay_position &&
+      current.overlay_strength === baseForm.overlay_strength
+    ) {
       return current;
     }
-    const baseForm = form || heroForm(selectedKey || "programs", current);
     const slidesHeroForm: HeroForm = {
       ...baseForm,
       media_type: "slides",
@@ -341,6 +346,26 @@ export default function PageHeroesPage() {
       video_url: "",
     };
     return persistHeroForm(slidesHeroForm, null);
+  };
+
+  const saveOverlaySettings = async (
+    nextPosition: OverlayPosition,
+    nextStrength: number,
+  ) => {
+    if (!form) return;
+    const updatedForm: HeroForm = {
+      ...form,
+      overlay_position: nextPosition,
+      overlay_strength: nextStrength,
+    };
+    setForm(updatedForm);
+    if (!current) return;
+    try {
+      await persistHeroForm(updatedForm, null);
+      setToast("Carousel alignment and opacity updated.");
+    } catch (v) {
+      setToast(isApiError(v) ? v.message : "Unable to update overlay settings.");
+    }
   };
 
   const saveSlide = async (e: React.FormEvent) => {
@@ -693,6 +718,82 @@ export default function PageHeroesPage() {
           </CardHeader>
 
           <CardContent className="p-5 space-y-4">
+            {/* Inline Carousel Text Alignment & Overall Opacity Controls */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50/70 dark:bg-zinc-900/50 p-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">Carousel Text Alignment</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  <Button
+                    type="button"
+                    variant={form.overlay_position === "left" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => void saveOverlaySettings("left", form.overlay_strength)}
+                    className="gap-1.5 text-xs h-8"
+                  >
+                    <AlignLeft className="h-3.5 w-3.5" />
+                    <span>Left</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={form.overlay_position === "center" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => void saveOverlaySettings("center", form.overlay_strength)}
+                    className="gap-1.5 text-xs h-8"
+                  >
+                    <AlignCenter className="h-3.5 w-3.5" />
+                    <span>Center</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={form.overlay_position === "right" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => void saveOverlaySettings("right", form.overlay_strength)}
+                    className="gap-1.5 text-xs h-8"
+                  >
+                    <AlignRight className="h-3.5 w-3.5" />
+                    <span>Right</span>
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="carousel_inline_opacity" className="text-xs font-bold">
+                    Overall Overlay Opacity (Dark Tint)
+                  </Label>
+                  <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                    {form.overlay_strength}%
+                  </span>
+                </div>
+                <input
+                  id="carousel_inline_opacity"
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={form.overlay_strength}
+                  onChange={(e) =>
+                    setForm({ ...form, overlay_strength: Number(e.target.value) })
+                  }
+                  onMouseUp={(e) =>
+                    void saveOverlaySettings(
+                      form.overlay_position,
+                      Number((e.target as HTMLInputElement).value),
+                    )
+                  }
+                  onTouchEnd={(e) =>
+                    void saveOverlaySettings(
+                      form.overlay_position,
+                      Number((e.target as HTMLInputElement).value),
+                    )
+                  }
+                  className="w-full accent-emerald-500 cursor-pointer"
+                />
+                <p className="text-[11px] text-slate-400 dark:text-zinc-500">
+                  Adjusts backdrop darkness behind slide text from 0% (clear image) to 100% (solid black).
+                </p>
+              </div>
+            </div>
+
             <div className="space-y-2.5">
               {sortedSlides.map((slide, idx) => {
                 const thumbUrl =
@@ -853,7 +954,7 @@ export default function PageHeroesPage() {
       )}
 
       {/* Slide Edit Popup Modal */}
-      {slideForm && (
+      {slideForm && form && (
         <SlideEditor
           isEditing={!!editingSlide}
           existingImageUrl={
@@ -861,6 +962,10 @@ export default function PageHeroesPage() {
           }
           form={slideForm}
           setForm={setSlideForm}
+          overlayPosition={form.overlay_position}
+          setOverlayPosition={(pos) => setForm({ ...form, overlay_position: pos })}
+          overlayStrength={form.overlay_strength}
+          setOverlayStrength={(strength) => setForm({ ...form, overlay_strength: strength })}
           file={slideFile}
           setFile={setSlideFile}
           error={slideError}
@@ -908,6 +1013,14 @@ function HeroPreview({
 
   const safeSlideIndex =
     activeSlides.length > 0 ? Math.min(selectedSlideIndex, activeSlides.length - 1) : 0;
+
+  useEffect(() => {
+    if (form.media_type !== "slides" || activeSlides.length <= 1) return;
+    const timer = setInterval(() => {
+      setSelectedSlideIndex((prev) => (prev + 1) % activeSlides.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [form.media_type, activeSlides.length]);
 
   const activeSlide =
     form.media_type === "slides" && activeSlides.length > 0
@@ -1091,6 +1204,10 @@ function SlideEditor({
   existingImageUrl,
   form,
   setForm,
+  overlayPosition,
+  setOverlayPosition,
+  overlayStrength,
+  setOverlayStrength,
   file,
   setFile,
   error,
@@ -1102,6 +1219,10 @@ function SlideEditor({
   existingImageUrl: string;
   form: SlideForm;
   setForm: (v: SlideForm) => void;
+  overlayPosition: OverlayPosition;
+  setOverlayPosition: (v: OverlayPosition) => void;
+  overlayStrength: number;
+  setOverlayStrength: (v: number) => void;
   file: File | null;
   setFile: (v: File | null) => void;
   error: string;
@@ -1304,6 +1425,64 @@ function SlideEditor({
                   min={0}
                   value={form.display_order}
                   onChange={(e) => setForm({ ...form, display_order: Number(e.target.value) })}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-xl border border-slate-200/80 p-3.5 bg-slate-50/50 dark:border-zinc-800 dark:bg-zinc-900/40">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Text Alignment</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  <Button
+                    type="button"
+                    variant={overlayPosition === "left" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setOverlayPosition("left")}
+                    className="gap-1.5 text-xs h-8"
+                  >
+                    <AlignLeft className="h-3.5 w-3.5" />
+                    <span>Left</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={overlayPosition === "center" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setOverlayPosition("center")}
+                    className="gap-1.5 text-xs h-8"
+                  >
+                    <AlignCenter className="h-3.5 w-3.5" />
+                    <span>Center</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={overlayPosition === "right" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setOverlayPosition("right")}
+                    className="gap-1.5 text-xs h-8"
+                  >
+                    <AlignRight className="h-3.5 w-3.5" />
+                    <span>Right</span>
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="slide_overlay_strength" className="text-xs font-semibold">
+                    Overall Opacity (Dark Tint)
+                  </Label>
+                  <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                    {overlayStrength}%
+                  </span>
+                </div>
+                <input
+                  id="slide_overlay_strength"
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={overlayStrength}
+                  onChange={(e) => setOverlayStrength(Number(e.target.value))}
+                  className="w-full accent-emerald-500 cursor-pointer"
                 />
               </div>
             </div>
