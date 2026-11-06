@@ -6,10 +6,13 @@ import {
   AlignCenter,
   AlignLeft,
   AlignRight,
+  ArrowDown,
+  ArrowUp,
   BarChart3,
+  ChevronLeft,
+  ChevronRight,
   Edit2,
   ExternalLink,
-  Eye,
   Film,
   Home,
   Image as ImageIcon,
@@ -20,7 +23,6 @@ import {
   Phone,
   Plus,
   Radio,
-  Sliders,
   Sparkles,
   Trash2,
   Video,
@@ -102,7 +104,7 @@ const heroForm = (key: PageKey, hero?: PageHero): HeroForm => ({
   is_active: hero?.is_active ?? true,
 });
 
-const blankSlide: SlideForm = {
+const createBlankSlide = (nextOrder = 0): SlideForm => ({
   title: "",
   subtitle: "",
   description: "",
@@ -112,9 +114,26 @@ const blankSlide: SlideForm = {
   video_url: "",
   cta_label: "",
   cta_url: "",
-  display_order: 0,
+  display_order: nextOrder,
   is_active: true,
-};
+});
+
+const toSlideForm = (slide: HeroSlide): SlideForm => ({
+  title: slide.title || "",
+  subtitle: slide.subtitle || "",
+  description: slide.description || "",
+  media_type: slide.media_type === "video" ? "video" : "image",
+  image_source:
+    slide.media_type === "image"
+      ? slide.image_source || (slide.uploaded_image ? "upload" : "external")
+      : "",
+  external_image_url: slide.external_image_url || "",
+  video_url: slide.video_url || "",
+  cta_label: slide.cta_label || "",
+  cta_url: slide.cta_url || "",
+  display_order: slide.display_order ?? 0,
+  is_active: slide.is_active ?? true,
+});
 
 function getPageIcon(key: PageKey) {
   switch (key) {
@@ -159,6 +178,17 @@ export default function PageHeroesPage() {
 
   const current = heroes.find((v) => v.page_key === selectedKey);
 
+  const sortedSlides = useMemo(() => {
+    return [...(current?.slides || [])].sort(
+      (a, b) => a.display_order - b.display_order || a.id - b.id,
+    );
+  }, [current?.slides]);
+
+  const nextSlideOrder = useMemo(() => {
+    if (!sortedSlides.length) return 0;
+    return Math.max(...sortedSlides.map((s) => s.display_order)) + 1;
+  }, [sortedSlides]);
+
   const load = useCallback(async () => {
     setError("");
     try {
@@ -192,8 +222,66 @@ export default function PageHeroesPage() {
     setForm(heroForm(key, hero));
     setFile(null);
     setSlideForm(null);
+    setSlideFile(null);
     setEditingSlide(null);
+    setSlideError("");
     setHeroModalOpen(false);
+  };
+
+  const openAddSlideModal = () => {
+    setEditingSlide(null);
+    setSlideFile(null);
+    setSlideError("");
+    setSlideForm(createBlankSlide(nextSlideOrder));
+  };
+
+  const openEditSlideModal = (slide: HeroSlide) => {
+    setEditingSlide(slide);
+    setSlideFile(null);
+    setSlideError("");
+    setSlideForm(toSlideForm(slide));
+  };
+
+  const persistHeroForm = async (overrideForm?: HeroForm, uploadFile?: File | null): Promise<PageHero> => {
+    const targetForm = overrideForm || form;
+    if (!targetForm) throw new Error("No hero form state available.");
+    const effectiveFile = targetForm.media_type === "image" ? (uploadFile ?? file) : null;
+    const fields = {
+      ...targetForm,
+      ...heroMediaFields(
+        targetForm.media_type,
+        targetForm.image_source,
+        targetForm.external_image_url,
+        targetForm.video_url,
+      ),
+    };
+
+    let saved: PageHero;
+    if (effectiveFile) {
+      const body = new FormData();
+      if (current) body.set("lookup_page_key", current.page_key);
+      for (const [k, v] of Object.entries(fields)) {
+        if (v === undefined) continue;
+        if (v === null) body.set(k, "");
+        else body.set(k, String(v));
+      }
+      body.set("uploaded_image", effectiveFile);
+      saved = await (current
+        ? apiClient.put<PageHero>("/api/site-settings/page-heroes", body)
+        : apiClient.post<PageHero>("/api/site-settings/page-heroes", body));
+    } else {
+      saved = await (current
+        ? apiClient.put<PageHero>("/api/site-settings/page-heroes", {
+            lookup_page_key: current.page_key,
+            ...fields,
+          })
+        : apiClient.post<PageHero>("/api/site-settings/page-heroes", fields));
+    }
+
+    setHeroes((values) => [...values.filter((v) => v.page_key !== saved.page_key), saved]);
+    setForm(heroForm(saved.page_key, saved));
+    setFile(null);
+    return saved;
   };
 
   const saveHero = async (e: React.FormEvent) => {
@@ -201,37 +289,10 @@ export default function PageHeroesPage() {
     if (!form) return;
     setSaving(true);
     setError("");
-    const fields = {
-      ...form,
-      ...heroMediaFields(form.media_type, form.image_source, form.external_image_url, form.video_url),
-    };
 
     try {
-      let saved: PageHero;
-      if (file) {
-        const body = new FormData();
-        if (current) body.set("lookup_page_key", current.page_key);
-        for (const [k, v] of Object.entries(fields)) {
-          if (v === undefined) continue;
-          if (v === null) body.set(k, "");
-          else body.set(k, String(v));
-        }
-        body.set("uploaded_image", file);
-        saved = await (current
-          ? apiClient.put("/api/site-settings/page-heroes", body)
-          : apiClient.post("/api/site-settings/page-heroes", body));
-      } else {
-        saved = await (current
-          ? apiClient.put("/api/site-settings/page-heroes", {
-              lookup_page_key: current.page_key,
-              ...fields,
-            })
-          : apiClient.post("/api/site-settings/page-heroes", fields));
-      }
+      const saved = await persistHeroForm(form, file);
       setToast(`Page Hero for "${saved.page_key}" saved successfully.`);
-      setHeroes((values) => [...values.filter((v) => v.page_key !== saved.page_key), saved]);
-      setForm(heroForm(saved.page_key, saved));
-      setFile(null);
       setHeroModalOpen(false);
     } catch (v) {
       setError(isApiError(v) ? v.message : "Unable to save Page Hero.");
@@ -240,30 +301,114 @@ export default function PageHeroesPage() {
     }
   };
 
+  const saveHeroAndOpenSlideCreator = async () => {
+    if (!form) return;
+    setSaving(true);
+    setError("");
+    try {
+      const slidesHeroForm: HeroForm = {
+        ...form,
+        media_type: "slides",
+        image_source: "",
+        external_image_url: "",
+        video_url: "",
+      };
+      const saved = await persistHeroForm(slidesHeroForm, null);
+      setHeroModalOpen(false);
+      setToast(`"${saved.page_key}" Hero set to Multi-Slide Carousel.`);
+      const existingCount = saved.slides?.length || 0;
+      setEditingSlide(null);
+      setSlideFile(null);
+      setSlideError("");
+      setSlideForm(createBlankSlide(existingCount));
+    } catch (v) {
+      setError(isApiError(v) ? v.message : "Unable to switch Page Hero to Multi-Slide Carousel.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const ensureSlidesHero = async (): Promise<PageHero> => {
+    if (current && current.media_type === "slides") {
+      return current;
+    }
+    const baseForm = form || heroForm(selectedKey || "programs", current);
+    const slidesHeroForm: HeroForm = {
+      ...baseForm,
+      media_type: "slides",
+      image_source: "",
+      external_image_url: "",
+      video_url: "",
+    };
+    return persistHeroForm(slidesHeroForm, null);
+  };
+
   const saveSlide = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!current || !slideForm) return;
+    if (!slideForm) return;
+
+    // Client-side validation for upload mode without file on new slide
+    if (
+      slideForm.media_type === "image" &&
+      slideForm.image_source === "upload" &&
+      !slideFile &&
+      !editingSlide?.uploaded_image
+    ) {
+      setSlideError("Please choose an image file to upload, or switch to Image URL.");
+      return;
+    }
+
+    if (
+      slideForm.media_type === "image" &&
+      slideForm.image_source === "external" &&
+      !slideForm.external_image_url.trim()
+    ) {
+      setSlideError("Please enter a valid external image URL.");
+      return;
+    }
+
+    if (slideForm.media_type === "video" && !slideForm.video_url.trim()) {
+      setSlideError("Please enter a valid video URL (YouTube or direct video stream).");
+      return;
+    }
+
     setSaving(true);
     setSlideError("");
-    const media =
-      slideForm.media_type === "image"
-        ? {
-            image_source: slideForm.image_source,
-            external_image_url:
-              slideForm.image_source === "external" ? slideForm.external_image_url : "",
-            video_url: "",
-            uploaded_image: slideForm.image_source === "upload" ? undefined : null,
-          }
-        : {
-            image_source: "" as ImageSource,
-            external_image_url: "",
-            video_url: slideForm.video_url,
-            uploaded_image: null,
-          };
-    const fields = { ...slideForm, ...media, page_hero: current.id };
 
     try {
-      if (slideFile) {
+      // Automatically create or switch parent hero to "slides" mode if needed
+      const parentHero = await ensureSlidesHero();
+
+      const media =
+        slideForm.media_type === "image"
+          ? {
+              image_source: slideForm.image_source,
+              external_image_url:
+                slideForm.image_source === "external" ? slideForm.external_image_url.trim() : "",
+              video_url: "",
+              uploaded_image: slideForm.image_source === "upload" ? undefined : null,
+            }
+          : {
+              image_source: "" as ImageSource,
+              external_image_url: "",
+              video_url: slideForm.video_url.trim(),
+              uploaded_image: null,
+            };
+
+      const fields = {
+        title: slideForm.title,
+        subtitle: slideForm.subtitle,
+        description: slideForm.description,
+        media_type: slideForm.media_type,
+        cta_label: slideForm.cta_label,
+        cta_url: slideForm.cta_url,
+        display_order: Math.max(0, Number(slideForm.display_order) || 0),
+        is_active: slideForm.is_active,
+        ...media,
+        page_hero: parentHero.id,
+      };
+
+      if (slideFile && slideForm.media_type === "image" && slideForm.image_source === "upload") {
         const body = new FormData();
         if (editingSlide) body.set("id", String(editingSlide.id));
         for (const [k, v] of Object.entries(fields)) {
@@ -282,12 +427,51 @@ export default function PageHeroesPage() {
       setSlideForm(null);
       setEditingSlide(null);
       setSlideFile(null);
-      setToast("Hero Slide saved successfully.");
+      setToast(editingSlide ? "Hero Slide updated successfully." : "Hero Slide created successfully.");
       await load();
     } catch (v) {
       setSlideError(isApiError(v) ? v.message : "Unable to save Hero Slide.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const toggleSlideActive = async (slide: HeroSlide, nextActive: boolean) => {
+    try {
+      await apiClient.put("/api/site-settings/hero-slides", {
+        id: slide.id,
+        is_active: nextActive,
+      });
+      setToast(`Slide "${slide.title || `#${slide.display_order}`}" ${nextActive ? "activated" : "hidden"}.`);
+      await load();
+    } catch (v) {
+      setToast(isApiError(v) ? v.message : "Unable to update slide visibility.");
+    }
+  };
+
+  const moveSlideOrder = async (index: number, direction: -1 | 1) => {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= sortedSlides.length) return;
+    const first = sortedSlides[index];
+    const second = sortedSlides[targetIndex];
+    const firstOrder = first.display_order === second.display_order ? index : first.display_order;
+    const secondOrder =
+      first.display_order === second.display_order ? targetIndex : second.display_order;
+
+    try {
+      await Promise.all([
+        apiClient.put("/api/site-settings/hero-slides", {
+          id: first.id,
+          display_order: secondOrder,
+        }),
+        apiClient.put("/api/site-settings/hero-slides", {
+          id: second.id,
+          display_order: firstOrder,
+        }),
+      ]);
+      await load();
+    } catch (v) {
+      setToast(isApiError(v) ? v.message : "Unable to reorder slides.");
     }
   };
 
@@ -316,7 +500,7 @@ export default function PageHeroesPage() {
           <span>Page Hero Banners</span>
         </h1>
         <p className="text-xs md:text-sm text-slate-500 dark:text-zinc-400">
-          Design visual headers, typography overlays, and interactive call-to-actions across public pages.
+          Design visual headers, multi-slide carousels, typography overlays, and interactive call-to-actions across public pages.
         </p>
       </div>
 
@@ -363,7 +547,11 @@ export default function PageHeroesPage() {
                   {key}
                 </span>
                 <span className="block text-[10px] text-slate-400 dark:text-zinc-500 truncate">
-                  {hero?.media_type ? `${hero.media_type} banner` : "Not configured"}
+                  {hero?.media_type === "slides"
+                    ? `Carousel (${hero.slides?.length || 0} slides)`
+                    : hero?.media_type
+                    ? `${hero.media_type} banner`
+                    : "Not configured"}
                 </span>
               </div>
             </button>
@@ -379,7 +567,7 @@ export default function PageHeroesPage() {
                 {getPageIcon(form.page_key)}
               </div>
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <CardTitle className="text-base sm:text-lg font-bold text-slate-900 dark:text-white capitalize">
                     {form.page_key} Hero Banner
                   </CardTitle>
@@ -401,20 +589,32 @@ export default function PageHeroesPage() {
               </div>
             </div>
 
-            <Button
-              onClick={() => setHeroModalOpen(true)}
-              className="gap-2 text-xs sm:text-sm font-semibold shadow-xs"
-            >
-              <Edit2 className="h-3.5 w-3.5" />
-              <span>{current ? "Edit Hero" : "Configure Hero"}</span>
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={openAddSlideModal}
+                className="gap-1.5 text-xs sm:text-sm font-semibold"
+              >
+                <Plus className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span>Add Carousel Slide</span>
+              </Button>
+              <Button
+                type="button"
+                onClick={() => setHeroModalOpen(true)}
+                className="gap-2 text-xs sm:text-sm font-semibold shadow-xs"
+              >
+                <Edit2 className="h-3.5 w-3.5" />
+                <span>{current ? "Edit Hero" : "Configure Hero"}</span>
+              </Button>
+            </div>
           </CardHeader>
 
           {/* Current Details Summary */}
           <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-zinc-800/80 grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50/50 dark:bg-zinc-900/30 text-xs">
             <div>
               <span className="block font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider text-[10px]">
-                Headline Title
+                Headline Title {form.media_type === "slides" ? "(Fallback)" : ""}
               </span>
               <p className="font-bold text-slate-900 dark:text-white mt-1 text-sm">
                 {form.title || "Untitled"}
@@ -422,7 +622,7 @@ export default function PageHeroesPage() {
             </div>
             <div>
               <span className="block font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider text-[10px]">
-                Subtitle / Eyebrow
+                Subtitle / Eyebrow {form.media_type === "slides" ? "(Fallback)" : ""}
               </span>
               <p className="font-semibold text-slate-700 dark:text-zinc-300 mt-1">
                 {form.subtitle || "None"}
@@ -430,7 +630,7 @@ export default function PageHeroesPage() {
             </div>
             <div>
               <span className="block font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider text-[10px]">
-                Action Button
+                Action Button {form.media_type === "slides" ? "(Fallback)" : ""}
               </span>
               <p className="font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
                 {form.cta_label ? `${form.cta_label} → ${form.cta_url}` : "No button configured"}
@@ -440,54 +640,119 @@ export default function PageHeroesPage() {
 
           {/* Real-Time Live Preview */}
           <div className="p-4 sm:p-6 bg-slate-950">
-            <HeroPreview form={form} hero={current} />
+            <HeroPreview
+              form={form}
+              hero={current}
+              onAddSlide={openAddSlideModal}
+              onEditSlide={openEditSlideModal}
+            />
           </div>
         </Card>
       )}
 
       {/* Multi-Slide Carousel Management */}
-      {current && form?.media_type === "slides" && (
+      {form && (form.media_type === "slides" || (current?.slides?.length ?? 0) > 0) && (
         <Card className="border-slate-200/80 bg-white dark:border-zinc-800/80 dark:bg-zinc-950">
           <CardHeader className="p-5 border-b border-slate-100 dark:border-zinc-800/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <CardTitle className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Layers className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                <span>Carousel Slides ({current.slides?.length || 0})</span>
-              </CardTitle>
-              <CardDescription className="text-xs text-slate-500 dark:text-zinc-400">
-                The public portal rotates or showcases active slides configured in ascending order.
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Layers className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                  <span>Carousel Slides ({sortedSlides.length})</span>
+                </CardTitle>
+                {current?.media_type !== "slides" && (
+                  <Badge variant="secondary" className="text-[10px]">
+                    Hero currently in {current?.media_type || "unset"} mode
+                  </Badge>
+                )}
+              </div>
+              <CardDescription className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
+                The public website smoothly crossfades and rotates active slides in ascending display order. Adding a slide automatically enables Multi-Slide Carousel mode.
               </CardDescription>
             </div>
-            <Button
-              size="sm"
-              onClick={() => {
-                setEditingSlide(null);
-                setSlideForm(blankSlide);
-              }}
-              className="gap-1.5 text-xs"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              <span>Add Slide</span>
-            </Button>
+            <div className="flex items-center gap-2">
+              {current && current.media_type !== "slides" && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => void ensureSlidesHero().then(() => setToast("Switched Hero to Multi-Slide Carousel mode."))}
+                  className="text-xs"
+                >
+                  Activate Carousel Mode
+                </Button>
+              )}
+              <Button
+                size="sm"
+                onClick={openAddSlideModal}
+                className="gap-1.5 text-xs"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>Add Slide</span>
+              </Button>
+            </div>
           </CardHeader>
 
           <CardContent className="p-5 space-y-4">
-            <div className="space-y-2">
-              {[...(current.slides || [])]
-                .sort((a, b) => a.display_order - b.display_order || a.id - b.id)
-                .map((slide) => (
+            <div className="space-y-2.5">
+              {sortedSlides.map((slide, idx) => {
+                const thumbUrl =
+                  slide.media_type === "image"
+                    ? slide.resolved_image_url || slide.external_image_url || slide.uploaded_image || ""
+                    : "";
+                return (
                   <div
                     key={slide.id}
-                    className="flex items-center justify-between rounded-lg border border-slate-200/80 p-3.5 bg-slate-50/50 dark:border-zinc-800/80 dark:bg-zinc-900/40"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-slate-200/80 p-3.5 bg-slate-50/50 dark:border-zinc-800/80 dark:bg-zinc-900/40"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-200 dark:bg-zinc-800 text-xs font-bold text-slate-700 dark:text-zinc-300">
-                        #{slide.display_order}
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <div className="flex flex-col items-center gap-0.5">
+                        <button
+                          type="button"
+                          disabled={idx === 0}
+                          onClick={() => void moveSlideOrder(idx, -1)}
+                          className="p-0.5 text-slate-400 hover:text-slate-700 disabled:opacity-30 dark:hover:text-zinc-200 cursor-pointer disabled:cursor-default"
+                          title="Move slide up"
+                        >
+                          <ArrowUp className="h-3 w-3" />
+                        </button>
+                        <div className="flex h-6 min-w-7 px-1.5 items-center justify-center rounded bg-slate-200 dark:bg-zinc-800 text-[11px] font-bold text-slate-700 dark:text-zinc-300">
+                          #{slide.display_order}
+                        </div>
+                        <button
+                          type="button"
+                          disabled={idx === sortedSlides.length - 1}
+                          onClick={() => void moveSlideOrder(idx, 1)}
+                          className="p-0.5 text-slate-400 hover:text-slate-700 disabled:opacity-30 dark:hover:text-zinc-200 cursor-pointer disabled:cursor-default"
+                          title="Move slide down"
+                        >
+                          <ArrowDown className="h-3 w-3" />
+                        </button>
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-semibold text-xs text-slate-900 dark:text-white">
-                            {slide.title || `Slide ${slide.id}`}
+
+                      {/* Thumbnail Preview */}
+                      <div className="relative h-14 w-24 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-900 dark:border-zinc-800 flex items-center justify-center">
+                        {thumbUrl ? (
+                          <Image
+                            src={thumbUrl}
+                            alt={slide.title || `Slide ${idx + 1}`}
+                            fill
+                            unoptimized
+                            className="object-cover"
+                          />
+                        ) : slide.media_type === "video" ? (
+                          <div className="flex flex-col items-center justify-center text-emerald-400">
+                            <Film className="h-5 w-5" />
+                            <span className="text-[9px] font-bold uppercase mt-0.5">Video</span>
+                          </div>
+                        ) : (
+                          <ImageIcon className="h-5 w-5 text-slate-500" />
+                        )}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white truncate">
+                            {slide.title || form.title || `Slide ${idx + 1}`}
                           </h4>
                           <Badge
                             variant={slide.is_active ? "default" : "secondary"}
@@ -495,22 +760,32 @@ export default function PageHeroesPage() {
                           >
                             {slide.is_active ? "Active" : "Hidden"}
                           </Badge>
+                          <Badge variant="outline" className="text-[9px] px-1.5 py-0 uppercase">
+                            {slide.media_type === "video" ? "Video" : `Image (${slide.image_source || "url"})`}
+                          </Badge>
                         </div>
-                        <p className="text-[11px] text-slate-400 dark:text-zinc-500 truncate max-w-sm">
-                          {slide.subtitle || slide.description || "No description provided."}
+                        <p className="text-[11px] text-slate-500 dark:text-zinc-400 truncate max-w-lg mt-0.5">
+                          {slide.subtitle ? `${slide.subtitle} — ` : ""}
+                          {slide.description ||
+                            (slide.media_type === "video" ? slide.video_url : thumbUrl) ||
+                            "Inherits parent hero description"}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center justify-end gap-2 shrink-0">
+                      <div className="flex items-center gap-1.5 mr-1">
+                        <span className="text-[10px] text-slate-400 dark:text-zinc-500">Live</span>
+                        <Switch
+                          checked={slide.is_active}
+                          onCheckedChange={(checked) => void toggleSlideActive(slide, checked)}
+                        />
+                      </div>
                       <Button
                         size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          setEditingSlide(slide);
-                          setSlideForm({ ...slide });
-                        }}
-                        className="h-8 px-2.5 text-xs text-slate-600 dark:text-zinc-400 hover:text-emerald-600 gap-1"
+                        variant="outline"
+                        onClick={() => openEditSlideModal(slide)}
+                        className="h-8 px-2.5 text-xs gap-1"
                       >
                         <Edit2 className="h-3 w-3" />
                         <span>Edit</span>
@@ -525,12 +800,25 @@ export default function PageHeroesPage() {
                       </Button>
                     </div>
                   </div>
-                ))}
+                );
+              })}
 
-              {(!current.slides || current.slides.length === 0) && (
-                <p className="text-xs text-slate-400 dark:text-zinc-500 text-center py-6">
-                  No slides created yet. Click &quot;Add Slide&quot; to configure carousel items.
-                </p>
+              {sortedSlides.length === 0 && (
+                <div className="rounded-xl border border-dashed border-slate-200 dark:border-zinc-800 p-8 text-center space-y-3">
+                  <Layers className="h-8 w-8 text-emerald-500 mx-auto opacity-80" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-bold text-slate-800 dark:text-zinc-200">
+                      No carousel slides added yet
+                    </p>
+                    <p className="text-xs text-slate-400 dark:text-zinc-500 max-w-md mx-auto">
+                      Add two or more slides (high-res images or YouTube/video streams) to activate an auto-rotating hero carousel on the {form.page_key} page.
+                    </p>
+                  </div>
+                  <Button size="sm" onClick={openAddSlideModal} className="gap-1.5 text-xs">
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>Add First Slide</span>
+                  </Button>
+                </div>
               )}
             </div>
           </CardContent>
@@ -547,9 +835,18 @@ export default function PageHeroesPage() {
           error={error}
           saving={saving}
           isConfigured={!!current}
+          slides={sortedSlides}
+          existingImageUrl={current?.resolved_image_url || ""}
           onSubmit={saveHero}
+          onSaveAndAddSlide={() => void saveHeroAndOpenSlideCreator()}
+          onEditSlide={(slide) => {
+            setHeroModalOpen(false);
+            openEditSlideModal(slide);
+          }}
           onCancel={() => {
             setHeroModalOpen(false);
+            setForm(heroForm(selectedKey || "programs", current));
+            setFile(null);
             setError("");
           }}
         />
@@ -559,6 +856,9 @@ export default function PageHeroesPage() {
       {slideForm && (
         <SlideEditor
           isEditing={!!editingSlide}
+          existingImageUrl={
+            editingSlide?.resolved_image_url || editingSlide?.uploaded_image || ""
+          }
           form={slideForm}
           setForm={setSlideForm}
           file={slideFile}
@@ -569,6 +869,7 @@ export default function PageHeroesPage() {
           onCancel={() => {
             setSlideForm(null);
             setEditingSlide(null);
+            setSlideFile(null);
             setSlideError("");
           }}
         />
@@ -586,7 +887,17 @@ export default function PageHeroesPage() {
   );
 }
 
-function HeroPreview({ form, hero }: { form: HeroForm; hero?: PageHero }) {
+function HeroPreview({
+  form,
+  hero,
+  onAddSlide,
+  onEditSlide,
+}: {
+  form: HeroForm;
+  hero?: PageHero;
+  onAddSlide: () => void;
+  onEditSlide: (slide: HeroSlide) => void;
+}) {
   const [selectedSlideIndex, setSelectedSlideIndex] = useState(0);
 
   const activeSlides: HeroSlide[] = useMemo(() => {
@@ -595,32 +906,34 @@ function HeroPreview({ form, hero }: { form: HeroForm; hero?: PageHero }) {
       .sort((a: HeroSlide, b: HeroSlide) => a.display_order - b.display_order || a.id - b.id);
   }, [hero?.slides]);
 
+  const safeSlideIndex =
+    activeSlides.length > 0 ? Math.min(selectedSlideIndex, activeSlides.length - 1) : 0;
+
   const activeSlide =
     form.media_type === "slides" && activeSlides.length > 0
-      ? activeSlides[Math.min(selectedSlideIndex, activeSlides.length - 1)]
+      ? activeSlides[safeSlideIndex]
       : null;
 
   const image =
     form.media_type === "image"
       ? form.image_source === "external"
         ? form.external_image_url
-        : hero?.resolved_image_url
+        : hero?.resolved_image_url || hero?.uploaded_image || ""
       : activeSlide?.media_type === "image"
-      ? activeSlide.resolved_image_url
+      ? activeSlide.resolved_image_url ||
+        activeSlide.external_image_url ||
+        activeSlide.uploaded_image ||
+        ""
       : "";
 
   const isVideo =
     form.media_type === "video" ||
     (form.media_type === "slides" && activeSlide?.media_type === "video");
 
-  const previewTitle =
-    activeSlide?.title || form.title || "Untitled Banner";
-  const previewSubtitle =
-    activeSlide?.subtitle || form.subtitle;
-  const previewDescription =
-    activeSlide?.description || form.description;
-  const previewCta =
-    activeSlide?.cta_label || form.cta_label;
+  const previewTitle = activeSlide?.title || form.title || "Untitled Banner";
+  const previewSubtitle = activeSlide?.subtitle || form.subtitle;
+  const previewDescription = activeSlide?.description || form.description;
+  const previewCta = activeSlide?.cta_label || form.cta_label;
 
   const alignmentClass =
     form.overlay_position === "left"
@@ -634,6 +947,7 @@ function HeroPreview({ form, hero }: { form: HeroForm; hero?: PageHero }) {
       <section className="relative min-h-[260px] md:min-h-[320px] rounded-xl overflow-hidden flex items-center p-6 sm:p-10 bg-slate-900 border border-zinc-800">
         {image ? (
           <Image
+            key={image}
             src={image}
             alt=""
             fill
@@ -655,15 +969,18 @@ function HeroPreview({ form, hero }: { form: HeroForm; hero?: PageHero }) {
 
         {/* Overlay Content */}
         <div className={`relative z-10 max-w-2xl flex flex-col gap-2.5 ${alignmentClass}`}>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {previewSubtitle && (
               <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-emerald-400">
                 {previewSubtitle}
               </span>
             )}
             {activeSlide && (
-              <Badge variant="outline" className="text-[9px] px-1.5 py-0 border-emerald-500/50 text-emerald-300 bg-black/40">
-                {activeSlide.media_type.toUpperCase()} SLIDE
+              <Badge
+                variant="outline"
+                className="text-[9px] px-1.5 py-0 border-emerald-500/50 text-emerald-300 bg-black/40"
+              >
+                {activeSlide.media_type.toUpperCase()} SLIDE {safeSlideIndex + 1}/{activeSlides.length}
               </Badge>
             )}
           </div>
@@ -688,30 +1005,80 @@ function HeroPreview({ form, hero }: { form: HeroForm; hero?: PageHero }) {
               * Video stream ({activeSlide?.video_url || form.video_url || "Configured URL"}) plays interactively on the public site.
             </p>
           )}
+          {form.media_type === "slides" && activeSlides.length === 0 && (
+            <div className="pt-2">
+              <Button
+                type="button"
+                size="sm"
+                onClick={onAddSlide}
+                className="gap-1.5 text-xs bg-emerald-500 text-slate-950 hover:bg-emerald-400"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>Add First Carousel Slide</span>
+              </Button>
+            </div>
+          )}
         </div>
       </section>
 
       {/* Multi-slide preview stepper */}
-      {form.media_type === "slides" && activeSlides.length > 1 && (
-        <div className="flex items-center justify-between px-2 text-xs">
-          <span className="text-slate-500 dark:text-zinc-400 font-medium">
-            Previewing Slide {selectedSlideIndex + 1} of {activeSlides.length}:
-          </span>
+      {form.media_type === "slides" && activeSlides.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-2 px-2 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="text-slate-400 font-medium">
+              Previewing Active Slide {safeSlideIndex + 1} of {activeSlides.length}
+            </span>
+            {activeSlide && (
+              <button
+                type="button"
+                onClick={() => onEditSlide(activeSlide)}
+                className="text-emerald-400 hover:underline text-[11px] font-semibold cursor-pointer"
+              >
+                Edit this slide
+              </button>
+            )}
+          </div>
           <div className="flex items-center gap-1.5">
+            {activeSlides.length > 1 && (
+              <button
+                type="button"
+                onClick={() =>
+                  setSelectedSlideIndex(
+                    (prev) => (prev - 1 + activeSlides.length) % activeSlides.length,
+                  )
+                }
+                className="p-1 rounded bg-zinc-800 text-zinc-300 hover:bg-zinc-700 cursor-pointer"
+                aria-label="Previous slide"
+              >
+                <ChevronLeft className="h-3.5 w-3.5" />
+              </button>
+            )}
             {activeSlides.map((slide, idx) => (
               <button
                 key={slide.id}
                 type="button"
                 onClick={() => setSelectedSlideIndex(idx)}
-                className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all ${
-                  idx === selectedSlideIndex
+                className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all cursor-pointer ${
+                  idx === safeSlideIndex
                     ? "bg-emerald-500 text-slate-950 shadow-xs"
-                    : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-300"
+                    : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
                 }`}
               >
                 {slide.media_type === "video" ? "🎬" : "🖼️"} #{idx + 1}
               </button>
             ))}
+            {activeSlides.length > 1 && (
+              <button
+                type="button"
+                onClick={() =>
+                  setSelectedSlideIndex((prev) => (prev + 1) % activeSlides.length)
+                }
+                className="p-1 rounded bg-zinc-800 text-zinc-300 hover:bg-zinc-700 cursor-pointer"
+                aria-label="Next slide"
+              >
+                <ChevronRight className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -721,6 +1088,7 @@ function HeroPreview({ form, hero }: { form: HeroForm; hero?: PageHero }) {
 
 function SlideEditor({
   isEditing,
+  existingImageUrl,
   form,
   setForm,
   file,
@@ -731,6 +1099,7 @@ function SlideEditor({
   onCancel,
 }: {
   isEditing: boolean;
+  existingImageUrl: string;
   form: SlideForm;
   setForm: (v: SlideForm) => void;
   file: File | null;
@@ -748,10 +1117,14 @@ function SlideEditor({
           <div>
             <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Layers className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-              <span>{isEditing ? `Edit Slide: ${form.title || `#${form.display_order}`}` : "Add Carousel Slide"}</span>
+              <span>
+                {isEditing
+                  ? `Edit Slide: ${form.title || `#${form.display_order}`}`
+                  : "Add Carousel Slide"}
+              </span>
             </h3>
             <p className="text-xs text-slate-500 dark:text-zinc-400">
-              Configure headline, media asset, and call-to-action for this slide.
+              Configure headline, media asset, and call-to-action for this slide. Leave text fields blank to inherit the parent Hero copy.
             </p>
           </div>
           <button
@@ -805,17 +1178,20 @@ function SlideEditor({
                 <select
                   id="slide_media_type"
                   value={form.media_type}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const nextMediaType = e.target.value as "image" | "video";
+                    if (nextMediaType !== "image") setFile(null);
                     setForm({
                       ...form,
-                      media_type: e.target.value as "image" | "video",
-                      image_source: e.target.value === "image" ? "external" : "",
-                    })
-                  }
+                      media_type: nextMediaType,
+                      image_source:
+                        nextMediaType === "image" ? form.image_source || "external" : "",
+                    });
+                  }}
                   className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-100"
                 >
                   <option value="image">Image</option>
-                  <option value="video">Video</option>
+                  <option value="video">Video (YouTube / MP4)</option>
                 </select>
               </div>
 
@@ -850,7 +1226,7 @@ function SlideEditor({
                     </div>
                   </div>
                   {form.image_source === "upload" ? (
-                    <div className="space-y-1">
+                    <div className="space-y-2">
                       <Input
                         id="slide_image_input"
                         type="file"
@@ -858,29 +1234,44 @@ function SlideEditor({
                         onChange={(e) => setFile(e.target.files?.[0] || null)}
                         className="text-xs cursor-pointer"
                       />
-                      {file && (
+                      {file ? (
                         <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono truncate">
                           Ready to upload: {file.name}
                         </p>
-                      )}
+                      ) : isEditing && existingImageUrl ? (
+                        <div className="flex items-center gap-2.5 rounded-lg border border-slate-200 dark:border-zinc-800 p-2 bg-slate-50 dark:bg-zinc-900/60">
+                          <div className="relative h-10 w-16 overflow-hidden rounded bg-slate-900 shrink-0">
+                            <Image
+                              src={existingImageUrl}
+                              alt="Current slide"
+                              fill
+                              unoptimized
+                              className="object-cover"
+                            />
+                          </div>
+                          <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                            Current uploaded image is active. Choose a new file above only if you want to replace it.
+                          </p>
+                        </div>
+                      ) : null}
                     </div>
                   ) : (
                     <Input
                       id="slide_image_input"
                       value={form.external_image_url}
                       onChange={(e) => setForm({ ...form, external_image_url: e.target.value })}
-                      placeholder="https://..."
+                      placeholder="https://images.unsplash.com/..."
                     />
                   )}
                 </div>
               ) : (
                 <div className="space-y-1.5 md:col-span-2">
-                  <Label htmlFor="slide_video_url">Video URL</Label>
+                  <Label htmlFor="slide_video_url">Video URL (YouTube or Direct Stream)</Label>
                   <Input
                     id="slide_video_url"
                     value={form.video_url}
                     onChange={(e) => setForm({ ...form, video_url: e.target.value })}
-                    placeholder="https://..."
+                    placeholder="https://www.youtube.com/watch?v=..."
                   />
                 </div>
               )}
@@ -958,7 +1349,11 @@ function HeroEditorModal({
   error,
   saving,
   isConfigured,
+  slides,
+  existingImageUrl,
   onSubmit,
+  onSaveAndAddSlide,
+  onEditSlide,
   onCancel,
 }: {
   form: HeroForm;
@@ -968,7 +1363,11 @@ function HeroEditorModal({
   error: string;
   saving: boolean;
   isConfigured: boolean;
+  slides: HeroSlide[];
+  existingImageUrl: string;
   onSubmit: (e: React.FormEvent) => void;
+  onSaveAndAddSlide: () => void;
+  onEditSlide: (slide: HeroSlide) => void;
   onCancel: () => void;
 }) {
   return (
@@ -982,7 +1381,7 @@ function HeroEditorModal({
               <span>{isConfigured ? `Edit ${form.page_key} Hero` : `Configure ${form.page_key} Hero`}</span>
             </h3>
             <p className="text-xs text-slate-500 dark:text-zinc-400">
-              Customize typography copy, media asset, overlay darkness, and call-to-action buttons.
+              Customize typography copy, media asset or multi-slide carousel, overlay darkness, and call-to-action buttons.
             </p>
           </div>
           <button
@@ -1002,7 +1401,9 @@ function HeroEditorModal({
               {/* Left Column: Content Details */}
               <div className="lg:col-span-7 space-y-4">
                 <div className="space-y-1.5">
-                  <Label htmlFor="modal_title">Hero Title *</Label>
+                  <Label htmlFor="modal_title">
+                    Hero Title * {form.media_type === "slides" ? "(Fallback for slides)" : ""}
+                  </Label>
                   <Input
                     id="modal_title"
                     required
@@ -1013,7 +1414,9 @@ function HeroEditorModal({
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="modal_subtitle">Subtitle / Eyebrow</Label>
+                  <Label htmlFor="modal_subtitle">
+                    Subtitle / Eyebrow {form.media_type === "slides" ? "(Fallback for slides)" : ""}
+                  </Label>
                   <Input
                     id="modal_subtitle"
                     value={form.subtitle}
@@ -1023,7 +1426,9 @@ function HeroEditorModal({
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="modal_description">Introductory Narrative</Label>
+                  <Label htmlFor="modal_description">
+                    Introductory Narrative {form.media_type === "slides" ? "(Fallback for slides)" : ""}
+                  </Label>
                   <Textarea
                     id="modal_description"
                     rows={3}
@@ -1060,7 +1465,7 @@ function HeroEditorModal({
                       Enable Page Hero
                     </Label>
                     <p className="text-[11px] text-slate-400 dark:text-zinc-500">
-                      When disabled, a compact minimalist breadcrumb is shown instead.
+                      When disabled, the page falls back to its default header banner.
                     </p>
                   </div>
                   <Switch
@@ -1078,17 +1483,21 @@ function HeroEditorModal({
                   <select
                     id="modal_media_type"
                     value={form.media_type}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const nextType = e.target.value as HeroMediaType;
+                      if (nextType !== "image") {
+                        setFile(null);
+                      }
                       setForm({
                         ...form,
-                        media_type: e.target.value as HeroMediaType,
+                        media_type: nextType,
                         image_source:
-                          e.target.value === "image" ? form.image_source || "external" : "",
-                      })
-                    }
+                          nextType === "image" ? form.image_source || "external" : "",
+                      });
+                    }}
                     className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-100"
                   >
-                    <option value="none">Text Only (Solid Dark Theme)</option>
+                    <option value="none">Text Only (Solid Brand Theme)</option>
                     <option value="image">Static High-Res Image</option>
                     <option value="video">Background Video Stream</option>
                     <option value="slides">Multi-Slide Carousel</option>
@@ -1109,7 +1518,10 @@ function HeroEditorModal({
                         type="button"
                         size="sm"
                         variant={form.image_source === "external" ? "default" : "outline"}
-                        onClick={() => setForm({ ...form, image_source: "external" })}
+                        onClick={() => {
+                          setForm({ ...form, image_source: "external" });
+                          setFile(null);
+                        }}
                         className="text-xs h-8"
                       >
                         External Link
@@ -1140,7 +1552,7 @@ function HeroEditorModal({
                         />
                       </div>
                     ) : (
-                      <div className="space-y-1.5 pt-1">
+                      <div className="space-y-2 pt-1">
                         <Label htmlFor="modal_image_file" className="text-xs">
                           Upload Banner Asset
                         </Label>
@@ -1151,6 +1563,11 @@ function HeroEditorModal({
                           onChange={(e) => setFile(e.target.files?.[0] || null)}
                           className="text-xs cursor-pointer file:cursor-pointer"
                         />
+                        {!file && existingImageUrl && (
+                          <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                            Current uploaded banner is active. Select a file only if you want to replace it.
+                          </p>
+                        )}
                       </div>
                     )}
                   </div>
@@ -1172,6 +1589,66 @@ function HeroEditorModal({
                       placeholder="https://www.youtube.com/watch?v=..."
                       className="font-mono text-xs"
                     />
+                  </div>
+                )}
+
+                {form.media_type === "slides" && (
+                  <div className="space-y-3 rounded-lg border border-emerald-500/30 p-3.5 bg-emerald-500/5 dark:bg-emerald-500/5">
+                    <div className="flex items-center justify-between pb-1.5 border-b border-emerald-500/20">
+                      <div className="flex items-center gap-2">
+                        <Layers className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                        <span className="text-xs font-bold text-slate-900 dark:text-white">
+                          Multi-Slide Carousel ({slides.length} slides)
+                        </span>
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={onSaveAndAddSlide}
+                        loading={saving}
+                        className="h-7 px-2.5 text-[11px] gap-1"
+                      >
+                        <Plus className="h-3 w-3" />
+                        <span>Save & Add Slide</span>
+                      </Button>
+                    </div>
+
+                    <p className="text-[11px] text-slate-600 dark:text-zinc-300 leading-relaxed">
+                      Each slide in the carousel can have its own photo or video stream, headline, description, and CTA button. Any fields left blank on a slide automatically inherit the Hero Title, Subtitle, and Description configured on the left.
+                    </p>
+
+                    {slides.length > 0 && (
+                      <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                        {slides.map((s, idx) => (
+                          <div
+                            key={s.id}
+                            className="flex items-center justify-between rounded-md border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2.5 py-1.5 text-xs"
+                          >
+                            <div className="flex items-center gap-2 truncate">
+                              <span className="font-mono text-[10px] text-slate-400">
+                                #{s.display_order}
+                              </span>
+                              <span className="font-semibold text-slate-800 dark:text-zinc-200 truncate">
+                                {s.title || `Slide ${idx + 1}`}
+                              </span>
+                              <Badge
+                                variant={s.is_active ? "default" : "secondary"}
+                                className="text-[8px] px-1 py-0"
+                              >
+                                {s.is_active ? "Active" : "Hidden"}
+                              </Badge>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => onEditSlide(s)}
+                              className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline shrink-0 ml-2 cursor-pointer"
+                            >
+                              Edit
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -1245,6 +1722,19 @@ function HeroEditorModal({
             <Button type="button" variant="outline" size="sm" onClick={onCancel}>
               Cancel
             </Button>
+            {form.media_type === "slides" && (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                loading={saving}
+                onClick={onSaveAndAddSlide}
+                className="gap-1"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>Save & Add Slide</span>
+              </Button>
+            )}
             <Button type="submit" size="sm" loading={saving}>
               {isConfigured ? `Update ${form.page_key} Hero` : `Publish ${form.page_key} Hero`}
             </Button>
